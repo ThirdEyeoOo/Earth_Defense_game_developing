@@ -38,5 +38,5 @@ export const CONFIG = {
     ufosPerWave: 1,
     victoryWaves: 10,
   },
-  saveVersion: 2,
+  saveVersion: 3,
 } as const;

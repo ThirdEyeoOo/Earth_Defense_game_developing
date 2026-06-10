@@ -46,6 +46,26 @@ describe('save', () => {
     for (let i = 0; i < 50; i++) tick(loaded);
   });
 
+  it('migra i salvataggi v2: nascono registro eventi e abductedTotal', () => {
+    const s = createNewGame(13);
+    for (let i = 0; i < 250; i++) tick(s);
+    const raw = JSON.parse(serialize(s));
+    raw.version = 2;
+    delete raw.events;
+    delete raw.nextEventId;
+    delete raw.stats.abductedTotal; // com'era in v2
+    const loaded = deserialize(JSON.stringify(raw))!;
+    expect(loaded).not.toBeNull();
+    expect(loaded.version).toBe(CONFIG.saveVersion);
+    expect(loaded.events).toEqual([]);
+    expect(loaded.nextEventId).toBe(1);
+    expect(loaded.stats.abductedTotal).toBe(0);
+    expect(loaded.stats.ufosShotDown).toBe(s.stats.ufosShotDown);
+    expect(loaded.stats.populationLost).toBe(s.stats.populationLost);
+    // la partita migrata prosegue senza errori
+    for (let i = 0; i < 50; i++) tick(loaded);
+  });
+
   it('rifiuta salvataggi con versione valida ma forma errata', () => {
     expect(deserialize('{"version":1}')).toBeNull();
     expect(deserialize('{"version":1,"cities":"x","squadrons":[],"ufos":[],"tick":0,"credits":1}')).toBeNull();

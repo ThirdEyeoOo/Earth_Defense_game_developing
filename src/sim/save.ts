@@ -21,6 +21,14 @@ const MIGRATIONS: Record<number, Migration> = {
     }
     return { ...raw, version: 2 };
   },
+  // v2 → v3: nasce il registro eventi e il cumulativo dei rapimenti.
+  2: raw => ({
+    ...raw,
+    events: [],
+    nextEventId: 1,
+    stats: { ...(raw.stats as Record<string, unknown>), abductedTotal: 0 },
+    version: 3,
+  }),
 };
 
 export function serialize(state: GameState): string {
