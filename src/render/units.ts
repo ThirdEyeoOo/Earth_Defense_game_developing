@@ -211,14 +211,16 @@ export class UnitLayer {
       // posizione assegnata direttamente: il moto fluido viene dal
       // progresso continuo (tick + frazione), non dall'inseguimento
       group.position.copy(this.ufoTarget(state, ufo, tickFraction));
-      // billboard verticale: asse del disco = radiale, faccia verso la camera
-      const up = group.position.clone().normalize();
-      const toCam = camera.position.clone().sub(group.position).projectOnPlane(up);
-      if (toCam.lengthSq() > 1e-10) {
-        const z = toCam.normalize();
-        const x = new THREE.Vector3().crossVectors(up, z);
-        group.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, up, z));
-      }
+      // billboard allineato allo schermo: il profilo del disco resta sempre
+      // orizzontale, senza flip né distorsioni (la camera non rolla mai)
+      group.quaternion.copy(camera.quaternion);
+      // effetto vicino/lontano: pieno in quota, dimezzato al suolo
+      const altitude = group.position.length();
+      const t = Math.min(
+        1,
+        Math.max(0, (altitude - SURFACE_ALTITUDE) / (ORBIT_ALTITUDE - SURFACE_ALTITUDE)),
+      );
+      group.scale.setScalar(0.5 + 0.5 * t * t * (3 - 2 * t));
       this.animateUfo(group, ufo, now);
     }
 

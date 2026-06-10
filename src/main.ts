@@ -151,6 +151,8 @@ function frame(now: number): void {
     }
     autosave();
   }
+  // TODO(debug): strumentazione temporanea per il bug della pausa-fantasma
+  if (!Number.isFinite(acc)) console.error('[loop] acc non finito:', acc);
   // in pausa resta congelata al valore corrente: niente scatto indietro
   const tickFraction = acc;
   if (state) {

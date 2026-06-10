@@ -38,7 +38,14 @@ body {
   background: rgba(8, 14, 26, 0.85);
   border-bottom: 1px solid #1d3450;
   font-size: 14px;
+  /* larghezze stabili: i pulsanti non devono mai spostarsi sotto il mouse */
+  font-variant-numeric: tabular-nums;
 }
+#hud span { display: inline-block; }
+#hud-date { min-width: 200px; }
+#hud-credits { min-width: 90px; }
+#hud-pop { min-width: 160px; }
+#hud-wave { min-width: 180px; }
 #hud button, #city-panel button, .end-box button, #start-screen button {
   background: #15263f;
   color: #cfe3ff;
