@@ -42,10 +42,6 @@ export function cmdRelocateSquadron(
 }
 
 export function cmdSetSpeed(state: GameState, speed: 0 | 1 | 2 | 4 | 10): CommandResult {
-  // TODO(debug): strumentazione temporanea per il bug della pausa-fantasma —
-  // rimuovere appena individuata la causa
-  console.warn('[setSpeed]', state.speed, '→', speed);
-  console.trace();
   state.speed = speed;
   return { ok: true };
 }
