@@ -25,6 +25,7 @@ export function processWaves(state: GameState): void {
   if (state.tick < state.nextWave.arrivalTick) return;
   const inRegion = state.cities.filter(c => c.alive && c.region === state.nextWave.region);
   const pool = inRegion.length > 0 ? inRegion : state.cities.filter(c => c.alive);
+  if (pool.length === 0) return; // nessuna città viva: la sconfitta è già in arrivo
   for (let i = 0; i < state.nextWave.ufoCount; i++) {
     const city = pickWeighted(state, pool, c => c.population);
     spawnUfo(state, city.id);

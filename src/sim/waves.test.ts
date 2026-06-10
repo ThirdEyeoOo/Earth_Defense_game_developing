@@ -46,4 +46,19 @@ describe('waves', () => {
     expect(a.ufos).toEqual(b.ufos);
     expect(a.nextWave).toEqual(b.nextWave);
   });
+
+  it('se la regione bersaglio non ha città vive, ripiega su tutte le città vive', () => {
+    const s = createNewGame(7);
+    const targetRegion = s.nextWave.region;
+    for (const c of s.cities) {
+      if (c.region === targetRegion) c.alive = false;
+    }
+    s.tick = s.nextWave.arrivalTick;
+    const expected = s.nextWave.ufoCount;
+    processWaves(s);
+    expect(s.ufos).toHaveLength(expected);
+    for (const u of s.ufos) {
+      expect(s.cities.find(c => c.id === u.targetCityId)!.alive).toBe(true);
+    }
+  });
 });
