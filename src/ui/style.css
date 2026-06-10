@@ -45,6 +45,8 @@ body {
 #hud-date { min-width: 200px; }
 #hud-credits { min-width: 90px; }
 #hud-pop { min-width: 160px; }
+#hud-abd { min-width: 120px; color: #c8a4ff; }
+#hud-dead { min-width: 100px; color: #ff8a99; }
 #hud-wave { min-width: 180px; }
 #hud button, #city-panel button, .end-box button, #start-screen button {
   background: #15263f;
@@ -101,3 +103,39 @@ body {
   padding: 28px 48px;
 }
 .start-box button { margin: 6px; font-size: 16px; padding: 8px 22px; }
+
+/* barre HP sopra le unità (asset SVG in shadow DOM, vedi render/hpBars.ts) */
+.unit-hp-anchor { pointer-events: none; }
+.unit-hp-host {
+  /* offset e fade sull'elemento interno: CSS2DRenderer sovrascrive
+     il transform dell'elemento esterno a ogni render */
+  transform: translateY(-20px);
+  width: 72px;
+  transition: opacity 0.4s;
+}
+.unit-hp-host--fading { opacity: 0; }
+
+/* scritte di feedback fluttuanti (render/floatingText.ts) */
+.float-text-anchor { pointer-events: none; }
+.float-text {
+  display: inline-block;
+  font-size: 11px;
+  color: #ffe9a8;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px #000, 0 0 4px #000;
+  animation: float-up 2s ease-out forwards;
+}
+@keyframes float-up {
+  from { transform: translateY(-12px); opacity: 1; }
+  to   { transform: translateY(-34px); opacity: 0; }
+}
+.abduction-counter {
+  display: inline-block;
+  transform: translateY(18px); /* sotto l'UFO: sopra ci sono barra HP e toast */
+  font-size: 11px;
+  color: #c44dff;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px #000, 0 0 4px #000;
+}

@@ -1,6 +1,7 @@
 import { CONFIG } from './config';
 import { resolveCombat } from './combat';
 import { applyDailyEconomy } from './economy';
+import { trimEvents } from './events';
 import { progressTransfers } from './squadrons';
 import type { GameState } from './state';
 import { worldPopulation } from './state';
@@ -28,4 +29,5 @@ export function tick(state: GameState): void {
   progressUfos(state);
   if (state.tick % CONFIG.ticksPerDay === 0) applyDailyEconomy(state);
   checkOutcome(state);
+  trimEvents(state);
 }

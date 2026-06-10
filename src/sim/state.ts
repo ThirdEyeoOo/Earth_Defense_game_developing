@@ -1,5 +1,6 @@
 import citiesData from '../data/cities.json';
 import { CONFIG } from './config';
+import type { SimEvent } from './events';
 import { stateRand } from './rng';
 
 export interface CityState {
@@ -50,6 +51,7 @@ export interface WaveState {
 export interface GameStats {
   ufosShotDown: number;
   populationLost: number;
+  abductedTotal: number; // cumulativo, accumula a frazioni per tick: mostrare col floor
 }
 
 export type Outcome = 'playing' | 'victory' | 'defeat';
@@ -69,6 +71,8 @@ export interface GameState {
   wavesSpawned: number;
   stats: GameStats;
   outcome: Outcome;
+  events: SimEvent[]; // registro recente (trimEvents), letto dalla UI senza mutarlo
+  nextEventId: number;
 }
 
 interface CityRow {
@@ -104,8 +108,10 @@ export function createNewGame(seed: number): GameState {
     nextUfoId: 1,
     nextWave: { waveNumber: 1, arrivalTick: 0, ufoCount: CONFIG.waves.ufosBase, region: '' },
     wavesSpawned: 0,
-    stats: { ufosShotDown: 0, populationLost: 0 },
+    stats: { ufosShotDown: 0, populationLost: 0, abductedTotal: 0 },
     outcome: 'playing',
+    events: [],
+    nextEventId: 1,
   };
   const w = CONFIG.waves;
   const day =

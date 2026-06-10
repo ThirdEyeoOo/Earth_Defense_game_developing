@@ -10,7 +10,9 @@ import { createNewGame, type GameState } from './sim/state';
 import { tick } from './sim/tick';
 import { CityLayer } from './render/cities';
 import { EffectsLayer } from './render/effects';
+import { FloatingTextLayer } from './render/floatingText';
 import { createGlobe } from './render/globe';
+import { HpBarLayer } from './render/hpBars';
 import { createScene } from './render/scene';
 import { UnitLayer } from './render/units';
 import { createCityPanel } from './ui/cityPanel';
@@ -40,6 +42,8 @@ createGlobe(ctx.scene);
 let cityLayer: CityLayer;
 const unitLayer = new UnitLayer(ctx.scene);
 const effects = new EffectsLayer(ctx.scene);
+const hpBars = new HpBarLayer(ctx.scene);
+const floatingText = new FloatingTextLayer(ctx.scene);
 
 // --- ui ---
 const hud = createHud(
@@ -98,6 +102,8 @@ function bootGame(gameState: GameState): void {
     cityLayer.dispose();
   }
   cityLayer = new CityLayer(ctx.scene, state.cities, handleCityClick);
+  hpBars.reset(); // niente barre residue tra una partita e l'altra (gli id ripartono)
+  floatingText.reset(state); // un salvataggio caricato non rigioca gli eventi conservati
   document.getElementById('start-screen')!.classList.add('hidden');
 }
 
@@ -159,6 +165,8 @@ function frame(now: number): void {
       cityLayer.update(state, selectedCityId, ctx.camera);
       unitLayer.update(state, tickFraction, ctx.camera);
       effects.update(state, unitLayer);
+      hpBars.update(state, unitLayer, ctx.camera);
+      floatingText.update(state, unitLayer, ctx.camera);
       hud.update(state, state.tick + tickFraction);
       radar.update(state);
       // il pannello ha pulsanti: si ricostruisce solo quando i dati cambiano,

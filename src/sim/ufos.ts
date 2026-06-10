@@ -1,4 +1,5 @@
 import { CONFIG } from './config';
+import { emitEvent } from './events';
 import { stateRand } from './rng';
 import type { GameState } from './state';
 
@@ -44,17 +45,23 @@ export function progressUfos(state: GameState): void {
       continue;
     }
     ufo.ticksRemaining--;
-    if (ufo.phase === 'abducting') ufo.abducted += perTick;
+    if (ufo.phase === 'abducting') {
+      ufo.abducted += perTick;
+      state.stats.abductedTotal += perTick;
+    }
     if (ufo.ticksRemaining > 0) continue;
     if (ufo.phase === 'approaching') {
       ufo.phase = 'orbiting';
       ufo.ticksRemaining = orbitTicks();
+      emitEvent(state, { type: 'ufoOrbiting', unitKind: 'ufo', unitId: ufo.id, cityId: city.id });
     } else if (ufo.phase === 'orbiting') {
       ufo.phase = 'descending';
       ufo.ticksRemaining = descentTicks();
+      emitEvent(state, { type: 'ufoDescending', unitKind: 'ufo', unitId: ufo.id, cityId: city.id });
     } else if (ufo.phase === 'descending') {
       ufo.phase = 'abducting';
       ufo.ticksRemaining = abductionTicks;
+      emitEvent(state, { type: 'ufoAbducting', unitKind: 'ufo', unitId: ufo.id, cityId: city.id });
     } else if (ufo.phase === 'abducting') {
       ufo.phase = 'escaping';
       ufo.ticksRemaining = descentTicks();
