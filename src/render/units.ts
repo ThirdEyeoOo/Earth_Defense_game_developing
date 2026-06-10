@@ -197,6 +197,10 @@ export class UnitLayer {
     return this.ufoMeshes.get(ufoId)?.position.clone() ?? null;
   }
 
+  squadronPosition(squadronId: number): THREE.Vector3 | null {
+    return this.squadronMeshes.get(squadronId)?.position.clone() ?? null;
+  }
+
   update(state: GameState, tickFraction: number, camera: THREE.Camera): void {
     const now = performance.now();
     this.sync(this.ufoMeshes, state.ufos.map(u => u.id), buildUfo);
