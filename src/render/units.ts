@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
+import ufoSvgRaw from '../../Assets/Alieni/UFO/ufo_disco_volante.svg?raw';
 import fighterSvgRaw from '../../Assets/Umani/Velivoli/f22_raptor_animabile.svg?raw';
 import { CONFIG } from '../sim/config';
 import type { GameState, UfoState } from '../sim/state';
 import { approachTicks, descentTicks, orbitTicks } from '../sim/ufos';
 import { cityPosition } from './cities';
 
-const UFO_COLOR = 0xff5566;
 const DEEP_ALTITUDE = 8; // spawn nello spazio profondo, in raggi
 const ORBIT_ALTITUDE = 1.6; // quota dell'orbita
 const SURFACE_ALTITUDE = 1.02; // quota di atterraggio
@@ -21,9 +21,70 @@ const PATROL_ALTITUDE = 1.03;
 const PATROL_RADIUS = 0.05; // raggio del pattugliamento attorno al nome della città
 const PATROL_SPEED = 0.0005; // rad/ms
 
-type FighterParts = Record<string, THREE.Mesh[]>;
+// --- UFO da SVG (Assets/Alieni/UFO/ufo_disco_volante.svg, vista di profilo) ---
+const UFO_WIDTH = 0.05; // larghezza del disco in unità mondo
+const UFO_SVG_WIDTH = 240;
+const UFO_SVG_HEIGHT = 200;
+const BEAM_ATTACH_Y = 108; // y (in coordinate SVG) dell'attacco del raggio al mozzo
+const RIM_LIGHTS = ['luce_1', 'luce_2', 'luce_3', 'luce_4', 'luce_5', 'luce_6', 'luce_7'];
+
+type SvgParts = Record<string, THREE.Mesh[]>;
 
 const fighterPaths = new SVGLoader().parse(fighterSvgRaw).paths;
+const ufoPaths = new SVGLoader().parse(ufoSvgRaw).paths;
+
+// Costruisce un gruppo piatto da path SVG: una mesh per shape (+ stroke),
+// indicizzate per id. pivotOverrides sposta il pivot di certi id (es. il
+// raggio traente, che deve estendersi scalando dal mozzo verso il basso).
+function buildSvgModel(
+  paths: ReturnType<SVGLoader['parse']>['paths'],
+  svgWidth: number,
+  svgHeight: number,
+  worldHeight: number,
+  pivotOverrides: Record<string, number> = {},
+): { model: THREE.Group; parts: SvgParts } {
+  const model = new THREE.Group();
+  const parts: SvgParts = {};
+  let zIndex = 0;
+  for (const path of paths) {
+    const id = (path.userData?.node as SVGElement | undefined)?.id ?? '';
+    const style = path.userData?.style as { fill?: string; stroke?: string };
+    const pivotY = pivotOverrides[id] ?? svgHeight / 2;
+    const animated = id.startsWith('luce') || id.startsWith('boost') || id in pivotOverrides;
+    const meshes: THREE.Mesh[] = [];
+
+    const addMesh = (geometry: THREE.BufferGeometry, colorStyle: string) => {
+      geometry.translate(-svgWidth / 2, -pivotY, 0);
+      const material = new THREE.MeshBasicMaterial({
+        color: new THREE.Color().setStyle(colorStyle),
+        side: THREE.DoubleSide,
+        transparent: animated || id === 'cupola',
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.y = pivotY - svgHeight / 2;
+      mesh.position.z = zIndex++ * 0.4; // evita z-fighting fra i layer (coordinate SVG)
+      model.add(mesh);
+      meshes.push(mesh);
+    };
+
+    if (style?.fill && style.fill !== 'none') {
+      for (const shape of SVGLoader.createShapes(path)) {
+        addMesh(new THREE.ShapeGeometry(shape), style.fill);
+      }
+    }
+    if (style?.stroke && style.stroke !== 'none') {
+      for (const subPath of path.subPaths) {
+        const geometry = SVGLoader.pointsToStroke(subPath.getPoints(), path.userData!.style);
+        if (geometry) addMesh(geometry, style.stroke);
+      }
+    }
+    if (id) parts[id] = meshes;
+  }
+  // SVG è y-in-basso: il flip Y raddrizza il modello
+  const s = worldHeight / svgHeight;
+  model.scale.set(s, -s, s);
+  return { model, parts };
+}
 
 // progresso continuo di una fase: tick svolti + frazione del tick corrente
 function phaseProgress(ticksRemaining: number, totalTicks: number, tickFraction: number): number {
@@ -56,54 +117,12 @@ function tangentBasis(radial: THREE.Vector3): { e1: THREE.Vector3; e2: THREE.Vec
   return { e1, e2 };
 }
 
-// Costruisce un singolo caccia dal file SVG: una mesh per shape (+ stroke),
-// indicizzate per id del path così le animazioni le raggiungono per nome.
-// Le fiamme dei boost hanno il pivot sugli ugelli (scale.y = estensione fiamma).
-function buildFighter(): { fighter: THREE.Group; parts: FighterParts } {
-  const fighter = new THREE.Group();
-  const parts: FighterParts = {};
-  let zIndex = 0;
-  for (const path of fighterPaths) {
-    const id = (path.userData?.node as SVGElement | undefined)?.id ?? '';
-    const style = path.userData?.style as { fill?: string; stroke?: string; strokeOpacity?: number };
-    const isBoost = id.startsWith('boost');
-    const isLight = id.startsWith('luce');
-    const meshes: THREE.Mesh[] = [];
-
-    const addMesh = (geometry: THREE.BufferGeometry, colorStyle: string) => {
-      // centra il modello; per i boost il pivot va sull'attacco agli ugelli
-      const pivotY = isBoost ? BOOST_ATTACH_Y : SVG_HEIGHT / 2;
-      geometry.translate(-SVG_WIDTH / 2, -pivotY, 0);
-      const material = new THREE.MeshBasicMaterial({
-        color: new THREE.Color().setStyle(colorStyle),
-        side: THREE.DoubleSide,
-        transparent: isBoost || isLight,
-      });
-      const mesh = new THREE.Mesh(geometry, material);
-      if (isBoost) mesh.position.y = BOOST_ATTACH_Y - SVG_HEIGHT / 2;
-      mesh.position.z = zIndex++ * 0.4; // evita z-fighting fra i layer (coordinate SVG)
-      fighter.add(mesh);
-      meshes.push(mesh);
-    };
-
-    if (style?.fill && style.fill !== 'none') {
-      for (const shape of SVGLoader.createShapes(path)) {
-        addMesh(new THREE.ShapeGeometry(shape), style.fill);
-      }
-    }
-    if (style?.stroke && style.stroke !== 'none') {
-      for (const subPath of path.subPaths) {
-        const geometry = SVGLoader.pointsToStroke(subPath.getPoints(), path.userData!.style);
-        if (geometry) addMesh(geometry, style.stroke);
-      }
-    }
-    if (id) parts[id] = meshes;
-  }
-  // SVG è y-in-basso: il flip Y porta il muso (y=6 nel file) verso +Y locale
-  const s = FIGHTER_LENGTH / SVG_HEIGHT;
-  fighter.scale.set(s, -s, s);
-  return { fighter, parts };
-}
+const FIGHTER_BOOST_PIVOTS = {
+  boost_sx_esterno: BOOST_ATTACH_Y,
+  boost_sx_interno: BOOST_ATTACH_Y,
+  boost_dx_esterno: BOOST_ATTACH_Y,
+  boost_dx_interno: BOOST_ATTACH_Y,
+};
 
 // Formazione a ^: leader davanti, due gregari dietro ai lati
 function buildSquadron(): THREE.Group {
@@ -113,16 +132,40 @@ function buildSquadron(): THREE.Group {
     new THREE.Vector3(-FIGHTER_LENGTH * 0.55, -FIGHTER_LENGTH * 0.4, 0),
     new THREE.Vector3(FIGHTER_LENGTH * 0.55, -FIGHTER_LENGTH * 0.4, 0),
   ];
-  const partsAll: FighterParts[] = [];
+  const partsAll: SvgParts[] = [];
   for (const offset of offsets) {
-    const { fighter, parts } = buildFighter();
-    fighter.position.copy(offset);
-    squadron.add(fighter);
+    const { model, parts } = buildSvgModel(
+      fighterPaths,
+      SVG_WIDTH,
+      SVG_HEIGHT,
+      FIGHTER_LENGTH,
+      FIGHTER_BOOST_PIVOTS,
+    );
+    model.position.copy(offset);
+    squadron.add(model);
     partsAll.push(parts);
   }
   squadron.userData.parts = partsAll;
   squadron.userData.boostLevel = 0;
   return squadron;
+}
+
+// Disco volante: vista di profilo, renderizzato come billboard verticale
+function buildUfo(): THREE.Group {
+  const ufo = new THREE.Group();
+  const { model, parts } = buildSvgModel(
+    ufoPaths,
+    UFO_SVG_WIDTH,
+    UFO_SVG_HEIGHT,
+    (UFO_WIDTH * UFO_SVG_HEIGHT) / UFO_SVG_WIDTH,
+    { raggio_traente: BEAM_ATTACH_Y },
+  );
+  ufo.add(model);
+  ufo.userData.parts = parts;
+  ufo.userData.beamLevel = 0;
+  // il raggio traente parte nascosto
+  for (const mesh of parts.raggio_traente ?? []) mesh.visible = false;
+  return ufo;
 }
 
 function setOpacity(meshes: THREE.Mesh[] | undefined, opacity: number): void {
@@ -143,17 +186,9 @@ export class UnitLayer {
     return this.ufoMeshes.get(ufoId)?.position.clone() ?? null;
   }
 
-  update(state: GameState, tickFraction: number): void {
+  update(state: GameState, tickFraction: number, camera: THREE.Camera): void {
     const now = performance.now();
-    this.sync(
-      this.ufoMeshes,
-      state.ufos.map(u => u.id),
-      () =>
-        new THREE.Mesh(
-          new THREE.ConeGeometry(0.02, 0.045, 8),
-          new THREE.MeshBasicMaterial({ color: UFO_COLOR }),
-        ),
-    );
+    this.sync(this.ufoMeshes, state.ufos.map(u => u.id), buildUfo);
     this.sync(
       this.squadronMeshes,
       state.squadrons.map(s => s.id),
@@ -161,9 +196,19 @@ export class UnitLayer {
     );
 
     for (const ufo of state.ufos) {
+      const group = this.ufoMeshes.get(ufo.id)!;
       // posizione assegnata direttamente: il moto fluido viene dal
       // progresso continuo (tick + frazione), non dall'inseguimento
-      this.ufoMeshes.get(ufo.id)!.position.copy(this.ufoTarget(state, ufo, tickFraction));
+      group.position.copy(this.ufoTarget(state, ufo, tickFraction));
+      // billboard verticale: asse del disco = radiale, faccia verso la camera
+      const up = group.position.clone().normalize();
+      const toCam = camera.position.clone().sub(group.position).projectOnPlane(up);
+      if (toCam.lengthSq() > 1e-10) {
+        const z = toCam.normalize();
+        const x = new THREE.Vector3().crossVectors(up, z);
+        group.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, up, z));
+      }
+      this.animateUfo(group, ufo, now);
     }
 
     for (const sq of state.squadrons) {
@@ -208,6 +253,47 @@ export class UnitLayer {
     }
   }
 
+  // Animazioni UFO da specifica: luci del bordo in sequenza rotante (più
+  // veloci in movimento), luce cupola che pulsa (lampeggia nel rapimento),
+  // cupola in sincrono, raggio traente che si estende/ritira dal mozzo.
+  private animateUfo(group: THREE.Object3D, ufo: UfoState, now: number): void {
+    const parts = group.userData.parts as SvgParts;
+    const abducting = ufo.phase === 'abducting';
+    const moving = !abducting;
+
+    // luci del bordo: testa della sequenza che scorre 1→7, le altre attenuate
+    const speed = moving ? 0.01 : 0.004; // luci/ms: accelerano in movimento
+    const head = (now * speed) % RIM_LIGHTS.length;
+    for (let i = 0; i < RIM_LIGHTS.length; i++) {
+      const dist = Math.min(
+        Math.abs(i - head),
+        RIM_LIGHTS.length - Math.abs(i - head),
+      );
+      setOpacity(parts[RIM_LIGHTS[i]], dist < 1.5 ? 1 - 0.5 * (dist / 1.5) : 0.2);
+    }
+
+    // luce cupola: pulsazione lenta in volo, lampeggio veloce nel rapimento
+    const domeLight = abducting
+      ? ((now % 300) < 150 ? 1 : 0.15)
+      : 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(now * 0.002));
+    setOpacity(parts.luce_cupola, domeLight);
+    // cupola: leggero pulse sincronizzato con la luce interna durante il rapimento
+    setOpacity(parts.cupola, abducting ? 0.55 + 0.35 * domeLight : 0.92);
+
+    // raggio traente: si estende dal mozzo durante il rapimento, poi si ritira
+    const level = THREE.MathUtils.lerp(
+      group.userData.beamLevel as number,
+      abducting ? 1 : 0,
+      0.1,
+    );
+    group.userData.beamLevel = level;
+    for (const mesh of parts.raggio_traente ?? []) {
+      mesh.visible = level > 0.02;
+      mesh.scale.y = level;
+      (mesh.material as THREE.MeshBasicMaterial).opacity = level * (0.55 + 0.15 * Math.random());
+    }
+  }
+
   // Animazioni da specifica: luci nav pulsanti sfasate, strobo secco ~1.5s,
   // boost che crescono dagli ugelli con flicker (nucleo più nervoso) solo in trasferimento.
   private animateFighters(squadron: THREE.Object3D, now: number, boostTarget: number): void {
@@ -217,7 +303,7 @@ export class UnitLayer {
       0.12,
     );
     squadron.userData.boostLevel = level;
-    const partsAll = squadron.userData.parts as FighterParts[];
+    const partsAll = squadron.userData.parts as SvgParts[];
     for (let i = 0; i < partsAll.length; i++) {
       const parts = partsAll[i];
       const phase = i * 0.7;

@@ -157,7 +157,7 @@ function frame(now: number): void {
     // un errore cosmetico non deve fermare la simulazione né il loop
     try {
       cityLayer.update(state, selectedCityId, ctx.camera);
-      unitLayer.update(state, tickFraction);
+      unitLayer.update(state, tickFraction, ctx.camera);
       effects.update(state, unitLayer);
       hud.update(state, state.tick + tickFraction);
       radar.update(state);
