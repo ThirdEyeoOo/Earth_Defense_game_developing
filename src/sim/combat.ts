@@ -2,7 +2,20 @@ import { CONFIG } from './config';
 import type { GameState, UfoPhase } from './state';
 import { removeUfo } from './ufos';
 
-const PHASE_RANK: Record<UfoPhase, number> = { abducting: 0, descending: 1, escaping: 2 };
+const PHASE_RANK: Record<UfoPhase, number> = {
+  abducting: 0,
+  descending: 1,
+  escaping: 2,
+  orbiting: 3, // mai ingaggiato: fuori portata
+  approaching: 4, // mai ingaggiato: fuori portata
+};
+
+// gli squadroni raggiungono solo gli UFO entrati in atmosfera
+export const ENGAGEABLE_PHASES: ReadonlySet<UfoPhase> = new Set([
+  'descending',
+  'abducting',
+  'escaping',
+]);
 
 export function effectiveDamage(attack: number, shots: number, armor: number): number {
   return shots * Math.max(1, attack - armor);
@@ -15,7 +28,9 @@ export function resolveCombat(state: GameState): void {
     if (!city.alive) continue;
     const defenders = state.squadrons.filter(s => s.cityId === city.id && s.transfer === null);
     if (defenders.length === 0) continue;
-    const engaged = state.ufos.filter(u => u.targetCityId === city.id);
+    const engaged = state.ufos.filter(
+      u => u.targetCityId === city.id && ENGAGEABLE_PHASES.has(u.phase),
+    );
     if (engaged.length === 0) continue;
     const target = [...engaged].sort(
       (a, b) =>

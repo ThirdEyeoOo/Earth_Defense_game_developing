@@ -100,8 +100,12 @@ function bootGame(gameState: GameState): void {
   state = gameState;
   selectedCityId = null;
   transferringSquadronId = null;
+  acc = 0;
   lastSavedDay = dayOfTick(state.tick);
-  if (cityLayer) ctx.scene.remove(cityLayer.group);
+  if (cityLayer) {
+    ctx.scene.remove(cityLayer.group);
+    cityLayer.dispose();
+  }
   cityLayer = new CityLayer(ctx.scene, state.cities);
   document.getElementById('start-screen')!.classList.add('hidden');
 }
@@ -142,26 +146,29 @@ function autosave(): void {
 
 // --- loop principale ---
 let last = performance.now();
+// accumulatore in UNITÀ DI TICK (non ms): così la frazione corrente non
+// dipende dalla velocità e cambiarla non fa "teletrasportare" le unità
 let acc = 0;
 function frame(now: number): void {
   const dt = Math.min(now - last, 1000); // clamp per tab in background
   last = now;
   if (state && state.outcome === 'playing' && state.speed > 0) {
-    acc += dt;
-    const msPerTick = 3000 / state.speed; // 1x: 1 giorno = 60s = 20 tick
-    while (acc >= msPerTick) {
-      acc -= msPerTick;
+    acc += dt / (3000 / state.speed); // 1x: 1 giorno = 60s = 20 tick
+    while (acc >= 1) {
+      acc -= 1;
       tick(state);
     }
     autosave();
   }
+  // in pausa resta congelata al valore corrente: niente scatto indietro
+  const tickFraction = acc;
   if (state) {
     // un errore cosmetico non deve fermare la simulazione né il loop
     try {
-      cityLayer.update(state, selectedCityId);
-      unitLayer.update(state);
+      cityLayer.update(state, selectedCityId, ctx.camera);
+      unitLayer.update(state, tickFraction);
       effects.update(state, unitLayer);
-      hud.update(state);
+      hud.update(state, state.tick + tickFraction);
       radar.update(state);
       // il pannello ha pulsanti: si ricostruisce solo quando i dati cambiano,
       // non a ogni frame, altrimenti i click cadrebbero su elementi distrutti
@@ -177,6 +184,7 @@ function frame(now: number): void {
   }
   ctx.controls.update();
   ctx.renderer.render(ctx.scene, ctx.camera);
+  ctx.labelRenderer.render(ctx.scene, ctx.camera);
   requestAnimationFrame(frame);
 }
 

@@ -55,6 +55,8 @@ describe('commands', () => {
     expect(s.speed).toBe(4);
     cmdSetSpeed(s, 0);
     expect(s.speed).toBe(0);
+    cmdSetSpeed(s, 10);
+    expect(s.speed).toBe(10);
   });
 
   it('cmdRelocateSquadron: l\'evacuazione da una città distrutta è permessa', () => {

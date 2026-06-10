@@ -1,16 +1,16 @@
 import { dayOfTick } from '../sim/calendar';
 import type { GameState } from '../sim/state';
 import { worldPopulation } from '../sim/state';
-import { fmtDate, fmtInt } from './format';
+import { fmtClock, fmtDate, fmtInt } from './format';
 
-const SPEEDS: Array<0 | 1 | 2 | 4> = [0, 1, 2, 4];
+const SPEEDS: Array<0 | 1 | 2 | 4 | 10> = [0, 1, 2, 4, 10];
 
 export function createHud(
   root: HTMLElement,
-  onSetSpeed: (speed: 0 | 1 | 2 | 4) => void,
+  onSetSpeed: (speed: 0 | 1 | 2 | 4 | 10) => void,
   onToggleRadar: () => void,
   onSave: () => void,
-): { update(state: GameState): void } {
+): { update(state: GameState, tickFloat: number): void } {
   root.innerHTML = `
     <span id="hud-date"></span>
     <span id="hud-credits"></span>
@@ -32,8 +32,9 @@ export function createHud(
   root.querySelector('#hud-save')!.addEventListener('click', onSave);
 
   return {
-    update(state: GameState) {
-      root.querySelector('#hud-date')!.textContent = fmtDate(state.tick);
+    update(state: GameState, tickFloat: number) {
+      root.querySelector('#hud-date')!.textContent =
+        `${fmtDate(state.tick)} — ${fmtClock(tickFloat)}`;
       root.querySelector('#hud-credits')!.textContent = `₡ ${fmtInt(state.credits)}`;
       root.querySelector('#hud-pop')!.textContent = `Pop. ${fmtInt(worldPopulation(state))}`;
       const days = Math.max(0, dayOfTick(state.nextWave.arrivalTick) - dayOfTick(state.tick));
