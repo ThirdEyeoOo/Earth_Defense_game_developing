@@ -146,6 +146,7 @@ let acc = 0;
 function frame(now: number): void {
   const dt = Math.min(now - last, 1000); // clamp per tab in background
   last = now;
+  let tickFraction = 0; // frazione del tick corrente: rende fluido il moto fra un tick e l'altro
   if (state && state.outcome === 'playing' && state.speed > 0) {
     acc += dt;
     const msPerTick = 3000 / state.speed; // 1x: 1 giorno = 60s = 20 tick
@@ -154,14 +155,15 @@ function frame(now: number): void {
       tick(state);
     }
     autosave();
+    tickFraction = acc / msPerTick;
   }
   if (state) {
     // un errore cosmetico non deve fermare la simulazione né il loop
     try {
-      cityLayer.update(state, selectedCityId);
-      unitLayer.update(state);
+      cityLayer.update(state, selectedCityId, ctx.camera);
+      unitLayer.update(state, tickFraction);
       effects.update(state, unitLayer);
-      hud.update(state);
+      hud.update(state, state.tick + tickFraction);
       radar.update(state);
       // il pannello ha pulsanti: si ricostruisce solo quando i dati cambiano,
       // non a ogni frame, altrimenti i click cadrebbero su elementi distrutti
@@ -177,6 +179,7 @@ function frame(now: number): void {
   }
   ctx.controls.update();
   ctx.renderer.render(ctx.scene, ctx.camera);
+  ctx.labelRenderer.render(ctx.scene, ctx.camera);
   requestAnimationFrame(frame);
 }
 

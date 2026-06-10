@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { latLonToVec3 } from '../sim/geo';
 import type { CityState, GameState } from '../sim/state';
 import { GLOBE_RADIUS } from './globe';
@@ -15,6 +16,7 @@ export function cityPosition(city: CityState, altitude = 1.005): THREE.Vector3 {
 
 export class CityLayer {
   private meshes = new Map<string, THREE.Mesh>();
+  private labels = new Map<string, { object: CSS2DObject; element: HTMLDivElement }>();
   readonly group = new THREE.Group();
 
   constructor(scene: THREE.Scene, cities: CityState[]) {
@@ -28,11 +30,23 @@ export class CityLayer {
       mesh.userData.cityId = city.id;
       this.meshes.set(city.id, mesh);
       this.group.add(mesh);
+
+      const element = document.createElement('div');
+      element.className = 'city-label';
+      element.textContent = city.name;
+      const label = new CSS2DObject(element);
+      label.position.set(0, size + 0.012, 0);
+      mesh.add(label);
+      this.labels.set(city.id, { object: label, element });
     }
     scene.add(this.group);
   }
 
-  update(state: GameState, selectedCityId: string | null): void {
+  update(state: GameState, selectedCityId: string | null, camera: THREE.Camera): void {
+    // una città è oltre l'orizzonte se l'angolo con la camera supera
+    // quello di tangenza: cos(α) = R / distanza camera
+    const camDir = camera.position.clone().normalize();
+    const horizonCos = GLOBE_RADIUS / camera.position.length();
     for (const city of state.cities) {
       const mesh = this.meshes.get(city.id);
       if (!mesh) continue;
@@ -49,6 +63,12 @@ export class CityLayer {
               ? COLOR_ATTACK
               : COLOR_OK,
       );
+      const label = this.labels.get(city.id);
+      if (label) {
+        const facing = mesh.position.clone().normalize().dot(camDir);
+        label.object.visible = facing > horizonCos;
+        label.element.classList.toggle('city-label--dead', !city.alive);
+      }
     }
   }
 

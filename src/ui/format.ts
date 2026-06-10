@@ -1,4 +1,4 @@
-import { dateOfTick } from '../sim/calendar';
+import { clockOfTick, dateOfTick } from '../sim/calendar';
 
 export function fmtInt(n: number): string {
   return Math.round(n).toLocaleString('it-IT');
@@ -11,4 +11,9 @@ export function fmtDate(tick: number): string {
     year: 'numeric',
     timeZone: 'UTC',
   });
+}
+
+export function fmtClock(tickFloat: number): string {
+  const { hour, minute } = clockOfTick(tickFloat);
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 }

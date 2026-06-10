@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { ENGAGEABLE_PHASES } from '../sim/combat';
 import type { GameState } from '../sim/state';
 import { cityPosition } from './cities';
 import type { UnitLayer } from './units';
@@ -33,7 +34,7 @@ export class EffectsLayer {
         const defended = state.squadrons.some(s => s.cityId === city.id && s.transfer === null);
         if (!defended) continue;
         for (const ufo of state.ufos) {
-          if (ufo.targetCityId !== city.id) continue;
+          if (ufo.targetCityId !== city.id || !ENGAGEABLE_PHASES.has(ufo.phase)) continue;
           const from = cityPosition(city, 1.03);
           const to = units.ufoPosition(ufo.id);
           if (!to) continue;
