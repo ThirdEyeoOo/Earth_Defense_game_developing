@@ -5,8 +5,23 @@ export const SAVE_KEY = 'earth-defense-save';
 
 type Migration = (raw: Record<string, unknown>) => Record<string, unknown>;
 
-// versione → funzione che migra a versione+1; si riempirà quando lo schema evolve
-const MIGRATIONS: Record<number, Migration> = {};
+// versione → funzione che migra a versione+1
+const MIGRATIONS: Record<number, Migration> = {
+  // v1 → v2: gli UFO acquisiscono spawnDir (direzione di arrivo dallo spazio).
+  // Per quelli già in volo ne sintetizziamo una deterministica dall'id.
+  1: raw => {
+    const ufos = Array.isArray(raw.ufos) ? (raw.ufos as Record<string, unknown>[]) : [];
+    for (const ufo of ufos) {
+      if (ufo.spawnDir) continue;
+      const id = typeof ufo.id === 'number' ? ufo.id : 0;
+      const z = (((id * 0.754) % 1) + 1) % 1 * 2 - 1;
+      const theta = id * 2.39996; // angolo aureo: direzioni ben distribuite
+      const r = Math.sqrt(Math.max(0, 1 - z * z));
+      ufo.spawnDir = { x: r * Math.cos(theta), y: z, z: r * Math.sin(theta) };
+    }
+    return { ...raw, version: 2 };
+  },
+};
 
 export function serialize(state: GameState): string {
   return JSON.stringify(state);

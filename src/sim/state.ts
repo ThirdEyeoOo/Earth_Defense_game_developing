@@ -28,7 +28,7 @@ export interface SquadronState {
   transfer: TransferState | null; // non-null = in volo, non combatte
 }
 
-export type UfoPhase = 'descending' | 'abducting' | 'escaping';
+export type UfoPhase = 'approaching' | 'orbiting' | 'descending' | 'abducting' | 'escaping';
 
 export interface UfoState {
   id: number;
@@ -37,6 +37,7 @@ export interface UfoState {
   phase: UfoPhase;
   ticksRemaining: number; // tick alla fine della fase corrente
   abducted: number; // contatore di bordo, accumula 0.5/tick in abducting
+  spawnDir: { x: number; y: number; z: number }; // direzione di arrivo dallo spazio profondo (unitaria)
 }
 
 export interface WaveState {
@@ -57,7 +58,7 @@ export interface GameState {
   version: number;
   seed: number;
   tick: number;
-  speed: 0 | 1 | 2 | 4;
+  speed: 0 | 1 | 2 | 4 | 10;
   credits: number;
   cities: CityState[];
   squadrons: SquadronState[];

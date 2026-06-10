@@ -1,19 +1,34 @@
 import { CONFIG } from './config';
+import { stateRand } from './rng';
 import type { GameState } from './state';
 
-export function travelTicks(): number {
-  const u = CONFIG.ufoAbductor;
-  return Math.ceil((u.descentKm / u.speedKmPerDay) * CONFIG.ticksPerDay);
+export function approachTicks(): number {
+  return Math.ceil(CONFIG.ufoAbductor.travel.approachDays * CONFIG.ticksPerDay);
+}
+
+export function orbitTicks(): number {
+  const t = CONFIG.ufoAbductor.travel;
+  return Math.ceil(t.orbits * t.orbitDaysPerOrbit * CONFIG.ticksPerDay);
+}
+
+export function descentTicks(): number {
+  const t = CONFIG.ufoAbductor.travel;
+  return Math.ceil((t.descentKm / t.atmosphereKmPerDay) * CONFIG.ticksPerDay);
 }
 
 export function spawnUfo(state: GameState, targetCityId: string): void {
+  // direzione di arrivo uniforme sulla sfera (deterministica dal seed)
+  const z = 2 * stateRand(state) - 1;
+  const theta = 2 * Math.PI * stateRand(state);
+  const r = Math.sqrt(Math.max(0, 1 - z * z));
   state.ufos.push({
     id: state.nextUfoId++,
     hp: CONFIG.ufoAbductor.hp,
     targetCityId,
-    phase: 'descending',
-    ticksRemaining: travelTicks(),
+    phase: 'approaching',
+    ticksRemaining: approachTicks(),
     abducted: 0,
+    spawnDir: { x: r * Math.cos(theta), y: z, z: r * Math.sin(theta) },
   });
 }
 
@@ -25,18 +40,24 @@ export function progressUfos(state: GameState): void {
     const city = state.cities.find(c => c.id === ufo.targetCityId)!;
     if (!city.alive && ufo.phase !== 'escaping') {
       ufo.phase = 'escaping';
-      ufo.ticksRemaining = travelTicks();
+      ufo.ticksRemaining = descentTicks();
       continue;
     }
     ufo.ticksRemaining--;
     if (ufo.phase === 'abducting') ufo.abducted += perTick;
     if (ufo.ticksRemaining > 0) continue;
-    if (ufo.phase === 'descending') {
+    if (ufo.phase === 'approaching') {
+      ufo.phase = 'orbiting';
+      ufo.ticksRemaining = orbitTicks();
+    } else if (ufo.phase === 'orbiting') {
+      ufo.phase = 'descending';
+      ufo.ticksRemaining = descentTicks();
+    } else if (ufo.phase === 'descending') {
       ufo.phase = 'abducting';
       ufo.ticksRemaining = abductionTicks;
     } else if (ufo.phase === 'abducting') {
       ufo.phase = 'escaping';
-      ufo.ticksRemaining = travelTicks();
+      ufo.ticksRemaining = descentTicks();
     } else {
       removeUfo(state, ufo.id, 'escaped');
     }

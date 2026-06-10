@@ -41,7 +41,7 @@ export function cmdRelocateSquadron(
   return { ok: true };
 }
 
-export function cmdSetSpeed(state: GameState, speed: 0 | 1 | 2 | 4): CommandResult {
+export function cmdSetSpeed(state: GameState, speed: 0 | 1 | 2 | 4 | 10): CommandResult {
   state.speed = speed;
   return { ok: true };
 }
