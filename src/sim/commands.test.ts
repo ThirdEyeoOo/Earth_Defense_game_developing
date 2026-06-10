@@ -56,4 +56,16 @@ describe('commands', () => {
     cmdSetSpeed(s, 0);
     expect(s.speed).toBe(0);
   });
+
+  it('cmdRelocateSquadron: l\'evacuazione da una città distrutta è permessa', () => {
+    const s = createNewGame(1);
+    s.credits = 9999;
+    cmdBuildSquadron(s, 'rome');
+    const rome = s.cities.find(c => c.id === 'rome')!;
+    rome.population = 0;
+    rome.alive = false;
+    const r = cmdRelocateSquadron(s, s.squadrons[0].id, 'paris');
+    expect(r.ok).toBe(true);
+    expect(s.squadrons[0].cityId).toBe('paris');
+  });
 });

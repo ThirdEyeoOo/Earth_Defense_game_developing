@@ -30,6 +30,7 @@ export function cmdRelocateSquadron(
   const sq = state.squadrons.find(s => s.id === squadronId);
   if (!sq) return { ok: false, reason: 'Squadrone inesistente' };
   if (sq.transfer) return { ok: false, reason: 'Squadrone già in trasferimento' };
+  // la città di partenza può anche essere distrutta: l'evacuazione è sempre permessa
   const from = state.cities.find(c => c.id === sq.cityId)!;
   const to = state.cities.find(c => c.id === toCityId);
   if (!to || !to.alive) return { ok: false, reason: 'Destinazione non disponibile' };
