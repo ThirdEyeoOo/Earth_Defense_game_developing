@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" width="240" height="200">
+  <!-- UFO classico a disco volante, vista di profilo.
+       Compatibile Three.js SVGLoader: fill solidi, niente gradienti/filtri/defs/use.
+       Parti animabili su path separati con id. -->
+
+  <!-- RAGGIO TRAENTE: normalmente nascosto, da mostrare in codice durante il rapimento -->
+  <path id="raggio_traente" d="M 95 108 L 145 108 L 180 195 L 60 195 Z" fill="#ffe98a"/>
+
+  <!-- CUPOLA: calotta trasparente sopra il disco (la base viene coperta dal corpo) -->
+  <path id="cupola" d="M 78 86 C 78 52 96 38 120 38 C 144 38 162 52 162 86 Z"
+        fill="#5f8a99" stroke="#2e2e2e" stroke-width="2"/>
+
+  <!-- LUCE CUPOLA: luce in cima, dentro la calotta -->
+  <circle id="luce_cupola" cx="120" cy="58" r="5" fill="#ff2a2a"/>
+
+  <!-- CORPO DEL DISCO -->
+  <ellipse id="disco_corpo" cx="120" cy="95" rx="100" ry="26"
+           fill="#a3a3a3" stroke="#2e2e2e" stroke-width="2"/>
+
+  <!-- MOZZO INFERIORE: parte centrale sotto il disco -->
+  <ellipse id="mozzo_inferiore" cx="120" cy="108" rx="40" ry="10"
+           fill="#6b6b6b" stroke="#2e2e2e" stroke-width="1.5"/>
+
+  <!-- LUCI SOTTO IL DISCO: 7 luci lungo il bordo inferiore, da animare in sequenza rotante -->
+  <circle id="luce_1" cx="37"  cy="102" r="4.5" fill="#ffd24a"/>
+  <circle id="luce_2" cx="58"  cy="109" r="4.5" fill="#ffd24a"/>
+  <circle id="luce_3" cx="90"  cy="114" r="4.5" fill="#ffd24a"/>
+  <circle id="luce_4" cx="120" cy="115" r="4.5" fill="#ffd24a"/>
+  <circle id="luce_5" cx="150" cy="114" r="4.5" fill="#ffd24a"/>
+  <circle id="luce_6" cx="182" cy="109" r="4.5" fill="#ffd24a"/>
+  <circle id="luce_7" cx="203" cy="102" r="4.5" fill="#ffd24a"/>
+</svg>
