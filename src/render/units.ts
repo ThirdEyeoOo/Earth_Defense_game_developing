@@ -91,6 +91,8 @@ export class UnitLayer {
     for (const [id, mesh] of meshes) {
       if (!wanted.has(id)) {
         this.group.remove(mesh);
+        mesh.geometry.dispose();
+        (mesh.material as THREE.Material).dispose();
         meshes.delete(id);
       }
     }

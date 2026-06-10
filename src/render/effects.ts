@@ -66,6 +66,8 @@ export class EffectsLayer {
       (e.mesh.material as THREE.MeshBasicMaterial).opacity *= 0.9;
       if (e.ttl <= 0) {
         this.group.remove(e.mesh);
+        e.mesh.geometry.dispose();
+        (e.mesh.material as THREE.Material).dispose();
         this.explosions = this.explosions.filter(x => x !== e);
       }
     }

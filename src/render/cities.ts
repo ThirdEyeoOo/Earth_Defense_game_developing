@@ -37,6 +37,8 @@ export class CityLayer {
       if (!mesh) continue;
       if (!city.alive) {
         this.group.remove(mesh);
+        mesh.geometry.dispose();
+        (mesh.material as THREE.Material).dispose();
         this.meshes.delete(city.id);
         continue;
       }
