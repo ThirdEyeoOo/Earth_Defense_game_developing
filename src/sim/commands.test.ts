@@ -1,0 +1,59 @@
+import { describe, expect, it } from 'vitest';
+import { cmdBuildSquadron, cmdRelocateSquadron, cmdSetSpeed } from './commands';
+import { createNewGame } from './state';
+
+describe('commands', () => {
+  it('cmdBuildSquadron: costruisce scalando i crediti', () => {
+    const s = createNewGame(1);
+    s.credits = 600;
+    const r = cmdBuildSquadron(s, 'rome');
+    expect(r.ok).toBe(true);
+    expect(s.credits).toBe(100);
+    expect(s.squadrons).toHaveLength(1);
+    expect(s.squadrons[0].cityId).toBe('rome');
+  });
+
+  it('cmdBuildSquadron: rifiuta crediti insufficienti e città non valide', () => {
+    const s = createNewGame(1);
+    s.credits = 100;
+    expect(cmdBuildSquadron(s, 'rome').ok).toBe(false);
+    s.credits = 9999;
+    expect(cmdBuildSquadron(s, 'atlantide').ok).toBe(false);
+    const rome = s.cities.find(c => c.id === 'rome')!;
+    rome.alive = false;
+    expect(cmdBuildSquadron(s, 'rome').ok).toBe(false);
+    expect(s.squadrons).toHaveLength(0);
+  });
+
+  it('cmdRelocateSquadron: avvia il trasferimento con durata da distanza', () => {
+    const s = createNewGame(1);
+    s.credits = 9999;
+    cmdBuildSquadron(s, 'rome');
+    const sq = s.squadrons[0];
+    const r = cmdRelocateSquadron(s, sq.id, 'tokyo');
+    expect(r.ok).toBe(true);
+    expect(sq.cityId).toBe('tokyo');
+    expect(sq.transfer).not.toBeNull();
+    expect(sq.transfer!.fromCityId).toBe('rome');
+    expect(sq.transfer!.ticksRemaining).toBeGreaterThan(1); // Roma-Tokyo è lontana
+  });
+
+  it('cmdRelocateSquadron: rifiuta se già in volo, destinazione uguale o non valida', () => {
+    const s = createNewGame(1);
+    s.credits = 9999;
+    cmdBuildSquadron(s, 'rome');
+    const sq = s.squadrons[0];
+    expect(cmdRelocateSquadron(s, sq.id, 'rome').ok).toBe(false);
+    expect(cmdRelocateSquadron(s, 999, 'tokyo').ok).toBe(false);
+    cmdRelocateSquadron(s, sq.id, 'tokyo');
+    expect(cmdRelocateSquadron(s, sq.id, 'paris').ok).toBe(false); // già in volo
+  });
+
+  it('cmdSetSpeed cambia la velocità', () => {
+    const s = createNewGame(1);
+    expect(cmdSetSpeed(s, 4).ok).toBe(true);
+    expect(s.speed).toBe(4);
+    cmdSetSpeed(s, 0);
+    expect(s.speed).toBe(0);
+  });
+});
