@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import { dayOfTick } from './sim/calendar';
 import {
   cmdBuildSquadron,
@@ -68,17 +67,9 @@ const cityPanel = createCityPanel(document.getElementById('city-panel')!, {
 });
 const endScreen = createEndScreen(document.getElementById('end-screen')!, () => startNewGame());
 
-// --- picking ---
-const raycaster = new THREE.Raycaster();
-ctx.renderer.domElement.addEventListener('click', event => {
-  if (!cityLayer) return;
-  const mouse = new THREE.Vector2(
-    (event.clientX / window.innerWidth) * 2 - 1,
-    -(event.clientY / window.innerHeight) * 2 + 1,
-  );
-  raycaster.setFromCamera(mouse, ctx.camera);
-  const cityId = cityLayer.cityIdAt(raycaster);
-  if (!cityId) return;
+// --- selezione città (click sulle targhette DOM) ---
+function handleCityClick(cityId: string): void {
+  if (!state) return;
   if (transferringSquadronId !== null) {
     showCommandError(cmdRelocateSquadron(state, transferringSquadronId, cityId));
     transferringSquadronId = null;
@@ -86,7 +77,7 @@ ctx.renderer.domElement.addEventListener('click', event => {
   } else {
     selectedCityId = cityId;
   }
-});
+}
 window.addEventListener('keydown', event => {
   if (event.key === 'Escape') {
     transferringSquadronId = null;
@@ -106,7 +97,7 @@ function bootGame(gameState: GameState): void {
     ctx.scene.remove(cityLayer.group);
     cityLayer.dispose();
   }
-  cityLayer = new CityLayer(ctx.scene, state.cities);
+  cityLayer = new CityLayer(ctx.scene, state.cities, handleCityClick);
   document.getElementById('start-screen')!.classList.add('hidden');
 }
 

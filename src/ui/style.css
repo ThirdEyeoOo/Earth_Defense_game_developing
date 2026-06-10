@@ -13,8 +13,19 @@ body {
   text-shadow: 0 1px 2px #000, 0 0 4px #000;
   white-space: nowrap;
   user-select: none;
+  pointer-events: auto; /* la targhetta è l'elemento cliccabile della città */
+  cursor: pointer;
+  padding: 1px 4px;
+  border-radius: 3px;
 }
+.city-label:hover { color: #e4f1ff; background: rgba(45, 74, 115, 0.55); }
+.city-label--selected { color: #ffe066; background: rgba(80, 64, 10, 0.6); }
+.city-label--attack { color: #ff5566; animation: city-attack-pulse 0.9s ease-in-out infinite; }
 .city-label--dead { color: #666a77; text-decoration: line-through; }
+@keyframes city-attack-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
 #hud {
   position: fixed;
   top: 0;
