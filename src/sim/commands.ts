@@ -1,4 +1,5 @@
 import { CONFIG } from './config';
+import { emitEvent } from './events';
 import { greatCircleKm } from './geo';
 import { squadronCost, transferTicks } from './squadrons';
 import type { GameState } from './state';
@@ -38,6 +39,12 @@ export function cmdRelocateSquadron(
   const ticks = transferTicks(greatCircleKm(from.lat, from.lon, to.lat, to.lon));
   sq.transfer = { fromCityId: from.id, toCityId: to.id, ticksRemaining: ticks, totalTicks: ticks };
   sq.cityId = to.id;
+  emitEvent(state, {
+    type: 'squadronTransferStarted',
+    unitKind: 'squadron',
+    unitId: sq.id,
+    cityId: from.id,
+  });
   return { ok: true };
 }
 
