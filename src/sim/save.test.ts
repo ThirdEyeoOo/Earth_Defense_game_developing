@@ -29,4 +29,9 @@ describe('save', () => {
     raw.version = CONFIG.saveVersion + 1;
     expect(deserialize(JSON.stringify(raw))).toBeNull();
   });
+
+  it('rifiuta salvataggi con versione valida ma forma errata', () => {
+    expect(deserialize('{"version":1}')).toBeNull();
+    expect(deserialize('{"version":1,"cities":"x","squadrons":[],"ufos":[],"tick":0,"credits":1}')).toBeNull();
+  });
 });

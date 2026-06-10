@@ -25,5 +25,14 @@ export function deserialize(json: string): GameState | null {
     if (!migrate) return null;
     raw = migrate(raw);
   }
+  if (
+    !Array.isArray(raw.cities) ||
+    !Array.isArray(raw.squadrons) ||
+    !Array.isArray(raw.ufos) ||
+    typeof raw.tick !== 'number' ||
+    typeof raw.credits !== 'number'
+  ) {
+    return null;
+  }
   return raw as unknown as GameState;
 }

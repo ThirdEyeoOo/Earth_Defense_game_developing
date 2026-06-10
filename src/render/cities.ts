@@ -6,6 +6,7 @@ import { GLOBE_RADIUS } from './globe';
 const COLOR_OK = 0x4db8ff;
 const COLOR_ATTACK = 0xff5566;
 const COLOR_SELECTED = 0xffe066;
+const COLOR_DEAD = 0x555566;
 
 export function cityPosition(city: CityState, altitude = 1.005): THREE.Vector3 {
   const v = latLonToVec3(city.lat, city.lon, GLOBE_RADIUS * altitude);
@@ -35,17 +36,18 @@ export class CityLayer {
     for (const city of state.cities) {
       const mesh = this.meshes.get(city.id);
       if (!mesh) continue;
-      if (!city.alive) {
-        this.group.remove(mesh);
-        mesh.geometry.dispose();
-        (mesh.material as THREE.Material).dispose();
-        this.meshes.delete(city.id);
-        continue;
-      }
       const underAttack = state.ufos.some(u => u.targetCityId === city.id);
       const mat = mesh.material as THREE.MeshBasicMaterial;
+      // le città distrutte restano visibili (grigie) e selezionabili:
+      // serve per poter evacuare gli squadroni rimasti
       mat.color.set(
-        city.id === selectedCityId ? COLOR_SELECTED : underAttack ? COLOR_ATTACK : COLOR_OK,
+        city.id === selectedCityId
+          ? COLOR_SELECTED
+          : !city.alive
+            ? COLOR_DEAD
+            : underAttack
+              ? COLOR_ATTACK
+              : COLOR_OK,
       );
     }
   }

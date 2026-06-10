@@ -45,7 +45,9 @@ const effects = new EffectsLayer(ctx.scene);
 // --- ui ---
 const hud = createHud(
   document.getElementById('hud')!,
-  speed => cmdSetSpeed(state, speed),
+  speed => {
+    if (state) cmdSetSpeed(state, speed);
+  },
   () => radar.toggle(),
   () => {
     if (!state) return;
@@ -156,9 +158,6 @@ function frame(now: number): void {
   if (state) {
     // un errore cosmetico non deve fermare la simulazione né il loop
     try {
-      if (selectedCityId && !state.cities.find(c => c.id === selectedCityId)?.alive) {
-        selectedCityId = null;
-      }
       cityLayer.update(state, selectedCityId);
       unitLayer.update(state);
       effects.update(state, unitLayer);
