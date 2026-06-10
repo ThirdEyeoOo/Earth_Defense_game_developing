@@ -6,20 +6,31 @@ import { CONFIG } from '../sim/config';
 import type { GameState, UfoState } from '../sim/state';
 import { approachTicks, descentTicks, orbitTicks } from '../sim/ufos';
 import { cityPosition } from './cities';
+import { ATMOSPHERE_ALTITUDE } from './globe';
 
 const DEEP_ALTITUDE = 8; // spawn nello spazio profondo, in raggi
 const ORBIT_ALTITUDE = 1.6; // quota dell'orbita
 const SURFACE_ALTITUDE = 1.02; // quota di atterraggio
-const TRANSFER_ALTITUDE = 1.15; // quota di crociera squadroni
+const CRUISE_ALTITUDE = ATMOSPHERE_ALTITUDE - 0.005; // crociera: dentro l'atmosfera, vicino al limite
+const GROUND_SCALE = 0.5; // dimensioni a terra (pattugliamento) rispetto alla crociera
+const CLIMB_FRACTION = 0.12; // frazione di rotta usata per decollo e atterraggio
 
 // --- caccia F-22 da SVG (Assets/Umani/Velivoli/f22_raptor_animabile.svg) ---
 const FIGHTER_LENGTH = 0.035; // lunghezza del singolo caccia in unità mondo
 const SVG_WIDTH = 200;
 const SVG_HEIGHT = 300;
 const BOOST_ATTACH_Y = 264; // y (in coordinate SVG) dell'attacco fiamme agli ugelli
-const PATROL_ALTITUDE = 1.03;
+const PATROL_ALTITUDE = 1.008; // rasoterra, con margine anti-compenetrazione col globo
 const PATROL_RADIUS = 0.05; // raggio del pattugliamento attorno al nome della città
 const PATROL_SPEED = 0.0005; // rad/ms
+
+// rampa di decollo/atterraggio: 0 a terra, 1 in crociera (smoothstep agli estremi della rotta)
+function liftProfile(frac: number): number {
+  const smooth = (t: number) => t * t * (3 - 2 * t);
+  if (frac < CLIMB_FRACTION) return smooth(frac / CLIMB_FRACTION);
+  if (frac > 1 - CLIMB_FRACTION) return smooth((1 - frac) / CLIMB_FRACTION);
+  return 1;
+}
 
 // --- UFO da SVG (Assets/Alieni/UFO/ufo_disco_volante.svg, vista di profilo) ---
 const UFO_WIDTH = 0.05; // larghezza del disco in unità mondo
@@ -224,11 +235,15 @@ export class UnitLayer {
         const b = cityPosition(to, 1).normalize();
         const angle = a.angleTo(b);
         const axis = new THREE.Vector3().crossVectors(a, b).normalize();
+        // decollo dal suolo, crociera sotto il limite atmosferico, atterraggio
+        const lift = liftProfile(frac);
+        const altitude = PATROL_ALTITUDE + (CRUISE_ALTITUDE - PATROL_ALTITUDE) * lift;
         const at = (f: number) =>
-          a.clone().applyAxisAngle(axis, angle * f).multiplyScalar(TRANSFER_ALTITUDE);
+          a.clone().applyAxisAngle(axis, angle * f).multiplyScalar(altitude);
         const pos = at(frac);
         const ahead = at(Math.min(1, frac + 0.002));
         group.position.copy(pos);
+        group.scale.setScalar(GROUND_SCALE + (1 - GROUND_SCALE) * lift);
         const forward = ahead.sub(pos);
         orientTangent(group, pos, forward.lengthSq() > 1e-12 ? forward : new THREE.Vector3(0, 1, 0));
       } else {
@@ -245,6 +260,7 @@ export class UnitLayer {
           .copy(center)
           .addScaledVector(e1, radius * cos)
           .addScaledVector(e2, radius * sin);
+        group.scale.setScalar(GROUND_SCALE); // a terra la formazione è dimezzata
         // muso tangente al cerchio di pattuglia (derivata della posizione)
         const forward = e1.clone().multiplyScalar(-sin).addScaledVector(e2, cos);
         orientTangent(group, group.position, forward);

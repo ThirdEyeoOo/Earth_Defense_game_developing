@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 export const GLOBE_RADIUS = 1;
+export const ATMOSPHERE_ALTITUDE = 1.05; // quota del limite atmosferico, in raggi
 
 export function createGlobe(scene: THREE.Scene): void {
   const material = new THREE.MeshPhongMaterial({ color: 0x2266aa, shininess: 8 });
@@ -21,7 +22,7 @@ export function createGlobe(scene: THREE.Scene): void {
   scene.add(globe);
 
   const atmosphere = new THREE.Mesh(
-    new THREE.SphereGeometry(GLOBE_RADIUS * 1.03, 64, 64),
+    new THREE.SphereGeometry(GLOBE_RADIUS * ATMOSPHERE_ALTITUDE, 64, 64),
     new THREE.MeshBasicMaterial({
       color: 0x4db8ff,
       transparent: true,
