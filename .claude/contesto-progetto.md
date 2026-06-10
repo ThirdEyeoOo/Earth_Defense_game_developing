@@ -1,6 +1,6 @@
 # Earth Defense — Contesto operativo
 
-Aggiornato: 2026-06-10 (chiusura sessione 01, commit #39, main pulito, v0.102.0 rilasciata)
+Aggiornato: 2026-06-10 (chiusura sessione 02, commit #47, main pulito, v0.103.0 rilasciata)
 
 ## Cos'è
 Gestionale di difesa planetaria nel browser (TypeScript + Vite + Three.js + Vitest).
@@ -13,6 +13,8 @@ I comandi (`src/sim/commands.ts`) sono l'unico canale di mutazione UI→sim.
 - **v0.1.0** — MVP completo (50 città reali, economia a tasse, ondate UFO, squadroni, salvataggi).
 - **v0.101.0** — etichette città, orologio HUD, 10x, moto fluido (tickFraction), UFO orbitali, salvataggi v2.
 - **v0.102.0** — restyle SVG (targhette città cliccabili, F-22 animati, dischi volanti, profilo di volo).
+- **v0.103.0** — feedback di combattimento: registro eventi sim (salvataggi v3), barre HP
+  da asset SVG (shadow DOM), scritte fluttuanti, contatore "Abductions = n", contatori HUD.
 - Release: a ogni merge chiedere il nome semver all'utente (proponendone uno) e aggiornare
   `lista aggiornamenti/releases.txt` (recap + delta byte). `commits.txt` si aggiorna da solo (hook git).
 
@@ -36,6 +38,13 @@ I comandi (`src/sim/commands.ts`) sono l'unico canale di mutazione UI→sim.
 - `cupola`, `luce_cupola`, `luce_1` … `luce_7` (bordo inferiore),
   `raggio_traente` (pivot attacco al mozzo, y SVG = 108; nascosto di default).
 
+### `Assets/Widgets/Barre/health-bar-humans.svg` e `health-bar-aliens.svg` (viewBox 530×92)
+- **Non passano da SVGLoader** (gradienti/filtri/testo/animazioni CSS): vanno inline nel DOM,
+  uno shadow root per istanza (gli id sono identici nei due file e tra le istanze).
+- API: `#hb-fill-group` scalato via `scaleX(0..1)`, `#hb-value` testo %, classe `is-critical`
+  su `#hb-root` ≤25%; colori pilotati con `--hb-fill-a/b` **inline su `#hb-root`**
+  (lo stile interno dichiara le variabili sullo stesso elemento e vince sullo host).
+
 ## Animazioni implementate (`src/render/units.ts`, loop di render)
 ### Caccia (squadrone = formazione a ^ di 3 F-22)
 - Luci nav: pulsazione lenta opacità, sx/dx in controfase, sfasate fra i 3 velivoli.
@@ -54,6 +63,16 @@ I comandi (`src/sim/commands.ts`) sono l'unico canale di mutazione UI→sim.
 - Raggio traente: si estende dal mozzo verso il suolo durante il rapimento
   (scale.y eased + tremolio opacità), si ritira alla fine.
 - Effetto distanza: scala 1 in orbita/spazio → 0.5 al suolo (smoothstep sulla quota).
+### Feedback (layer CSS2D separati, stile EffectsLayer)
+- `hpBars.ts`: barre HP visibili solo se danneggiati o ingaggiati (linger 1,2 s);
+  ingaggio derivato specchiando le precondizioni di `resolveCombat`; colori continui
+  (umani verde→giallo→rosso, alieni acido→viola scuro), critico ≤25% con lampeggio LOW.
+- `floatingText.ts`: toast dagli eventi sim ("squadrone in viaggio", "in orbita",
+  "atterraggio", "rapimenti in corso"), cursore `lastSeenId` (reset al boot, niente replay);
+  contatore persistente "Abductions = n" sotto l'UFO in fase abducting.
+- `horizon.ts`: `isOccludedByGlobe` valido anche per punti in quota (usato da barre e scritte).
+- Gotcha CSS2D: offset/animazioni su elementi INTERNI (il transform esterno viene sovrascritto);
+  `element.remove()` manuale alla rimozione (i nodi DOM non si rimuovono da soli).
 
 ## Gameplay/sim — punti chiave
 - UFO: spawn spazio profondo (direzione casuale dal seed, serializzata in `spawnDir`) →
@@ -62,7 +81,10 @@ I comandi (`src/sim/commands.ts`) sono l'unico canale di mutazione UI→sim.
 - Perdita popolazione = rapiti a bordo al momento dell'uscita di scena (fuga o abbattimento).
 - Config velocità per fase di viaggio in `CONFIG.ufoAbductor.travel` — predisposta per
   future stat per-fase (spazio profondo/orbita/atmosfera) di ogni nemico e difesa.
-- Salvataggi versionati (v2) con migrazioni; il salvataggio conserva anche la velocità
+- **Registro eventi sim** (`state.events`, `src/sim/events.ts`): id monotoni, trim a 40 tick
+  in coda a `tick()`; emessi su partenza trasferimento e transizioni UFO orbita/discesa/rapimento.
+  La UI legge col cursore, non muta mai il registro. Stat cumulativa `stats.abductedTotal`.
+- Salvataggi versionati (**v3**) con migrazioni; il salvataggio conserva anche la velocità
   (salvare in pausa ⇒ si riparte in pausa: comportamento noto, non è un bug).
 
 ## Prossimi passi concordati
