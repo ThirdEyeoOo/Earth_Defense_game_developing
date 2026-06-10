@@ -76,4 +76,14 @@ export class CityLayer {
     const hits = raycaster.intersectObjects([...this.meshes.values()]);
     return hits.length > 0 ? (hits[0].object.userData.cityId as string) : null;
   }
+
+  // da chiamare quando il layer viene sostituito (nuova partita): gli elementi
+  // DOM delle etichette non vengono rimossi da Three.js da soli
+  dispose(): void {
+    for (const { element } of this.labels.values()) element.remove();
+    for (const mesh of this.meshes.values()) {
+      mesh.geometry.dispose();
+      (mesh.material as THREE.Material).dispose();
+    }
+  }
 }

@@ -101,7 +101,10 @@ function bootGame(gameState: GameState): void {
   selectedCityId = null;
   transferringSquadronId = null;
   lastSavedDay = dayOfTick(state.tick);
-  if (cityLayer) ctx.scene.remove(cityLayer.group);
+  if (cityLayer) {
+    ctx.scene.remove(cityLayer.group);
+    cityLayer.dispose();
+  }
   cityLayer = new CityLayer(ctx.scene, state.cities);
   document.getElementById('start-screen')!.classList.add('hidden');
 }
