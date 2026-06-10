@@ -131,7 +131,7 @@ Un unico generatore casuale con seed nello stato (spawn, scelta bersagli, variaz
 
 ### Globo (Three.js)
 Stile MVP pulito e neutro (non vincola la direzione artistica futura): sfera con texture semplice della Terra, leggero alone atmosferico, campo stellato.
-- **Città**: marker sulla superficie (lat/lon → coordinate sferiche), dimensione proporzionale alla popolazione, colore di stato (sana / sotto attacco; le distrutte vengono rimosse). Etichetta visibile all'hover o sotto soglia di zoom.
+- **Città**: marker sulla superficie (lat/lon → coordinate sferiche), dimensione proporzionale alla popolazione, colore di stato (sana / sotto attacco / distrutta in grigio — resta selezionabile per evacuare gli squadroni). Etichetta visibile all'hover o sotto soglia di zoom.
 - **UFO**: visibili in discesa, atterrati (indicatore di rapimento in corso) e in fuga.
 - **Squadroni**: icona nella città di stanza; in trasferimento, icona lungo l'arco di rotta con stima d'arrivo.
 - **Combattimento**: traccianti, lampi, esplosione all'abbattimento. Tutto cosmetico, interpolato fra i tick.
