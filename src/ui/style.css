@@ -101,3 +101,14 @@ body {
   padding: 28px 48px;
 }
 .start-box button { margin: 6px; font-size: 16px; padding: 8px 22px; }
+
+/* barre HP sopra le unità (asset SVG in shadow DOM, vedi render/hpBars.ts) */
+.unit-hp-anchor { pointer-events: none; }
+.unit-hp-host {
+  /* offset e fade sull'elemento interno: CSS2DRenderer sovrascrive
+     il transform dell'elemento esterno a ogni render */
+  transform: translateY(-20px);
+  width: 72px;
+  transition: opacity 0.4s;
+}
+.unit-hp-host--fading { opacity: 0; }

@@ -1,0 +1,167 @@
+<svg id="hb-root" xmlns="http://www.w3.org/2000/svg" viewBox="90 14 530 92" width="530" height="92" role="img" aria-label="Barra di salute">
+  <!--
+  ============================================================
+  SCI-FI HEALTH BAR — asset SVG animabile
+  ============================================================
+  SOTTOPARTI (id):
+    #hb-frame      cornice esterna angolata
+    #hb-corners    accenti angolari (bracket)
+    #hb-track      binario scuro di fondo
+    #hb-fill-group gruppo del riempimento -> SCALARE QUESTO via scaleX(0..1)
+    #hb-fill       rettangolo del riempimento (gradiente)
+    #hb-fill-edge  bordo luminoso sul fronte del riempimento
+    #hb-shimmer    riflesso animato che scorre sul riempimento
+    #hb-segments   tacche di segmentazione (overlay)
+    #hb-label      etichetta "HP"
+    #hb-value      testo percentuale (aggiornare da gioco)
+    #hb-warning    indicatore LOW visibile solo in stato critico
+
+  API DAL GIOCO (JS):
+    const svg  = document.getElementById('hb-root');
+    const fill = svg.querySelector('#hb-fill-group');
+    function setHealth(hp /* 0..1 */) {
+      fill.style.transform = `scaleX(${hp})`;
+      svg.querySelector('#hb-value').textContent = Math.round(hp*100) + '%';
+      svg.classList.toggle('is-critical', hp <= 0.25);
+    }
+    Per danno istantaneo senza easing: svg.classList.add('no-ease') prima
+    di settare, poi rimuovere la classe.
+
+  TEMI: tutti i colori passano dalle variabili CSS --hb-* qui sotto.
+  Sfondo: trasparente (nessun rect di background).
+  ============================================================
+  -->
+
+  <style>
+    :root, #hb-root {
+      --hb-primary:  #19e3ff;  /* ciano HUD */
+      --hb-fill-a:   #00ffa3;  /* verde energia (inizio gradiente) */
+      --hb-fill-b:   #19e3ff;  /* ciano (fine gradiente) */
+      --hb-track:    #0a1f2b;  /* fondo binario */
+      --hb-dim:      #0e4a5e;  /* linee secondarie */
+      --hb-critical: #ff3b5c;  /* rosso allarme */
+      --hb-text:     #d8f7ff;
+      font-family: Consolas, 'Courier New', monospace;
+    }
+
+    /* --- riempimento pilotabile dal gioco --- */
+    #hb-fill-group {
+      transform-box: fill-box;
+      transform-origin: left center;
+      transform: scaleX(1);                 /* 0..1 = HP */
+      transition: transform .35s cubic-bezier(.2,.9,.3,1);
+    }
+    #hb-root.no-ease #hb-fill-group { transition: none; }
+
+    /* --- riflesso che scorre --- */
+    #hb-shimmer {
+      animation: hb-sweep 2.8s linear infinite;
+      mix-blend-mode: screen;
+    }
+    @keyframes hb-sweep {
+      from { transform: translateX(-80px); }
+      to   { transform: translateX(560px); }
+    }
+
+    /* --- stato critico: aggiungere la classe .is-critical a #hb-root --- */
+    #hb-warning { opacity: 0; }
+    .is-critical #hb-fill      { fill: url(#hb-grad-critical); }
+    .is-critical #hb-fill-edge { stroke: var(--hb-critical); }
+    .is-critical #hb-frame     { stroke: var(--hb-critical); }
+    .is-critical #hb-warning   { opacity: 1; animation: hb-blink .6s steps(2) infinite; }
+    .is-critical #hb-fill-group{ animation: hb-flicker 1s ease-in-out infinite; }
+    @keyframes hb-blink   { 50% { opacity: 0; } }
+    @keyframes hb-flicker { 0%,100% { opacity: 1; } 50% { opacity: .65; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      #hb-shimmer, .is-critical #hb-fill-group { animation: none; }
+    }
+  </style>
+
+  <defs>
+    <!-- gradiente del riempimento -->
+    <linearGradient id="hb-grad-fill" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0"  stop-color="var(--hb-fill-a)"/>
+      <stop offset="1"  stop-color="var(--hb-fill-b)"/>
+    </linearGradient>
+
+    <!-- gradiente alternativo per stato critico -->
+    <linearGradient id="hb-grad-critical" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff7a4d"/>
+      <stop offset="1" stop-color="var(--hb-critical)"/>
+    </linearGradient>
+
+    <!-- glow ciano -->
+    <filter id="hb-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- sagoma interna della barra (parallelogramma smussato) -->
+    <path id="hb-bar-shape" d="M118 52 L596 52 L610 70 L596 88 L104 88 L118 52 Z"/>
+
+    <clipPath id="hb-bar-clip">
+      <use href="#hb-bar-shape"/>
+    </clipPath>
+  </defs>
+
+  <!-- ================= BINARIO ================= -->
+  <use id="hb-track" href="#hb-bar-shape" fill="var(--hb-track)" fill-opacity=".8"/>
+
+  <!-- ================= RIEMPIMENTO (scalare #hb-fill-group) ================= -->
+  <g clip-path="url(#hb-bar-clip)">
+    <g id="hb-fill-group">
+      <rect id="hb-fill" x="100" y="52" width="514" height="36" fill="url(#hb-grad-fill)"/>
+      <!-- fronte luminoso del riempimento -->
+      <line id="hb-fill-edge" x1="610" y1="50" x2="610" y2="90"
+            stroke="var(--hb-fill-b)" stroke-width="4" filter="url(#hb-glow)"/>
+      <!-- riflesso in movimento -->
+      <g id="hb-shimmer">
+        <rect x="100" y="52" width="46" height="36" fill="#ffffff" opacity=".22"
+              transform="skewX(-20)"/>
+      </g>
+    </g>
+    <!-- ================= SEGMENTI (overlay sopra il riempimento) ================= -->
+    <g id="hb-segments" stroke="#03141c" stroke-width="3" opacity=".9">
+      <line x1="155" y1="50" x2="143" y2="90"/>
+      <line x1="205" y1="50" x2="193" y2="90"/>
+      <line x1="255" y1="50" x2="243" y2="90"/>
+      <line x1="305" y1="50" x2="293" y2="90"/>
+      <line x1="355" y1="50" x2="343" y2="90"/>
+      <line x1="405" y1="50" x2="393" y2="90"/>
+      <line x1="455" y1="50" x2="443" y2="90"/>
+      <line x1="505" y1="50" x2="493" y2="90"/>
+      <line x1="555" y1="50" x2="543" y2="90"/>
+    </g>
+  </g>
+
+  <!-- ================= CORNICE ================= -->
+  <use id="hb-frame" href="#hb-bar-shape" fill="none"
+       stroke="var(--hb-primary)" stroke-width="2" filter="url(#hb-glow)"/>
+
+  <g id="hb-corners" stroke="var(--hb-primary)" stroke-width="3" fill="none">
+    <path d="M112 44 L124 44"/>
+    <path d="M590 44 L604 44 L612 54"/>
+    <path d="M98 86 L106 96 L120 96"/>
+    <path d="M592 96 L604 96"/>
+  </g>
+
+  <!-- ================= TESTI ================= -->
+  <text id="hb-label" x="118" y="40" fill="var(--hb-primary)" font-size="18"
+        font-weight="bold" letter-spacing="4" filter="url(#hb-glow)">HP</text>
+
+  <text id="hb-value" x="610" y="40" fill="var(--hb-primary)" font-size="18"
+        font-weight="bold" text-anchor="end" letter-spacing="2"
+        filter="url(#hb-glow)">100%</text>
+
+  <!-- indicatore stato critico (nascosto di default) -->
+  <g id="hb-warning">
+    <path d="M440 24 L450 40 L430 40 Z" fill="none"
+          stroke="var(--hb-critical)" stroke-width="2"/>
+    <text x="458" y="38" fill="var(--hb-critical)" font-size="13"
+          letter-spacing="3">LOW</text>
+  </g>
+</svg>
