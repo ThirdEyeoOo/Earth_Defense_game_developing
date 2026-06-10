@@ -15,6 +15,8 @@ export function createHud(
     <span id="hud-date"></span>
     <span id="hud-credits"></span>
     <span id="hud-pop"></span>
+    <span id="hud-abd"></span>
+    <span id="hud-dead"></span>
     <span id="hud-wave"></span>
     <span id="hud-speeds"></span>
     <button id="hud-radar">Radar</button>
@@ -37,6 +39,9 @@ export function createHud(
         `${fmtDate(state.tick)} — ${fmtClock(tickFloat)}`;
       root.querySelector('#hud-credits')!.textContent = `₡ ${fmtInt(state.credits)}`;
       root.querySelector('#hud-pop')!.textContent = `Pop. ${fmtInt(worldPopulation(state))}`;
+      root.querySelector('#hud-abd')!.textContent =
+        `Abductions: ${fmtInt(Math.floor(state.stats.abductedTotal))}`;
+      root.querySelector('#hud-dead')!.textContent = `Morti: ${fmtInt(state.stats.populationLost)}`;
       const days = Math.max(0, dayOfTick(state.nextWave.arrivalTick) - dayOfTick(state.tick));
       root.querySelector('#hud-wave')!.textContent =
         state.ufos.length > 0 ? '⚠ ATTACCO IN CORSO' : `Prossima ondata: ${days}g`;

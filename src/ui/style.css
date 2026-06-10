@@ -45,6 +45,8 @@ body {
 #hud-date { min-width: 200px; }
 #hud-credits { min-width: 90px; }
 #hud-pop { min-width: 160px; }
+#hud-abd { min-width: 120px; color: #c8a4ff; }
+#hud-dead { min-width: 100px; color: #ff8a99; }
 #hud-wave { min-width: 180px; }
 #hud button, #city-panel button, .end-box button, #start-screen button {
   background: #15263f;
