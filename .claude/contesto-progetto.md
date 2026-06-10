@@ -1,6 +1,6 @@
 # Earth Defense — Contesto operativo
 
-Aggiornato: 2026-06-10 (fine sessione 01, commit #36 `0d61fd8`, branch `feature/restyle-unita`)
+Aggiornato: 2026-06-10 (chiusura sessione 01, commit #39, main pulito, v0.102.0 rilasciata)
 
 ## Cos'è
 Gestionale di difesa planetaria nel browser (TypeScript + Vite + Three.js + Vitest).
@@ -12,7 +12,7 @@ I comandi (`src/sim/commands.ts`) sono l'unico canale di mutazione UI→sim.
 ## Stato release
 - **v0.1.0** — MVP completo (50 città reali, economia a tasse, ondate UFO, squadroni, salvataggi).
 - **v0.101.0** — etichette città, orologio HUD, 10x, moto fluido (tickFraction), UFO orbitali, salvataggi v2.
-- **branch `feature/restyle-unita`** — restyle SVG completo, PRONTO AL MERGE (proposta ~v0.102.0).
+- **v0.102.0** — restyle SVG (targhette città cliccabili, F-22 animati, dischi volanti, profilo di volo).
 - Release: a ogni merge chiedere il nome semver all'utente (proponendone uno) e aggiornare
   `lista aggiornamenti/releases.txt` (recap + delta byte). `commits.txt` si aggiorna da solo (hook git).
 
@@ -66,7 +66,6 @@ I comandi (`src/sim/commands.ts`) sono l'unico canale di mutazione UI→sim.
   (salvare in pausa ⇒ si riparte in pausa: comportamento noto, non è un bug).
 
 ## Prossimi passi concordati
-1. Merge `feature/restyle-unita` in main (chiedere semver, proposta v0.102.0).
-2. Stat di velocità per-fase di viaggio per ogni nemico/difesa (config già strutturata).
-3. Meta-progressione / albero tecnologico (ripristino popolazione) — post-MVP, da spec.
-4. Eventuale: rendere esplicita la scelta "pausa al caricamento" con indicatore visibile.
+1. Stat di velocità per-fase di viaggio per ogni nemico/difesa (config già strutturata).
+2. Meta-progressione / albero tecnologico (ripristino popolazione) — post-MVP, da spec.
+3. Eventuale: rendere esplicita la scelta "pausa al caricamento" con indicatore visibile.

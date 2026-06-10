@@ -1,7 +1,7 @@
 # Sessione 01 — 2026-06-10
 
-**Intervallo commit:** dal commit #1 (`9e410bd`) al commit #36 (`0d61fd8`) — 36 commit.
-Branch attivo a fine sessione: `feature/restyle-unita` (pronto al merge, proposta v0.102.0).
+**Intervallo commit:** dal commit #1 (`9e410bd`) al commit #39 (chiusura sessione) — 39 commit.
+Stato a fine sessione: tutto mergiato in `main`, release **v0.1.0**, **v0.101.0** e **v0.102.0** taggate.
 
 ## Cosa abbiamo fatto
 
@@ -110,4 +110,7 @@ Branch attivo a fine sessione: `feature/restyle-unita` (pronto al merge, propost
 #34 0472831 feat(render): profilo di volo squadroni e atmosfera a 1.05
 #35 ee1bdfe fix(render): UFO billboard allineato allo schermo con effetto distanza; HUD a larghezze stabili
 #36 0d61fd8 chore: rimossa strumentazione diagnostica della pausa-fantasma
+#37 e5aeb8c docs: sistema di memoria persistente del progetto
+#38 20aac59 Merge branch 'feature/restyle-unita'  [tag v0.102.0]
+#39 (questo commit) docs: chiusura sessione 01 (diario, indice, releases, contesto)
 ```
