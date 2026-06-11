@@ -45,6 +45,9 @@ export const en: Record<MessageKey, string> = {
   'end.ufosShot': 'UFOs shot down:',
   'end.newGame': 'New game',
 
+  // intro (logo + video, ui/intro.ts)
+  'intro.skipHint': 'Click or press Esc to skip',
+
   // start screen and banners
   'start.continue': 'Continue',
   'start.newGame': 'New game',

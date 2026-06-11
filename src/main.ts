@@ -24,6 +24,7 @@ import { createCityPanel } from './ui/cityPanel';
 import { createEndScreen } from './ui/endScreen';
 import { createHud } from './ui/hud';
 import { gearIcon } from './ui/icons';
+import { createIntro } from './ui/intro';
 import { loadPrefs, savePrefs } from './ui/prefs';
 import { createRadar } from './ui/radar';
 import { createSettings } from './ui/settings';
@@ -228,7 +229,11 @@ onLanguageChange(() => {
   const startScreen = document.getElementById('start-screen')!;
   if (!startScreen.classList.contains('hidden')) setupStartScreen();
   settings.refresh();
+  intro.refreshLabels();
 });
 
+// l'intro copre lo start screen (z-25) e si nasconde da sola a fine video;
+// onDone resta come hook futuro (es. musica di menu sullo stesso user gesture)
+const intro = createIntro(document.getElementById('intro-screen')!, () => {});
 setupStartScreen();
 requestAnimationFrame(frame);

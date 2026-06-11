@@ -44,6 +44,9 @@ export const it = {
   'end.ufosShot': 'UFO abbattuti:',
   'end.newGame': 'Nuova partita',
 
+  // intro (logo + video, ui/intro.ts)
+  'intro.skipHint': 'Clicca o premi Esc per saltare',
+
   // schermata iniziale e banner
   'start.continue': 'Continua',
   'start.newGame': 'Nuova partita',

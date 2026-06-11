@@ -202,3 +202,94 @@ body {
   white-space: nowrap;
   text-shadow: 0 1px 2px #000, 0 0 4px #000;
 }
+
+/* intro: logo animato + video (ui/intro.ts) */
+#intro-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  z-index: 25; /* sopra lo start screen (20), sotto le impostazioni (30) */
+}
+#intro-screen svg { width: min(92vw, 148vh); height: auto; } /* 690:420 ≈ 1.64 */
+.intro-next { cursor: pointer; }
+.intro-skip-hint {
+  position: absolute;
+  bottom: 24px;
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  color: #9fc3e8;
+  opacity: 0.7;
+}
+#intro-screen video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+/* timeline del logo: occhio chiuso → si apre → scritte → pulsante.
+   fill-mode both: prima del delay vale il keyframe "from" (elementi nascosti). */
+/* blink: ogni 4s l'occhio aperto sparisce per ~160ms e riaffiorano i trattini.
+   La seconda animazione parte a 3s (occhio già aperto) e da lì in poi governa
+   lei l'opacity: i suoi keyframe "a riposo" replicano lo stato post-apertura. */
+.intro-dash {
+  animation:
+    intro-dash-seq 2.3s ease-in-out both,
+    intro-blink-closed 4s 3s infinite;
+}
+.intro-eye-open {
+  animation:
+    intro-fade-in 0.45s ease-out 2.1s both,
+    intro-blink-open 4s 3s infinite;
+}
+.intro-studio    { animation: intro-fade-in 0.8s ease-out 2.6s both; }
+.intro-presents  { animation: intro-fade-in 0.8s ease-out 3.4s both; }
+.intro-author    { animation: intro-fade-in 0.8s ease-out 4.2s both; }
+.intro-next      { animation: intro-fade-in 0.6s ease-out 5s both; }
+/* pulse sui FIGLI (anello esterno + freccia), non sul gruppo: fade-in e pulse
+   sullo stesso elemento si contenderebbero la stessa opacity */
+.intro-next circle:first-of-type,
+.intro-next path { animation: intro-pulse 1.6s ease-in-out 5.6s infinite; }
+/* la pupilla orbita dentro l'anello dorato: rotate sul proprio centro
+   + translateX = moto circolare di raggio 4px attorno al centro originale */
+.intro-pupil {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: intro-pupil-orbit 2.4s linear 2.6s infinite;
+}
+/* dal primo movimento del mouse la pupilla segue il cursore (intro.ts
+   imposta il translate inline): l'orbita automatica si spegne */
+.intro-pupil.intro-pupil--tracking { animation: none; }
+/* click sull'occhio: chiuso finché non si riclicca. !important perché le
+   animazioni di blink vincerebbero sulle dichiarazioni normali */
+.intro-eye-hit { cursor: pointer; }
+svg.intro-eye-closed .intro-eye-open { opacity: 0 !important; }
+svg.intro-eye-closed .intro-dash { opacity: 1 !important; }
+@keyframes intro-fade-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes intro-dash-seq {
+  0%   { opacity: 0; }
+  26%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes intro-pulse { 0%, 100% { opacity: 0.9; } 50% { opacity: 0.35; } }
+@keyframes intro-blink-open {
+  0%, 94%  { opacity: 1; }
+  95%, 99% { opacity: 0; }
+  100%     { opacity: 1; }
+}
+@keyframes intro-blink-closed {
+  0%, 94%  { opacity: 0; }
+  95%, 99% { opacity: 1; }
+  100%     { opacity: 0; }
+}
+@keyframes intro-pupil-orbit {
+  from { transform: rotate(0turn) translateX(4px); }
+  to   { transform: rotate(1turn) translateX(4px); }
+}
