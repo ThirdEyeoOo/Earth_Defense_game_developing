@@ -1,3 +1,4 @@
+import { cityName, countryName, t } from '../i18n';
 import { squadronCost } from '../sim/squadrons';
 import type { GameState } from '../sim/state';
 import { fmtInt } from './format';
@@ -24,24 +25,24 @@ export function createCityPanel(
       const cost = squadronCost(state, city.id);
       const ufosHere = state.ufos.filter(u => u.targetCityId === city.id).length;
       root.innerHTML = `
-        <h2>${city.name} <small>(${city.country})</small></h2>
-        <p>Popolazione: <strong>${fmtInt(city.population)}</strong></p>
-        ${city.alive ? '' : '<p class="danger">CITTÀ DISTRUTTA</p>'}
-        ${ufosHere > 0 ? `<p class="danger">⚠ ${ufosHere} UFO in zona</p>` : ''}
-        <h3>Squadroni (${stationed.length})</h3>
+        <h2>${cityName(city.id, city.name)} <small>(${countryName(city.country)})</small></h2>
+        <p>${t('panel.population')} <strong>${fmtInt(city.population)}</strong></p>
+        ${city.alive ? '' : `<p class="danger">${t('panel.cityDestroyed')}</p>`}
+        ${ufosHere > 0 ? `<p class="danger">${t('panel.ufosInArea', { n: ufosHere })}</p>` : ''}
+        <h3>${t('panel.squadrons', { n: stationed.length })}</h3>
         <ul id="squadron-list"></ul>
-        ${inbound.length > 0 ? `<p>${inbound.length} in arrivo</p>` : ''}
+        ${inbound.length > 0 ? `<p>${t('panel.inbound', { n: inbound.length })}</p>` : ''}
         <button id="build-btn" ${state.credits < cost || !city.alive ? 'disabled' : ''}>
-          Costruisci squadrone (₡ ${fmtInt(cost)})
+          ${t('panel.build', { cost: fmtInt(cost) })}
         </button>
         <p id="panel-error" class="danger"></p>
       `;
       const list = root.querySelector('#squadron-list')!;
       for (const sq of stationed) {
         const li = document.createElement('li');
-        li.innerHTML = `Squadrone #${sq.id} — HP ${sq.hp} `;
+        li.innerHTML = `${t('panel.squadronItem', { id: sq.id, hp: sq.hp })} `;
         const btn = document.createElement('button');
-        btn.textContent = 'Trasferisci';
+        btn.textContent = t('panel.transfer');
         btn.addEventListener('click', () => cb.onStartTransfer(sq.id));
         li.appendChild(btn);
         list.appendChild(li);

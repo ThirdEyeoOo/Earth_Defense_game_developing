@@ -47,10 +47,10 @@ body {
   left: 0;
   right: 0;
   display: flex;
-  gap: 14px;
+  gap: 10px;
   align-items: center;
   white-space: nowrap; /* gli span non devono mai spezzarsi su due righe */
-  padding: 8px 14px;
+  padding: 8px 12px;
   background: rgba(8, 14, 26, 0.85);
   border-bottom: 1px solid #1d3450;
   font-size: 12px;
@@ -66,7 +66,7 @@ body {
 #hud-abd { min-width: 160px; color: #c8a4ff; }
 #hud-dead { min-width: 150px; color: #ff8a99; }
 #hud-wave { min-width: 190px; }
-#hud button, #city-panel button, .end-box button, #start-screen button {
+#hud button, #city-panel button, .end-box button, #start-screen button, .settings-box button {
   font-family: inherit; /* i bottoni non ereditano il font di default */
   background: #15263f;
   color: #cfe3ff;
@@ -76,7 +76,30 @@ body {
   cursor: pointer;
 }
 #hud button.active { background: #2c4a73; }
+#hud-speeds button { padding: 4px 7px; }
 #hud button:disabled, #city-panel button:disabled { opacity: 0.4; cursor: default; }
+#bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 6px 12px;
+  background: rgba(8, 14, 26, 0.85);
+  border-top: 1px solid #1d3450;
+}
+.bar-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  line-height: 0; /* niente spazio fantasma sotto l'SVG inline */
+}
+.bar-btn:hover { filter: brightness(1.3); }
+.bar-btn svg text { font-family: 'Michroma', system-ui, sans-serif; }
+
 #banner {
   position: fixed;
   top: 48px;
@@ -105,7 +128,7 @@ body {
 #city-panel h2, #radar-panel h2 { margin-top: 0; font-size: 16px; }
 #city-panel ul { padding-left: 16px; }
 .danger { color: #ff5566; }
-#end-screen, #start-screen {
+#end-screen, #start-screen, #settings-modal {
   position: fixed;
   inset: 0;
   display: flex;
@@ -114,14 +137,35 @@ body {
   background: rgba(3, 6, 12, 0.85);
   z-index: 20;
 }
-.end-box, .start-box {
+#settings-modal { z-index: 30; } /* sopra anche allo start screen */
+.end-box, .start-box, .settings-box {
   text-align: center;
   background: #0b1424;
   border: 1px solid #2c4a73;
   border-radius: 8px;
   padding: 28px 48px;
 }
+.start-box { position: relative; }
 .start-box button { margin: 6px; font-size: 16px; padding: 8px 22px; }
+.settings-box button { margin: 4px; padding: 6px 16px; }
+.settings-box button.active { background: #2c4a73; }
+.settings-box h1 { font-size: 20px; }
+
+/* bottoni-icona (SVG inline, es. ingranaggio impostazioni) */
+.icon-btn { line-height: 0; }
+.icon-btn svg { display: block; }
+#hud-settings { margin-left: auto; padding: 1px; border: none; background: none; }
+#hud-settings svg { width: 26px; height: 26px; }
+#start-settings {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+}
+#start-settings svg { width: 34px; height: 34px; }
 
 /* barre HP sopra le unità (asset SVG in shadow DOM, vedi render/hpBars.ts) */
 .unit-hp-anchor { pointer-events: none; }

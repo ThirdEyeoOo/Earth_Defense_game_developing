@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="190" height="48" viewBox="0 0 190 48">
+  <!-- font ereditato dal documento (Michroma bundlata); etichetta riempita
+       a runtime dal sistema i18n (src/ui/bottomBar.ts): niente testo hardcoded -->
+  <g id="btn-bilancio">
+    <rect x="0.5" y="0.5" width="189" height="47" rx="6" fill="#121B33" stroke="#2B3D63"/>
+    <g transform="translate(38,15)" stroke="#6FCF97" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 2 V15 M6 16.5 H12 M3.5 4.5 H14.5"/>
+      <path d="M3.5 4.5 L0.8 9.5 M3.5 4.5 L6.2 9.5 M0.8 9.5 A2.7 2.7 0 0 0 6.2 9.5"/>
+      <path d="M14.5 4.5 L11.8 9.5 M14.5 4.5 L17.2 9.5 M11.8 9.5 A2.7 2.7 0 0 0 17.2 9.5"/>
+    </g>
+    <text x="108" y="29" font-size="13" letter-spacing="0.5" text-anchor="middle" fill="#D6E2F5"></text>
+  </g>
+</svg>

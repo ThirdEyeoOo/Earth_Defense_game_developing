@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <g id="btn-impostazioni" style="cursor:pointer">
+    <title>Impostazioni</title>
+    <rect x="0.5" y="0.5" width="47" height="47" rx="6" fill="#121B33" stroke="#2B3D63"/>
+    <g transform="translate(14,14)" stroke="#A9BCD9" stroke-width="1.6" fill="none" stroke-linecap="round">
+      <circle cx="10" cy="10" r="6"/>
+      <circle cx="10" cy="10" r="2.8"/>
+      <path d="M16 10 H18.7 M14.24 14.24 L16.15 16.15 M10 16 V18.7 M5.76 14.24 L3.85 16.15 M4 10 H1.3 M5.76 5.76 L3.85 3.85 M10 4 V1.3 M14.24 5.76 L16.15 3.85"/>
+    </g>
+  </g>
+</svg>
