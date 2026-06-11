@@ -1,0 +1,48 @@
+<svg width="100%" viewBox="0 0 690 420" xmlns="http://www.w3.org/2000/svg" role="img">
+  <!-- Schermata 1 dell'intro. Inlineato nel DOM da src/ui/intro.ts: le classi
+       intro-* sono i hook della timeline CSS (src/ui/style.css), il click sulla
+       freccia (.intro-next) lo gestisce il modulo. Niente id (stripForInline). -->
+  <rect x="0" y="0" width="690" height="420" fill="#000000"/>
+
+  <!-- occhio chiuso: tre trattini che svaniscono quando l'occhio si apre -->
+  <g fill="#f0c34e" font-family="Orbitron, sans-serif" font-size="28" font-weight="700" text-anchor="middle">
+    <text class="intro-dash" x="336" y="140">-</text>
+    <text class="intro-dash" x="358" y="140">-</text>
+    <text class="intro-dash" x="380" y="140">-</text>
+  </g>
+
+  <!-- occhio aperto: pupilla rossa tra parentesi dorate -->
+  <g font-family="Orbitron, sans-serif" font-size="28" font-weight="700" text-anchor="middle">
+    <text class="intro-eye-open" x="336" y="140" fill="#f0c34e">&lt;</text>
+    <g class="intro-eye-open">
+      <circle class="intro-eye-ring" cx="358" cy="129" r="11" fill="none" stroke="#f0c34e" stroke-width="2.5"/>
+      <circle class="intro-pupil" cx="358" cy="129" r="3.5" fill="#ff2e2e"/>
+    </g>
+    <text class="intro-eye-open" x="380" y="140" fill="#f0c34e">&gt;</text>
+  </g>
+
+  <!-- zona di click invisibile sopra l'occhio: chiude/riapre (ui/intro.ts) -->
+  <rect class="intro-eye-hit" x="322" y="110" width="72" height="38" fill="transparent"/>
+
+  <g class="intro-studio" font-family="Orbitron, sans-serif" font-size="28" font-weight="700" letter-spacing="2">
+    <text x="318" y="140" text-anchor="end" fill="#3fd9d4">Third Eye</text>
+    <text x="398" y="140" text-anchor="start" fill="#3fd9d4">Studios</text>
+    <line x1="152" y1="162" x2="528" y2="162" stroke="#3fd9d4" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+  </g>
+
+  <g class="intro-presents">
+    <text x="340" y="232" text-anchor="middle" font-family="Orbitron, sans-serif" font-size="17" font-weight="400" letter-spacing="4" fill="#3fd9d4" opacity="0.8">presents</text>
+  </g>
+
+  <g class="intro-author" font-family="Orbitron, sans-serif" text-anchor="middle" letter-spacing="2">
+    <text x="340" y="278" font-size="14" font-weight="500" fill="#3fd9d4" opacity="0.85">a game by</text>
+    <text x="340" y="304" font-size="15" font-weight="500" fill="#f0c34e">Daniele Bigoni</text>
+  </g>
+
+  <!-- pulsante next: anello esterno e freccia pulsano (intro-pulse parte da 0.9) -->
+  <g class="intro-next">
+    <circle cx="340" cy="352" r="20" fill="none" stroke="#3fd9d4" stroke-width="1.2" opacity="0.9"/>
+    <circle cx="340" cy="352" r="15" fill="#0a1f1f" stroke="#3fd9d4" stroke-width="1.5"/>
+    <path d="M336,345 L344,352 L336,359" fill="none" stroke="#f0c34e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+  </g>
+</svg>
