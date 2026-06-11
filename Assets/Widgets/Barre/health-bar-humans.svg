@@ -41,7 +41,7 @@
       --hb-dim:      #0e4a5e;  /* linee secondarie */
       --hb-critical: #ff3b5c;  /* rosso allarme */
       --hb-text:     #d8f7ff;
-      font-family: Consolas, 'Courier New', monospace;
+      font-family: 'Michroma', Consolas, 'Courier New', monospace;
     }
 
     /* --- riempimento pilotabile dal gioco --- */

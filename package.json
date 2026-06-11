@@ -10,6 +10,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@fontsource/michroma": "^5.2.8",
+    "@fontsource/orbitron": "^5.2.8",
     "three": "^0.165.0"
   },
   "devDependencies": {

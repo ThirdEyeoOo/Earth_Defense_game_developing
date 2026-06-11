@@ -1,3 +1,6 @@
+import '@fontsource/michroma'; // font UI di default
+import '@fontsource/orbitron/400.css'; // nomi città sulla mappa
+import '@fontsource/orbitron/700.css';
 import { dayOfTick } from './sim/calendar';
 import {
   cmdBuildSquadron,
