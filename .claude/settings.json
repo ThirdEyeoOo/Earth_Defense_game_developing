@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "powershell",
+            "command": "if ((Test-Path 'graphify-out/.semantic_pending') -and ((Get-Item 'graphify-out/.semantic_pending').Length -gt 0)) { 'GRAPHIFY: estrazione semantica del grafo pendente per questi file:'; Get-Content 'graphify-out/.semantic_pending' | Sort-Object -Unique; 'Esegui subito /graphify --update, poi cancella graphify-out/.semantic_pending' }",
+            "timeout": 15,
+            "statusMessage": "Controllo aggiornamenti semantici graphify"
+          }
+        ]
+      }
+    ]
+  }
+}
