@@ -1,6 +1,6 @@
 # Earth Defense — Contesto operativo
 
-Aggiornato: 2026-06-11 (chiusura sessione 03, commit #58, main pulito, v0.104.0 rilasciata)
+Aggiornato: 2026-06-11 (chiusura sessione 04, commit #61, main pulito, v0.105.0 rilasciata)
 
 ## Cos'è
 Gestionale di difesa planetaria nel browser (TypeScript + Vite + Three.js + Vitest).
@@ -22,6 +22,9 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
 - **v0.104.0** — gioco bilingue IT/EN (`src/i18n/`), menu impostazioni con selettore lingua
   (ingranaggio nell'HUD e sullo start screen), barra menu inferiore con 4 pulsanti placeholder
   (Bilancio, Costruisci, Ricerca, Città), automazione knowledge graph graphify.
+- **v0.105.0** — sequenza d'intro a ogni caricamento (`src/ui/intro.ts`): logo animato
+  Third Eye Studios con occhio interattivo (blink, pupilla che segue il mouse, click
+  chiude/riapre), click sulla freccia → video 16 MB saltabile (click/Esc) → start screen.
 - Release: a ogni merge chiedere il nome semver all'utente (proponendone uno) e aggiornare
   `lista aggiornamenti/releases.txt` (recap + delta byte, somma dimensioni `git ls-files`).
   `commits.txt` si aggiorna da solo (hook git).
@@ -40,6 +43,19 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
 - Test: parità chiavi e placeholder it/en, sync con cities.json (50 città, 40 paesi tradotti).
 
 ## UI (oltre l'HUD)
+- **Intro** (`src/ui/intro.ts`, v0.105.0): overlay `#intro-screen` z-25 (sopra start screen
+  z-20, sotto impostazioni z-30), visibile dal primo paint; si nasconde da solo a fine intro
+  (lo start screen è già costruito sotto), `onDone` no-op = hook per musica futura.
+  Fase logo: SVG inlineato con sanitizzazione propria (title/desc/on*, NON stripForInline:
+  servono le classi `intro-*`), timeline CSS in style.css sezione `/* intro */`, freccia
+  cliccabile solo dopo l'`animationend` del suo fade-in (+ `stopPropagation` sul click).
+  Occhio: blink ogni 4 s; pupilla segue il mouse (px schermo → unità SVG via larghezza reale
+  dell'anello, max 4,5; dal primo mousemove `.intro-pupil--tracking` spegne l'orbita);
+  click su `intro-eye-hit` chiude/riapre (`!important` per battere le animazioni di blink).
+  Fase video: parte dal click (user gesture ⇒ audio ok); `finish()` idempotente su
+  ended/error/click/Esc (Esc capture-phase come settings); teardown completo del `<video>`.
+  Gotcha CSS: due animazioni sulla stessa proprietà → l'ultima vince per tutta la sua durata
+  (pulse sui FIGLI del gruppo in fade-in; i keyframe del blink replicano lo stato a riposo).
 - **Menu impostazioni** (`src/ui/settings.ts`): overlay z-30, bottoni Italiano/English,
   apertura da ingranaggio HUD (in fondo, `margin-left:auto`) e start screen; Esc chiude in
   capture-phase (non interferisce con l'annullamento trasferimenti, handler bubble).
@@ -81,6 +97,13 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
 ### `Assets/Widgets/Barra_Menu_Inferiore/Pulsanti/tasto-{bilancio,costruisci,ricerca,citta}.svg` (190×48)
 - Pulsanti barra inferiore, gruppo `btn-*`, icona stroke + `<text>` segnaposto vuoto (i18n).
 
+### `Assets/Intro/` — Logo_intro.svg (viewBox 690×420) + Intro_video.mp4 (16 MB)
+- Logo: classi (non id) come hook CSS/JS — `intro-dash` ×3 (occhio chiuso), `intro-eye-open`
+  (parentesi + gruppo cerchi con `intro-eye-ring`/`intro-pupil`), `intro-studio`,
+  `intro-presents`, `intro-author`, `intro-next` (pulsante), `intro-eye-hit` (rect di click
+  invisibile). Testi brand in inglese = artwork, esenti da i18n. Inline nel DOM da intro.ts
+  (mai da SVGLoader). Video: import Vite come URL, scaricato solo al click sulla freccia.
+
 ## Animazioni implementate (`src/render/units.ts`, loop di render)
 ### Caccia (squadrone = formazione a ^ di 3 F-22)
 - Luci nav in controfase sfasate, strobo coda ~90 ms ogni 1,5 s; boost solo in trasferimento
@@ -105,7 +128,7 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
 - Salvataggi versionati (**v3**) con migrazioni; la velocità viene salvata (pausa ⇒ riparte in pausa).
 
 ## Knowledge graph (graphify)
-- Grafo del codebase in `graphify-out/` (gitignored), ~490 nodi. Hook git aggiornano la parte
+- Grafo del codebase in `graphify-out/` (gitignored), ~510 nodi. Hook git aggiornano la parte
   codice a ogni commit/checkout/merge (AST, background, log in `~/.cache/graphify-rebuild.log`);
   i non-code finiscono in `.semantic_pending` → eseguire `/graphify --update` (regola CLAUDE.md).
 - Interprete pinnato negli hook (`_PINNED`); dopo refactoring distruttivi: `graphify update . --force`.
