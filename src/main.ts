@@ -19,6 +19,7 @@ import { createGlobe } from './render/globe';
 import { HpBarLayer } from './render/hpBars';
 import { createScene } from './render/scene';
 import { UnitLayer } from './render/units';
+import { createBottomBar } from './ui/bottomBar';
 import { createCityPanel } from './ui/cityPanel';
 import { createEndScreen } from './ui/endScreen';
 import { createHud } from './ui/hud';
@@ -35,12 +36,18 @@ let lastSavedDay = -1;
 let lastPanelKey = '';
 
 const banner = document.getElementById('banner')!;
+let bannerTimer: ReturnType<typeof setTimeout> | undefined;
+
+function showBanner(text: string, ms: number | null = 2500): void {
+  banner.textContent = text;
+  banner.classList.remove('hidden');
+  clearTimeout(bannerTimer);
+  if (ms !== null) bannerTimer = setTimeout(() => banner.classList.add('hidden'), ms);
+}
 
 function showCommandError(result: CommandResult): void {
   if (result.ok) return;
-  banner.textContent = t(`cmd.${result.code}`, 'params' in result ? result.params : undefined);
-  banner.classList.remove('hidden');
-  setTimeout(() => banner.classList.add('hidden'), 2500);
+  showBanner(t(`cmd.${result.code}`, 'params' in result ? result.params : undefined));
 }
 
 // --- lingua: preferenza salvata, altrimenti quella del browser ---
@@ -72,20 +79,21 @@ const hud = createHud(
   () => {
     if (!state) return;
     localStorage.setItem(SAVE_KEY, serialize(state));
-    banner.textContent = t('banner.gameSaved');
-    banner.classList.remove('hidden');
-    setTimeout(() => banner.classList.add('hidden'), 1500);
+    showBanner(t('banner.gameSaved'), 1500);
   },
   () => settings.open(),
 );
 const settings = createSettings(document.getElementById('settings-modal')!, selectLanguage);
+// barra inferiore: per ora ogni pulsante è un segnaposto ("Funzione in arrivo")
+const bottomBar = createBottomBar(document.getElementById('bottom-bar')!, () =>
+  showBanner(t('banner.comingSoon')),
+);
 const radar = createRadar(document.getElementById('radar-panel')!);
 const cityPanel = createCityPanel(document.getElementById('city-panel')!, {
   onBuild: cityId => showCommandError(cmdBuildSquadron(state, cityId)),
   onStartTransfer: squadronId => {
     transferringSquadronId = squadronId;
-    banner.textContent = t('banner.selectDestination');
-    banner.classList.remove('hidden');
+    showBanner(t('banner.selectDestination'), null); // resta finché si sceglie o si annulla
   },
 });
 const endScreen = createEndScreen(document.getElementById('end-screen')!, () => startNewGame());
@@ -213,6 +221,7 @@ onLanguageChange(() => {
   document.title = t('app.title');
   document.documentElement.lang = getLanguage();
   hud.refreshLabels();
+  bottomBar.refreshLabels();
   lastPanelKey = ''; // il pannello città si ricostruisce solo al cambio dati: forzalo
   if (cityLayer) cityLayer.refreshNames();
   if (state) endScreen.refresh(state);

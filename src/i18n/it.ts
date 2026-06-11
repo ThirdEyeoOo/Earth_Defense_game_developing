@@ -50,6 +50,13 @@ export const it = {
   'start.invalidSave': 'Salvataggio non valido o incompatibile',
   'banner.gameSaved': 'Partita salvata',
   'banner.selectDestination': 'Seleziona la città di destinazione (Esc per annullare)',
+  'banner.comingSoon': 'Funzione in arrivo',
+
+  // barra menu inferiore
+  'bar.bilancio': 'Bilancio',
+  'bar.costruisci': 'Costruisci',
+  'bar.ricerca': 'Ricerca',
+  'bar.citta': 'Città',
 
   // errori dei comandi (codici da sim/commands.ts: la sim non conosce i testi)
   'cmd.cityUnavailable': 'Città non disponibile',

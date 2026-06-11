@@ -51,6 +51,13 @@ export const en: Record<MessageKey, string> = {
   'start.invalidSave': 'Invalid or incompatible save',
   'banner.gameSaved': 'Game saved',
   'banner.selectDestination': 'Select the destination city (Esc to cancel)',
+  'banner.comingSoon': 'Coming soon',
+
+  // bottom menu bar
+  'bar.bilancio': 'Budget',
+  'bar.costruisci': 'Build',
+  'bar.ricerca': 'Research',
+  'bar.citta': 'Cities',
 
   // command errors
   'cmd.cityUnavailable': 'City unavailable',
