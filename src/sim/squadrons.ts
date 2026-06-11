@@ -6,6 +6,7 @@ export function squadronsInCity(state: GameState, cityId: string): number {
   return state.squadrons.filter(s => s.cityId === cityId).length;
 }
 
+// costo crescente: +costGrowth (50%) del prezzo base per ogni squadrone già in città
 export function squadronCost(state: GameState, cityId: string): number {
   const sq = CONFIG.squadron;
   return Math.round(sq.baseCost * (1 + sq.costGrowth * squadronsInCity(state, cityId)));
