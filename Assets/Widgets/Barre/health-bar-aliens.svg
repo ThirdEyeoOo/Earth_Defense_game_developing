@@ -39,7 +39,7 @@
       --hb-dim:      #46206b;
       --hb-critical: #c8ff1e;  /* verde acido: per gli alieni il pericolo e' acido */
       --hb-text:     #f0dcff;
-      font-family: Consolas, 'Courier New', monospace;
+      font-family: 'Michroma', Consolas, 'Courier New', monospace;
     }
 
     /* --- riempimento pilotabile dal gioco --- */

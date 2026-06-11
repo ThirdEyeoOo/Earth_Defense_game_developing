@@ -2,12 +2,13 @@ body {
   margin: 0;
   background: #05080f;
   color: #cfe3ff;
-  font-family: system-ui, sans-serif;
+  font-family: 'Michroma', system-ui, sans-serif;
   overflow: hidden;
 }
 .hidden { display: none !important; }
 #scene-container { position: fixed; inset: 0; }
 .city-label {
+  font-family: 'Orbitron', 'Michroma', sans-serif;
   font-size: 10px;
   color: #9fc3e8;
   text-shadow: 0 1px 2px #000, 0 0 4px #000;
@@ -15,13 +16,27 @@ body {
   user-select: none;
   pointer-events: auto; /* la targhetta è l'elemento cliccabile della città */
   cursor: pointer;
-  padding: 1px 4px;
-  border-radius: 3px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(13, 26, 48, 0.55);
+  border: 1px solid rgba(120, 170, 230, 0.35);
 }
-.city-label:hover { color: #e4f1ff; background: rgba(45, 74, 115, 0.55); }
-.city-label--selected { color: #ffe066; background: rgba(80, 64, 10, 0.6); }
-.city-label--attack { color: #ff5566; animation: city-attack-pulse 0.9s ease-in-out infinite; }
-.city-label--dead { color: #666a77; text-decoration: line-through; }
+.city-label:hover { color: #e4f1ff; background: rgba(45, 74, 115, 0.65); }
+.city-label--selected {
+  color: #ffe066;
+  background: rgba(80, 64, 10, 0.6);
+  border-color: rgba(255, 224, 102, 0.5);
+}
+.city-label--attack {
+  color: #ff5566;
+  border-color: rgba(255, 85, 102, 0.5);
+  animation: city-attack-pulse 0.9s ease-in-out infinite;
+}
+.city-label--dead {
+  color: #666a77;
+  border-color: rgba(102, 106, 119, 0.35);
+  text-decoration: line-through;
+}
 @keyframes city-attack-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.45; }
@@ -32,23 +47,27 @@ body {
   left: 0;
   right: 0;
   display: flex;
-  gap: 18px;
+  gap: 14px;
   align-items: center;
+  white-space: nowrap; /* gli span non devono mai spezzarsi su due righe */
   padding: 8px 14px;
   background: rgba(8, 14, 26, 0.85);
   border-bottom: 1px solid #1d3450;
-  font-size: 14px;
-  /* larghezze stabili: i pulsanti non devono mai spostarsi sotto il mouse */
+  font-size: 12px;
+  /* larghezze stabili: i pulsanti non devono mai spostarsi sotto il mouse.
+     Michroma non ha cifre tabulari, quindi i min-width sono tarati sul
+     caso peggiore di ogni campo a 12px (misurati, con margine). */
   font-variant-numeric: tabular-nums;
 }
 #hud span { display: inline-block; }
-#hud-date { min-width: 200px; }
+#hud-date { min-width: 225px; }
 #hud-credits { min-width: 90px; }
-#hud-pop { min-width: 160px; }
-#hud-abd { min-width: 120px; color: #c8a4ff; }
-#hud-dead { min-width: 100px; color: #ff8a99; }
-#hud-wave { min-width: 180px; }
+#hud-pop { min-width: 150px; }
+#hud-abd { min-width: 160px; color: #c8a4ff; }
+#hud-dead { min-width: 150px; color: #ff8a99; }
+#hud-wave { min-width: 190px; }
 #hud button, #city-panel button, .end-box button, #start-screen button {
+  font-family: inherit; /* i bottoni non ereditano il font di default */
   background: #15263f;
   color: #cfe3ff;
   border: 1px solid #2c4a73;
