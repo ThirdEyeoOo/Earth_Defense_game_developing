@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { t, type MessageKey } from '../i18n';
 import type { SimEvent, SimEventType } from '../sim/events';
 import type { GameState } from '../sim/state';
 import { cityPosition } from './cities';
@@ -10,11 +11,11 @@ const TOAST_MS = 2000; // durata dell'animazione float-up in style.css
 const MAX_TOASTS = 24;
 const STACK_OFFSET_PX = 14; // toast nati nello stesso frame sulla stessa unità
 
-const EVENT_TEXT: Record<SimEventType, string> = {
-  squadronTransferStarted: 'squadrone in viaggio',
-  ufoOrbiting: 'in orbita',
-  ufoDescending: 'atterraggio',
-  ufoAbducting: 'rapimenti in corso',
+const EVENT_KEY: Record<SimEventType, MessageKey> = {
+  squadronTransferStarted: 'float.squadronTransferStarted',
+  ufoOrbiting: 'float.ufoOrbiting',
+  ufoDescending: 'float.ufoDescending',
+  ufoAbducting: 'float.ufoAbducting',
 };
 
 interface Toast {
@@ -109,7 +110,7 @@ export class FloatingTextLayer {
     if (stack > 0) anchor.style.marginTop = `${-stack * STACK_OFFSET_PX}px`;
     const span = document.createElement('span');
     span.className = 'float-text';
-    span.textContent = EVENT_TEXT[e.type];
+    span.textContent = t(EVENT_KEY[e.type]);
     anchor.appendChild(span);
     const object = new CSS2DObject(anchor);
     object.position.copy(position);
@@ -145,7 +146,7 @@ export class FloatingTextLayer {
         counter = { object, anchor, span, lastText: '' };
         this.counters.set(ufo.id, counter);
       }
-      const text = `Abductions = ${Math.floor(ufo.abducted)}`;
+      const text = t('float.abductions', { n: Math.floor(ufo.abducted) });
       if (text !== counter.lastText) {
         counter.lastText = text;
         counter.span.textContent = text;

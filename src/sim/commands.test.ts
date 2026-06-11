@@ -16,12 +16,16 @@ describe('commands', () => {
   it('cmdBuildSquadron: rifiuta crediti insufficienti e città non valide', () => {
     const s = createNewGame(1);
     s.credits = 100;
-    expect(cmdBuildSquadron(s, 'rome').ok).toBe(false);
+    expect(cmdBuildSquadron(s, 'rome')).toEqual({
+      ok: false,
+      code: 'insufficientCredits',
+      params: { cost: 500 },
+    });
     s.credits = 9999;
-    expect(cmdBuildSquadron(s, 'atlantide').ok).toBe(false);
+    expect(cmdBuildSquadron(s, 'atlantide')).toEqual({ ok: false, code: 'cityUnavailable' });
     const rome = s.cities.find(c => c.id === 'rome')!;
     rome.alive = false;
-    expect(cmdBuildSquadron(s, 'rome').ok).toBe(false);
+    expect(cmdBuildSquadron(s, 'rome')).toEqual({ ok: false, code: 'cityUnavailable' });
     expect(s.squadrons).toHaveLength(0);
   });
 
@@ -43,10 +47,20 @@ describe('commands', () => {
     s.credits = 9999;
     cmdBuildSquadron(s, 'rome');
     const sq = s.squadrons[0];
-    expect(cmdRelocateSquadron(s, sq.id, 'rome').ok).toBe(false);
-    expect(cmdRelocateSquadron(s, 999, 'tokyo').ok).toBe(false);
+    expect(cmdRelocateSquadron(s, sq.id, 'rome')).toEqual({ ok: false, code: 'sameCity' });
+    expect(cmdRelocateSquadron(s, 999, 'tokyo')).toEqual({ ok: false, code: 'squadronNotFound' });
+    const tokyo = s.cities.find(c => c.id === 'tokyo')!;
+    tokyo.alive = false;
+    expect(cmdRelocateSquadron(s, sq.id, 'tokyo')).toEqual({
+      ok: false,
+      code: 'destinationUnavailable',
+    });
+    tokyo.alive = true;
     cmdRelocateSquadron(s, sq.id, 'tokyo');
-    expect(cmdRelocateSquadron(s, sq.id, 'paris').ok).toBe(false); // già in volo
+    expect(cmdRelocateSquadron(s, sq.id, 'paris')).toEqual({
+      ok: false,
+      code: 'squadronInTransfer',
+    }); // già in volo
   });
 
   it('cmdSetSpeed cambia la velocità', () => {

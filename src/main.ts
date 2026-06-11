@@ -1,6 +1,7 @@
 import '@fontsource/michroma'; // font UI di default
 import '@fontsource/orbitron/400.css'; // nomi città sulla mappa
 import '@fontsource/orbitron/700.css';
+import { detectLanguage, getLanguage, onLanguageChange, setLanguage, t, type Lang } from './i18n';
 import { dayOfTick } from './sim/calendar';
 import {
   cmdBuildSquadron,
@@ -21,7 +22,10 @@ import { UnitLayer } from './render/units';
 import { createCityPanel } from './ui/cityPanel';
 import { createEndScreen } from './ui/endScreen';
 import { createHud } from './ui/hud';
+import { gearIcon } from './ui/icons';
+import { loadPrefs, savePrefs } from './ui/prefs';
 import { createRadar } from './ui/radar';
+import { createSettings } from './ui/settings';
 
 // --- stato applicativo ---
 let state: GameState;
@@ -34,9 +38,19 @@ const banner = document.getElementById('banner')!;
 
 function showCommandError(result: CommandResult): void {
   if (result.ok) return;
-  banner.textContent = result.reason;
+  banner.textContent = t(`cmd.${result.code}`, 'params' in result ? result.params : undefined);
   banner.classList.remove('hidden');
   setTimeout(() => banner.classList.add('hidden'), 2500);
+}
+
+// --- lingua: preferenza salvata, altrimenti quella del browser ---
+setLanguage(loadPrefs().language ?? detectLanguage(navigator.language));
+document.title = t('app.title');
+document.documentElement.lang = getLanguage();
+
+function selectLanguage(lang: Lang): void {
+  setLanguage(lang);
+  savePrefs({ ...loadPrefs(), language: lang });
 }
 
 // --- scena ---
@@ -58,17 +72,19 @@ const hud = createHud(
   () => {
     if (!state) return;
     localStorage.setItem(SAVE_KEY, serialize(state));
-    banner.textContent = 'Partita salvata';
+    banner.textContent = t('banner.gameSaved');
     banner.classList.remove('hidden');
     setTimeout(() => banner.classList.add('hidden'), 1500);
   },
+  () => settings.open(),
 );
+const settings = createSettings(document.getElementById('settings-modal')!, selectLanguage);
 const radar = createRadar(document.getElementById('radar-panel')!);
 const cityPanel = createCityPanel(document.getElementById('city-panel')!, {
   onBuild: cityId => showCommandError(cmdBuildSquadron(state, cityId)),
   onStartTransfer: squadronId => {
     transferringSquadronId = squadronId;
-    banner.textContent = 'Seleziona la città di destinazione (Esc per annullare)';
+    banner.textContent = t('banner.selectDestination');
     banner.classList.remove('hidden');
   },
 });
@@ -121,16 +137,18 @@ function setupStartScreen(): void {
   const saved = savedJson ? deserialize(savedJson) : null;
   root.innerHTML = `
     <div class="start-box">
+      <button id="start-settings" class="icon-btn" title="${t('settings.open')}">${gearIcon}</button>
       <h1>EARTH DEFENSE</h1>
-      ${saved ? '<button id="continue-btn">Continua</button>' : ''}
-      ${savedJson && !saved ? '<p class="danger">Salvataggio non valido o incompatibile</p>' : ''}
-      <button id="newgame-btn">Nuova partita</button>
+      ${saved ? `<button id="continue-btn">${t('start.continue')}</button>` : ''}
+      ${savedJson && !saved ? `<p class="danger">${t('start.invalidSave')}</p>` : ''}
+      <button id="newgame-btn">${t('start.newGame')}</button>
     </div>
   `;
   root.querySelector('#newgame-btn')!.addEventListener('click', startNewGame);
   if (saved) {
     root.querySelector('#continue-btn')!.addEventListener('click', () => bootGame(saved));
   }
+  root.querySelector('#start-settings')!.addEventListener('click', () => settings.open());
 }
 
 function autosave(): void {
@@ -189,6 +207,19 @@ function frame(now: number): void {
   ctx.labelRenderer.render(ctx.scene, ctx.camera);
   requestAnimationFrame(frame);
 }
+
+// --- cambio lingua a caldo: rinfresca le superfici che non si ridisegnano da sole ---
+onLanguageChange(() => {
+  document.title = t('app.title');
+  document.documentElement.lang = getLanguage();
+  hud.refreshLabels();
+  lastPanelKey = ''; // il pannello città si ricostruisce solo al cambio dati: forzalo
+  if (cityLayer) cityLayer.refreshNames();
+  if (state) endScreen.refresh(state);
+  const startScreen = document.getElementById('start-screen')!;
+  if (!startScreen.classList.contains('hidden')) setupStartScreen();
+  settings.refresh();
+});
 
 setupStartScreen();
 requestAnimationFrame(frame);

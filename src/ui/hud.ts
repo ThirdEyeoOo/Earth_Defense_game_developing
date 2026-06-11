@@ -1,7 +1,9 @@
+import { t } from '../i18n';
 import { dayOfTick } from '../sim/calendar';
 import type { GameState } from '../sim/state';
 import { worldPopulation } from '../sim/state';
 import { fmtClock, fmtDate, fmtInt } from './format';
+import { gearIcon } from './icons';
 
 const SPEEDS: Array<0 | 1 | 2 | 4 | 10> = [0, 1, 2, 4, 10];
 
@@ -10,7 +12,8 @@ export function createHud(
   onSetSpeed: (speed: 0 | 1 | 2 | 4 | 10) => void,
   onToggleRadar: () => void,
   onSave: () => void,
-): { update(state: GameState, tickFloat: number): void } {
+  onOpenSettings: () => void,
+): { update(state: GameState, tickFloat: number): void; refreshLabels(): void } {
   root.innerHTML = `
     <span id="hud-date"></span>
     <span id="hud-credits"></span>
@@ -19,8 +22,9 @@ export function createHud(
     <span id="hud-dead"></span>
     <span id="hud-wave"></span>
     <span id="hud-speeds"></span>
-    <button id="hud-radar">Radar</button>
-    <button id="hud-save">Salva</button>
+    <button id="hud-radar"></button>
+    <button id="hud-save"></button>
+    <button id="hud-settings" class="icon-btn">${gearIcon}</button>
   `;
   const speedsEl = root.querySelector('#hud-speeds')!;
   for (const sp of SPEEDS) {
@@ -32,19 +36,35 @@ export function createHud(
   }
   root.querySelector('#hud-radar')!.addEventListener('click', onToggleRadar);
   root.querySelector('#hud-save')!.addEventListener('click', onSave);
+  root.querySelector('#hud-settings')!.addEventListener('click', onOpenSettings);
+
+  function refreshLabels(): void {
+    root.querySelector('#hud-radar')!.textContent = t('hud.radar');
+    root.querySelector('#hud-save')!.textContent = t('hud.save');
+    root.querySelector('#hud-settings')!.setAttribute('title', t('settings.open'));
+  }
+  refreshLabels();
 
   return {
+    refreshLabels,
     update(state: GameState, tickFloat: number) {
       root.querySelector('#hud-date')!.textContent =
         `${fmtDate(state.tick)} — ${fmtClock(tickFloat)}`;
-      root.querySelector('#hud-credits')!.textContent = `₡ ${fmtInt(state.credits)}`;
-      root.querySelector('#hud-pop')!.textContent = `Pop. ${fmtInt(worldPopulation(state))}`;
-      root.querySelector('#hud-abd')!.textContent =
-        `Abductions: ${fmtInt(Math.floor(state.stats.abductedTotal))}`;
-      root.querySelector('#hud-dead')!.textContent = `Morti: ${fmtInt(state.stats.populationLost)}`;
+      root.querySelector('#hud-credits')!.textContent = t('hud.credits', {
+        n: fmtInt(state.credits),
+      });
+      root.querySelector('#hud-pop')!.textContent = t('hud.pop', {
+        n: fmtInt(worldPopulation(state)),
+      });
+      root.querySelector('#hud-abd')!.textContent = t('hud.abductions', {
+        n: fmtInt(Math.floor(state.stats.abductedTotal)),
+      });
+      root.querySelector('#hud-dead')!.textContent = t('hud.dead', {
+        n: fmtInt(state.stats.populationLost),
+      });
       const days = Math.max(0, dayOfTick(state.nextWave.arrivalTick) - dayOfTick(state.tick));
       root.querySelector('#hud-wave')!.textContent =
-        state.ufos.length > 0 ? '⚠ ATTACCO IN CORSO' : `Prossima ondata: ${days}g`;
+        state.ufos.length > 0 ? t('hud.attackInProgress') : t('hud.nextWave', { days });
       for (const btn of speedsEl.querySelectorAll('button')) {
         btn.classList.toggle('active', Number(btn.dataset.speed) === state.speed);
       }

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { cityName } from '../i18n';
 import { latLonToVec3 } from '../sim/geo';
 import type { CityState, GameState } from '../sim/state';
 import { GLOBE_RADIUS } from './globe';
@@ -14,7 +15,10 @@ const DRAG_TOLERANCE_PX = 5;
 // Le città sono rappresentate solo dalle targhette col nome (CSS2D),
 // che sono anche l'elemento cliccabile per selezione e trasferimenti.
 export class CityLayer {
-  private labels = new Map<string, { object: CSS2DObject; element: HTMLDivElement }>();
+  private labels = new Map<
+    string,
+    { object: CSS2DObject; element: HTMLDivElement; name: string }
+  >();
   readonly group = new THREE.Group();
   private pointerDownAt = { x: 0, y: 0 };
   private readonly onPointerDown = (event: PointerEvent): void => {
@@ -27,7 +31,7 @@ export class CityLayer {
     for (const city of cities) {
       const element = document.createElement('div');
       element.className = 'city-label';
-      element.textContent = city.name;
+      element.textContent = cityName(city.id, city.name);
       // dimensione leggermente proporzionale alla popolazione (come i vecchi marker)
       const fontPx = 9 + 3 * Math.cbrt(city.population / 37_000_000);
       element.style.fontSize = `${fontPx.toFixed(1)}px`;
@@ -41,10 +45,18 @@ export class CityLayer {
       });
       const label = new CSS2DObject(element);
       label.position.copy(cityPosition(city, 1.01));
-      this.labels.set(city.id, { object: label, element });
+      this.labels.set(city.id, { object: label, element, name: city.name });
       this.group.add(label);
     }
     scene.add(this.group);
+  }
+
+  // i testi delle targhette sono settati alla creazione: al cambio lingua
+  // vanno riscritti esplicitamente
+  refreshNames(): void {
+    for (const [id, label] of this.labels) {
+      label.element.textContent = cityName(id, label.name);
+    }
   }
 
   update(state: GameState, selectedCityId: string | null, camera: THREE.Camera): void {
