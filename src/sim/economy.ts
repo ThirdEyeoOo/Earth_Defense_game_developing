@@ -1,6 +1,7 @@
 import { CONFIG } from './config';
 import type { GameState } from './state';
 
+// tasse: 1 credito al giorno per milione di abitanti vivi (CONFIG.taxPerMillionPerDay)
 export function dailyIncome(state: GameState): number {
   const alivePop = state.cities
     .filter(c => c.alive)
