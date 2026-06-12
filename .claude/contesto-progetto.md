@@ -1,6 +1,6 @@
 # Earth Defense — Contesto operativo
 
-Aggiornato: 2026-06-11 (chiusura sessione 04, commit #61, main pulito, v0.105.0 rilasciata)
+Aggiornato: 2026-06-12 (chiusura sessione 05, commit #73, main pulito, v0.111.0 rilasciata)
 
 ## Cos'è
 Gestionale di difesa planetaria nel browser (TypeScript + Vite + Three.js + Vitest).
@@ -25,9 +25,43 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
 - **v0.105.0** — sequenza d'intro a ogni caricamento (`src/ui/intro.ts`): logo animato
   Third Eye Studios con occhio interattivo (blink, pupilla che segue il mouse, click
   chiude/riapre), click sulla freccia → video 16 MB saltabile (click/Esc) → start screen.
+- **v0.110.0** — rehaul economico "Humanity Treasure": mondo post-collasso, valuta HumT,
+  10 risorse per città, fondazione del QG + espansione con ambasciate, salvataggi v4,
+  pannello Bilancio (vedi sezione Economia).
+- **v0.111.0** — tutorial "Terzo Occhio" (`src/ui/tutorial.ts`): l'occhio del logo come
+  compagno sotto la data dell'HUD, fumetto a step in fase di fondazione.
 - Release: a ogni merge chiedere il nome semver all'utente (proponendone uno) e aggiornare
-  `lista aggiornamenti/releases.txt` (recap + delta byte, somma dimensioni `git ls-files`).
+  `lista aggiornamenti/releases.txt` (nuova voce IN ALTO; il file è locale, la cartella è
+  gitignorata) con recap + delta byte (somma dimensioni `git ls-files`); tag ANNOTATO.
   `commits.txt` si aggiorna da solo (hook git).
+
+## Economia HumT (v0.110.0) — il cuore del gameplay
+- Lore: il mondo è già collassato (sparizione di quasi tutte le città); il dollaro è
+  carta straccia, la valuta è l'**HumT**. Modello e razionali in `Economy-model/ECONOMIA.md`
+  (versionato); dataset in `src/data/cities.json` (50 città × 2-5 risorse tra 10 macrogruppi,
+  `amount` = capacità 0-100; `gdp_post_apoc_humt` = Σ peso×amount, test d'invarianza in
+  `src/sim/data.test.ts`). Pesi/tassi/costi/kit in `CONFIG.economy`; tipi in
+  `src/sim/resources.ts` (modulo dedicato: evita l'import circolare config↔state).
+- **Nuova partita = 0 HumT/risorse/squadroni, tempo congelato** (`hqCityId: null`,
+  `tick()` no-op): si sceglie una città sul globo e si fonda il QG (`cmdFoundHq`, gratis,
+  accredita lo starter kit: Ħ450 + 30 industria + 20 combustibili + 25 agroalimentare =
+  basta per il primo squadrone). Da lì partono economia, orologio e ondate (l'arrivalTick
+  della prima ondata decorre di fatto dalla fondazione).
+- **Rete**: producono e pagano tasse solo le città collegate (QG + ambasciate).
+  Gettito/giorno per città = Σ(peso×amount_corrente) × (pop/popIniziale) × aliquota (0,09);
+  produzione/giorno per risorsa = amount × 0,1 × popFactor → magazzino GLOBALE
+  `state.resources` (float, la UI mostra floor). Rapimento attivo = città sospesa.
+  Gli `amount` sono mutabili nello stato (deep-copy dal JSON!): predisposti per nemici
+  futuri che danneggiano le risorse oltre alla popolazione.
+- **Ambasciata** (`cmdBuildEmbassy`): costo (Ħ150 + 20 agroalimentare) × (1 + km/5000)
+  dalla città collegata più vicina. **Squadroni**: Ħ300 + 25 industria + 15 combustibili,
+  crescita +50% per squadrone in città su tutte le componenti (`payCost` helper).
+  Vincolo emergente: senza città industriali collegate niente nuovi squadroni.
+- **Salvataggi v4** (migrazione v3: credits→humt 1:1, città vive collegate, QG = città
+  con più squadroni o la viva più popolosa). La fase di fondazione è salvabile
+  (hqCityId null) e si salva ESPLICITAMENTE alla fondazione (l'autosave è a cambio giorno).
+- **Test**: il guard di fondazione rende no-op `createNewGame()+tick()` → usare
+  `newGameWithHq`/`grantRiches` da `src/sim/testUtils.ts` in ogni test che ticka.
 
 ## i18n (v0.104.0) — regole operative
 - `src/i18n/it.ts` = fonte di verità (`MessageKey`); `en.ts` forzato completo da
@@ -43,6 +77,27 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
 - Test: parità chiavi e placeholder it/en, sync con cities.json (50 città, 40 paesi tradotti).
 
 ## UI (oltre l'HUD)
+- **Tutorial "Terzo Occhio"** (`src/ui/tutorial.ts` + `tutorialSteps.ts`, v0.111.0):
+  l'occhio del logo estratto A RUNTIME da `Logo_intro.svg?raw` (DOMParser, viewBox
+  ritagliato `320 105 80 50`, importare i `<g>` INTERI: fill/font vivono sui genitori),
+  fisso sotto la data (`#tutorial-companion`, top 44 left 12, z-15). Le classi `intro-*`
+  riusate danno gratis le animazioni CSS (apertura ~2s, blink, orbita pupilla, stato
+  chiuso). Utility condivise intro/tutorial in `src/ui/eye.ts` (sanitizeSvg, trackPupil
+  con dispose, bindEyeToggle: onToggle solo sui click utente, mai sui set programmatici).
+  Sequenza a step COME DATI in `tutorialSteps.ts` (funzioni pure testate): 3 step
+  founding + founded; niente `>` sull'ultimo step founding (si avanza fondando);
+  fumetto ridisegnato solo al cambio chiave (ha un bottone). Click sull'occhio =
+  tutorial nascosto → il banner `banner.chooseHq` torna come FALLBACK (main.ts decide
+  via `tutorial.isHidden()` in bootGame/Esc/onLanguageChange/callback visibilità).
+  L'occhio resta dopo la fondazione, pronto per step futuri. Riappare a ogni nuova
+  partita (nessuna pref).
+- **Pannello Bilancio** (`src/ui/balancePanel.ts`, v0.110.0): toggle dal pulsante
+  Bilancio della barra inferiore (gli altri 3 restano placeholder); scorte per tipo
+  con produzione/g, gettito Ħ/g, città collegate. Pattern radar (toggle+update).
+- **Pannello città** (`src/ui/cityPanel.ts`): modalità fondazione (risorse + "Fonda
+  qui" + anteprima kit), stato rete (★ QG / ● collegata / ○ neutrale), risorse con
+  produzione/g, bottone ambasciata, costo squadrone composito. Targhette globo:
+  classi `city-label--hq` (stella) e `--connected` (verde) in `render/cities.ts`.
 - **Intro** (`src/ui/intro.ts`, v0.105.0): overlay `#intro-screen` z-25 (sopra start screen
   z-20, sotto impostazioni z-30), visibile dal primo paint; si nasconde da solo a fine intro
   (lo start screen è già costruito sotto), `onDone` no-op = hook per musica futura.
@@ -125,10 +180,10 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
 - Perdita popolazione = rapiti a bordo all'uscita di scena. Config velocità per fase in
   `CONFIG.ufoAbductor.travel` (predisposta per stat per-fase future).
 - Registro eventi sim (`state.events`): id monotoni, trim a 40 tick; UI legge col cursore.
-- Salvataggi versionati (**v3**) con migrazioni; la velocità viene salvata (pausa ⇒ riparte in pausa).
+- Salvataggi versionati (**v4**) con migrazioni; la velocità viene salvata (pausa ⇒ riparte in pausa).
 
 ## Knowledge graph (graphify)
-- Grafo del codebase in `graphify-out/` (gitignored), ~510 nodi. Hook git aggiornano la parte
+- Grafo del codebase in `graphify-out/` (gitignored), ~570 nodi. Hook git aggiornano la parte
   codice a ogni commit/checkout/merge (AST, background, log in `~/.cache/graphify-rebuild.log`);
   i non-code finiscono in `.semantic_pending` → eseguire `/graphify --update` (regola CLAUDE.md).
 - Interprete pinnato negli hook (`_PINNED`); dopo refactoring distruttivi: `graphify update . --force`.
@@ -137,8 +192,13 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
 - Esplorazione: `graphify query "<domanda>"`, `path`, `explain`, `affected`.
 
 ## Prossimi passi concordati
-1. Pannelli veri per i 4 pulsanti della barra inferiore (Bilancio, Costruisci, Ricerca, Città)
-   — oggi placeholder "Funzione in arrivo".
-2. Stat di velocità per-fase di viaggio per ogni nemico/difesa (config già strutturata).
-3. Meta-progressione / albero tecnologico (pulsante Ricerca già pronto) — post-MVP, da spec.
-4. Eventuale: HUD responsive sotto i ~1460px (oggi sfora, limite noto).
+1. Pannelli veri per i 3 pulsanti rimasti della barra inferiore (Costruisci, Ricerca, Città)
+   — Bilancio è fatto (v0.110.0); gli altri sono placeholder "Funzione in arrivo".
+2. Economia: edifici di produzione, torri difensive, mercato/vendita surplus, nemici che
+   danneggiano gli amount delle risorse (stato già predisposto); icone risorse e SVG
+   QG/ambasciata (oggi placeholder funzionali); bilanciamento col playtest (CONFIG.economy).
+3. Tutorial: step futuri (primo squadrone, prima ambasciata, prima ondata) — la sequenza
+   a dati in tutorialSteps.ts è già pronta; eventuale accenno al collasso nell'intro.
+4. Stat di velocità per-fase di viaggio per ogni nemico/difesa (config già strutturata).
+5. Meta-progressione / albero tecnologico (pulsante Ricerca già pronto) — post-MVP, da spec.
+6. Eventuale: HUD responsive sotto i ~1460px (oggi sfora, l'ingranaggio esce dal viewport).
