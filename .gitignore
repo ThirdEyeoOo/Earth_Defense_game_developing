@@ -4,3 +4,19 @@ lista aggiornamenti/
 graphify-out/
 
 .superpowers/
+
+# log e cache
+*.log
+.vite/
+coverage/
+
+# ambiente
+.env
+.env.*
+
+# editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
