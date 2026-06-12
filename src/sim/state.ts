@@ -1,6 +1,8 @@
 import citiesData from '../data/cities.json';
 import { CONFIG } from './config';
 import type { SimEvent } from './events';
+import type { CityResource, ResourceType } from './resources';
+import { emptyStockpile } from './resources';
 import { stateRand } from './rng';
 
 export interface CityState {
@@ -13,6 +15,8 @@ export interface CityState {
   population: number;
   initialPopulation: number;
   alive: boolean;
+  resources: CityResource[]; // amount mutabili in partita (copiati dal JSON)
+  embassy: boolean; // collegata alla rete della nuova umanità (il QG non la richiede)
 }
 
 export interface TransferState {
@@ -61,7 +65,9 @@ export interface GameState {
   seed: number;
   tick: number;
   speed: 0 | 1 | 2 | 4 | 10;
-  credits: number;
+  humt: number; // Humanity Treasure, la valuta post-collasso
+  resources: Record<ResourceType, number>; // magazzino globale (float: la UI mostra il floor)
+  hqCityId: string | null; // null = fase di fondazione, la sim non avanza
   cities: CityState[];
   squadrons: SquadronState[];
   ufos: UfoState[];
@@ -83,6 +89,9 @@ interface CityRow {
   lat: number;
   lon: number;
   population: number;
+  gdp_billion_usd: number; // lore pre-apocalisse, non entra nello stato
+  gdp_post_apoc_humt: number; // ridondante (= Σ peso×amount), non entra nello stato
+  resources: CityResource[];
 }
 
 export function worldPopulation(state: GameState): number {
@@ -90,17 +99,29 @@ export function worldPopulation(state: GameState): number {
 }
 
 export function createNewGame(seed: number): GameState {
+  // mapping esplicito: i campi gdp_* restano nel JSON; deep-copy delle risorse
+  // perché il modulo JSON importato è un singleton e gli amount sono mutabili
   const cities: CityState[] = (citiesData as CityRow[]).map(c => ({
-    ...c,
+    id: c.id,
+    name: c.name,
+    country: c.country,
+    region: c.region,
+    lat: c.lat,
+    lon: c.lon,
+    population: c.population,
     initialPopulation: c.population,
     alive: true,
+    resources: c.resources.map(r => ({ ...r })),
+    embassy: false,
   }));
   const state: GameState = {
     version: CONFIG.saveVersion,
     seed,
     tick: 0,
     speed: 1,
-    credits: CONFIG.startingCredits,
+    humt: 0, // il mondo è collassato: si parte da zero, fino alla fondazione del QG
+    resources: emptyStockpile(),
+    hqCityId: null,
     cities,
     squadrons: [],
     ufos: [],

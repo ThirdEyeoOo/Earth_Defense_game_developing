@@ -21,7 +21,8 @@ function checkOutcome(state: GameState): void {
 // Ordine fisso del tick: trasferimenti → ondate → combattimento →
 // progressione UFO → economia (a fine giornata) → esito.
 export function tick(state: GameState): void {
-  if (state.outcome !== 'playing') return;
+  // hqCityId null = fase di fondazione: il tempo parte solo col QG fondato
+  if (state.outcome !== 'playing' || state.hqCityId === null) return;
   state.tick++;
   progressTransfers(state);
   processWaves(state);

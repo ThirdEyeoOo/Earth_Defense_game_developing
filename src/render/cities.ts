@@ -75,6 +75,12 @@ export class CityLayer {
       label.element.classList.toggle('city-label--selected', city.id === selectedCityId);
       label.element.classList.toggle('city-label--attack', city.alive && underAttack);
       label.element.classList.toggle('city-label--dead', !city.alive);
+      // rete della nuova umanità: QG e città collegate (rehaul economico)
+      label.element.classList.toggle('city-label--hq', city.id === state.hqCityId);
+      label.element.classList.toggle(
+        'city-label--connected',
+        city.alive && city.embassy && city.id !== state.hqCityId,
+      );
     }
   }
 

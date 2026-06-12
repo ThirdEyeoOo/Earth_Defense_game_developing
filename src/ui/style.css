@@ -22,6 +22,16 @@ body {
   border: 1px solid rgba(120, 170, 230, 0.35);
 }
 .city-label:hover { color: #e4f1ff; background: rgba(45, 74, 115, 0.65); }
+/* rete della nuova umanità: prima di --selected/--attack, che devono prevalere */
+.city-label--connected {
+  color: #8fe6b0;
+  border-color: rgba(110, 231, 160, 0.5);
+}
+.city-label--hq {
+  color: #ffd76a;
+  border-color: rgba(255, 215, 106, 0.65);
+}
+.city-label--hq::before { content: '★ '; }
 .city-label--selected {
   color: #ffe066;
   background: rgba(80, 64, 10, 0.6);
@@ -61,7 +71,7 @@ body {
 }
 #hud span { display: inline-block; }
 #hud-date { min-width: 225px; }
-#hud-credits { min-width: 90px; }
+#hud-humt { min-width: 90px; }
 #hud-pop { min-width: 150px; }
 #hud-abd { min-width: 160px; color: #c8a4ff; }
 #hud-dead { min-width: 150px; color: #ff8a99; }
@@ -111,7 +121,7 @@ body {
   border-radius: 4px;
   z-index: 10;
 }
-#city-panel, #radar-panel {
+#city-panel, #radar-panel, #balance-panel {
   position: fixed;
   top: 56px;
   width: 280px;
@@ -125,9 +135,21 @@ body {
 }
 #city-panel { right: 12px; }
 #radar-panel { left: 12px; }
-#city-panel h2, #radar-panel h2 { margin-top: 0; font-size: 16px; }
+/* il bilancio si apre dalla barra inferiore: ancorato in basso a sinistra */
+#balance-panel { top: auto; bottom: 64px; left: 12px; width: 320px; }
+#city-panel h2, #radar-panel h2, #balance-panel h2 { margin-top: 0; font-size: 16px; }
+.balance-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.balance-table td, .balance-table th { padding: 2px 4px; text-align: left; }
+.balance-table .num { text-align: right; }
+.balance-table .gain { color: #6ee7a0; }
 #city-panel ul { padding-left: 16px; }
 .danger { color: #ff5566; }
+/* stato rete della città (rehaul economico) */
+.network-hq { color: #ffd76a; }
+.network-connected { color: #6ee7a0; }
+.network-neutral { color: #8aa3c4; }
+.resource-list { font-size: 13px; }
+.resource-list small { color: #6ee7a0; }
 #end-screen, #start-screen, #settings-modal {
   position: fixed;
   inset: 0;

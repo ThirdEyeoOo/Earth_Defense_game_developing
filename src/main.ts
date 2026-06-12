@@ -1,10 +1,20 @@
 import '@fontsource/michroma'; // font UI di default
 import '@fontsource/orbitron/400.css'; // nomi città sulla mappa
 import '@fontsource/orbitron/700.css';
-import { detectLanguage, getLanguage, onLanguageChange, setLanguage, t, type Lang } from './i18n';
+import {
+  cityName,
+  detectLanguage,
+  getLanguage,
+  onLanguageChange,
+  setLanguage,
+  t,
+  type Lang,
+} from './i18n';
 import { dayOfTick } from './sim/calendar';
 import {
+  cmdBuildEmbassy,
   cmdBuildSquadron,
+  cmdFoundHq,
   cmdRelocateSquadron,
   cmdSetSpeed,
   type CommandResult,
@@ -19,6 +29,7 @@ import { createGlobe } from './render/globe';
 import { HpBarLayer } from './render/hpBars';
 import { createScene } from './render/scene';
 import { UnitLayer } from './render/units';
+import { createBalancePanel } from './ui/balancePanel';
 import { createBottomBar } from './ui/bottomBar';
 import { createCityPanel } from './ui/cityPanel';
 import { createEndScreen } from './ui/endScreen';
@@ -48,6 +59,16 @@ function showBanner(text: string, ms: number | null = 2500): void {
 
 function showCommandError(result: CommandResult): void {
   if (result.ok) return;
+  // caso speciale: il nome della risorsa va tradotto (la sim passa solo il codice)
+  if (result.code === 'insufficientResources') {
+    showBanner(
+      t('cmd.insufficientResources', {
+        amount: result.params.amount,
+        resource: t(`res.${result.params.type}`),
+      }),
+    );
+    return;
+  }
   showBanner(t(`cmd.${result.code}`, 'params' in result ? result.params : undefined));
 }
 
@@ -85,17 +106,36 @@ const hud = createHud(
   () => settings.open(),
 );
 const settings = createSettings(document.getElementById('settings-modal')!, selectLanguage);
-// barra inferiore: per ora ogni pulsante è un segnaposto ("Funzione in arrivo")
-const bottomBar = createBottomBar(document.getElementById('bottom-bar')!, () =>
-  showBanner(t('banner.comingSoon')),
-);
+// barra inferiore: Bilancio apre il pannello, gli altri sono ancora segnaposto
+const bottomBar = createBottomBar(document.getElementById('bottom-bar')!, action => {
+  if (action === 'bilancio') balancePanel.toggle();
+  else showBanner(t('banner.comingSoon'));
+});
 const radar = createRadar(document.getElementById('radar-panel')!);
+const balancePanel = createBalancePanel(document.getElementById('balance-panel')!);
 const cityPanel = createCityPanel(document.getElementById('city-panel')!, {
   onBuild: cityId => showCommandError(cmdBuildSquadron(state, cityId)),
   onStartTransfer: squadronId => {
     transferringSquadronId = squadronId;
     showBanner(t('banner.selectDestination'), null); // resta finché si sceglie o si annulla
   },
+  onFoundHq: cityId => {
+    const result = cmdFoundHq(state, cityId);
+    if (!result.ok) {
+      showCommandError(result);
+      return;
+    }
+    const city = state.cities.find(c => c.id === cityId)!;
+    showBanner(t('banner.hqFounded', { city: cityName(city.id, city.name) }));
+    // l'autosave scatta solo al cambio giorno: senza questo, un refresh
+    // prima del giorno 1 perderebbe la fondazione (e l'intera partita)
+    try {
+      localStorage.setItem(SAVE_KEY, serialize(state));
+    } catch {
+      // storage non disponibile: si continua senza salvare
+    }
+  },
+  onBuildEmbassy: cityId => showCommandError(cmdBuildEmbassy(state, cityId)),
 });
 const endScreen = createEndScreen(document.getElementById('end-screen')!, () => startNewGame());
 
@@ -115,6 +155,8 @@ window.addEventListener('keydown', event => {
     transferringSquadronId = null;
     selectedCityId = null;
     banner.classList.add('hidden');
+    // in fase di fondazione l'istruzione resta a schermo
+    if (state && state.hqCityId === null) showBanner(t('banner.chooseHq'), null);
   }
 });
 
@@ -133,6 +175,7 @@ function bootGame(gameState: GameState): void {
   hpBars.reset(); // niente barre residue tra una partita e l'altra (gli id ripartono)
   floatingText.reset(state); // un salvataggio caricato non rigioca gli eventi conservati
   document.getElementById('start-screen')!.classList.add('hidden');
+  if (state.hqCityId === null) showBanner(t('banner.chooseHq'), null);
 }
 
 function startNewGame(): void {
@@ -179,7 +222,7 @@ let acc = 0;
 function frame(now: number): void {
   const dt = Math.min(now - last, 1000); // clamp per tab in background
   last = now;
-  if (state && state.outcome === 'playing' && state.speed > 0) {
+  if (state && state.outcome === 'playing' && state.speed > 0 && state.hqCityId !== null) {
     acc += dt / (3000 / state.speed); // 1x: 1 giorno = 60s = 20 tick
     while (acc >= 1) {
       acc -= 1;
@@ -199,9 +242,11 @@ function frame(now: number): void {
       floatingText.update(state, unitLayer, ctx.camera);
       hud.update(state, state.tick + tickFraction);
       radar.update(state);
+      balancePanel.update(state);
       // il pannello ha pulsanti: si ricostruisce solo quando i dati cambiano,
       // non a ogni frame, altrimenti i click cadrebbero su elementi distrutti
-      const panelKey = `${selectedCityId}:${state.tick}:${state.credits}:${state.squadrons.length}`;
+      const embassies = state.cities.reduce((n, c) => n + (c.embassy ? 1 : 0), 0);
+      const panelKey = `${selectedCityId}:${state.tick}:${state.humt}:${state.squadrons.length}:${state.hqCityId}:${embassies}`;
       if (panelKey !== lastPanelKey) {
         lastPanelKey = panelKey;
         cityPanel.update(state, selectedCityId);
@@ -228,6 +273,7 @@ onLanguageChange(() => {
   if (state) endScreen.refresh(state);
   const startScreen = document.getElementById('start-screen')!;
   if (!startScreen.classList.contains('hidden')) setupStartScreen();
+  else if (state && state.hqCityId === null) showBanner(t('banner.chooseHq'), null);
   settings.refresh();
   intro.refreshLabels();
 });

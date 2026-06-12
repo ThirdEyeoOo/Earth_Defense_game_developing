@@ -1,25 +1,103 @@
 import { describe, expect, it } from 'vitest';
-import { applyDailyEconomy, dailyIncome } from './economy';
-import { createNewGame, worldPopulation } from './state';
+import { CONFIG } from './config';
+import {
+  applyDailyEconomy,
+  cityIncomePerDay,
+  dailyIncome,
+  dailyProductionByType,
+  embassyCost,
+  isConnected,
+  nearestConnectedKm,
+  underAbduction,
+} from './economy';
+import { createNewGame } from './state';
+import { newGameWithHq } from './testUtils';
+import { spawnUfo } from './ufos';
 
-describe('economy', () => {
-  it('reddito = popolazione viva in milioni × aliquota, arrotondato', () => {
+describe('economia HumT', () => {
+  it('senza QG nessuna città è collegata: zero entrate e produzione', () => {
     const s = createNewGame(1);
-    expect(dailyIncome(s)).toBe(Math.round(worldPopulation(s) / 1_000_000));
+    expect(s.cities.some(c => isConnected(s, c))).toBe(false);
+    expect(dailyIncome(s)).toBe(0);
+    expect(Object.values(dailyProductionByType(s)).every(v => v === 0)).toBe(true);
   });
 
-  it('le città distrutte non pagano tasse', () => {
-    const s = createNewGame(1);
+  it('gettito città = Σ(peso×amount) × popFactor × aliquota', () => {
+    const s = newGameWithHq(1, 'rome');
+    const rome = s.cities.find(c => c.id === 'rome')!;
+    const gdp = rome.resources.reduce(
+      (sum, r) => sum + CONFIG.economy.resourceWeights[r.type] * r.amount,
+      0,
+    );
+    expect(cityIncomePerDay(rome)).toBeCloseTo(gdp * CONFIG.economy.taxRatePerDay);
+    expect(dailyIncome(s)).toBe(Math.round(cityIncomePerDay(rome)));
+    // la popolazione dimezzata dimezza il gettito
+    rome.population = rome.initialPopulation / 2;
+    expect(cityIncomePerDay(rome)).toBeCloseTo((gdp * CONFIG.economy.taxRatePerDay) / 2);
+  });
+
+  it('producono solo le città collegate (QG + ambasciate), non le neutrali o distrutte', () => {
+    const s = newGameWithHq(1, 'rome');
     const before = dailyIncome(s);
-    const tokyo = s.cities.find(c => c.id === 'tokyo')!;
-    tokyo.alive = false;
-    expect(dailyIncome(s)).toBe(before - Math.round(tokyo.population / 1_000_000));
+    const paris = s.cities.find(c => c.id === 'paris')!;
+    paris.embassy = true;
+    expect(dailyIncome(s)).toBe(before + Math.round(cityIncomePerDay(paris)));
+    paris.alive = false;
+    expect(dailyIncome(s)).toBe(before);
   });
 
-  it('applyDailyEconomy accredita il reddito', () => {
-    const s = createNewGame(1);
-    const credits = s.credits;
+  it('produzione giornaliera = amount × tasso × popFactor, per tipo', () => {
+    const s = newGameWithHq(1, 'rome');
+    const rome = s.cities.find(c => c.id === 'rome')!;
+    const prod = dailyProductionByType(s);
+    for (const r of rome.resources) {
+      expect(prod[r.type]).toBeCloseTo(r.amount * CONFIG.economy.conversionRate);
+    }
+  });
+
+  it('un rapimento attivo sospende produzione e gettito della città', () => {
+    const s = newGameWithHq(1, 'rome');
+    spawnUfo(s, 'rome');
+    const ufo = s.ufos[0];
+    ufo.phase = 'abducting';
+    expect(underAbduction(s, 'rome')).toBe(true);
+    expect(dailyIncome(s)).toBe(0);
+    expect(Object.values(dailyProductionByType(s)).every(v => v === 0)).toBe(true);
+    ufo.phase = 'escaping';
+    expect(underAbduction(s, 'rome')).toBe(false);
+    expect(dailyIncome(s)).toBeGreaterThan(0);
+  });
+
+  it('applyDailyEconomy accredita HumT e riempie il magazzino', () => {
+    const s = newGameWithHq(1, 'rome');
+    const humt = s.humt;
+    const before = { ...s.resources }; // il kit di partenza è già nel magazzino
     applyDailyEconomy(s);
-    expect(s.credits).toBe(credits + dailyIncome(s));
+    expect(s.humt).toBe(humt + dailyIncome(s));
+    const rome = s.cities.find(c => c.id === 'rome')!;
+    for (const r of rome.resources) {
+      expect(s.resources[r.type] - before[r.type]).toBeCloseTo(
+        r.amount * CONFIG.economy.conversionRate,
+      );
+    }
+  });
+
+  it("il costo dell'ambasciata cresce con la distanza dalla rete", () => {
+    const s = newGameWithHq(1, 'rome');
+    const e = CONFIG.economy.embassy;
+    // Roma→Parigi ~1100 km, Roma→Tokyo ~9900 km
+    const paris = embassyCost(s, 'paris');
+    const tokyo = embassyCost(s, 'tokyo');
+    expect(nearestConnectedKm(s, 'paris')).toBeGreaterThan(1000);
+    expect(nearestConnectedKm(s, 'paris')).toBeLessThan(1300);
+    expect(paris.humt).toBe(
+      Math.round(e.baseHumt * (1 + nearestConnectedKm(s, 'paris') / e.distanceDivisorKm)),
+    );
+    expect(tokyo.humt).toBeGreaterThan(paris.humt);
+    expect(tokyo.resources.agroalimentare!).toBeGreaterThan(paris.resources.agroalimentare!);
+    // una rete più estesa avvicina le ambasciate successive (Londra dista meno da Parigi)
+    const londonFromRome = embassyCost(s, 'london').humt;
+    s.cities.find(c => c.id === 'paris')!.embassy = true;
+    expect(embassyCost(s, 'london').humt).toBeLessThan(londonFromRome);
   });
 });

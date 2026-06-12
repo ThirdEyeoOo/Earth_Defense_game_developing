@@ -7,7 +7,7 @@ export const it = {
   // HUD
   'hud.radar': 'Radar',
   'hud.save': 'Salva',
-  'hud.credits': '₡ {n}',
+  'hud.humt': 'Ħ {n}',
   'hud.pop': 'Pop. {n}',
   'hud.abductions': 'Abductions: {n}',
   'hud.dead': 'Morti: {n}',
@@ -20,9 +20,17 @@ export const it = {
   'panel.ufosInArea': '⚠ UFO in zona: {n}',
   'panel.squadrons': 'Squadroni ({n})',
   'panel.inbound': '{n} in arrivo',
-  'panel.build': 'Costruisci squadrone (₡ {cost})',
+  'panel.build': 'Costruisci squadrone (Ħ {humt} + {ind} industria + {fuel} combustibili)',
   'panel.squadronItem': 'Squadrone #{id} — HP {hp}',
   'panel.transfer': 'Trasferisci',
+  'panel.networkHq': '★ Quartier Generale',
+  'panel.networkConnected': '● Collegata alla rete',
+  'panel.networkNeutral': '○ Neutrale (fuori rete)',
+  'panel.resources': 'Risorse',
+  'panel.productionPerDay': '+{n}/g',
+  'panel.foundHq': 'Fonda qui il Quartier Generale (gratis)',
+  'panel.starterKit': 'Kit di partenza: Ħ {humt} + {ind} industria + {fuel} combustibili + {agro} agroalimentare',
+  'panel.openEmbassy': 'Apri ambasciata (Ħ {humt} + {agro} agroalimentare)',
 
   // radar
   'radar.title': 'Radar',
@@ -54,6 +62,15 @@ export const it = {
   'banner.gameSaved': 'Partita salvata',
   'banner.selectDestination': 'Seleziona la città di destinazione (Esc per annullare)',
   'banner.comingSoon': 'Funzione in arrivo',
+  'banner.chooseHq': 'Il mondo è collassato. Scegli una città dove fondare il Quartier Generale della nuova umanità',
+  'banner.hqFounded': 'Quartier Generale fondato a {city}',
+
+  // pannello bilancio
+  'balance.title': 'Bilancio',
+  'balance.stock': 'Scorta',
+  'balance.productionPerDay': 'Prod./g',
+  'balance.incomePerDay': 'Gettito giornaliero:',
+  'balance.connectedCities': 'Città collegate:',
 
   // barra menu inferiore
   'bar.bilancio': 'Bilancio',
@@ -63,11 +80,27 @@ export const it = {
 
   // errori dei comandi (codici da sim/commands.ts: la sim non conosce i testi)
   'cmd.cityUnavailable': 'Città non disponibile',
-  'cmd.insufficientCredits': 'Crediti insufficienti (servono {cost})',
+  'cmd.insufficientHumt': 'HumT insufficienti (servono Ħ {cost})',
+  'cmd.insufficientResources': 'Risorse insufficienti: servono {amount} di {resource}',
   'cmd.squadronNotFound': 'Squadrone inesistente',
   'cmd.squadronInTransfer': 'Squadrone già in trasferimento',
   'cmd.destinationUnavailable': 'Destinazione non disponibile',
   'cmd.sameCity': 'Lo squadrone è già qui',
+  'cmd.hqAlreadyFounded': 'Il Quartier Generale è già stato fondato',
+  'cmd.hqNotFounded': 'Prima fonda il Quartier Generale',
+  'cmd.alreadyConnected': 'Città già collegata alla rete',
+
+  // risorse (chiave = ResourceType in sim/resources.ts)
+  'res.agroalimentare': 'Agroalimentare',
+  'res.chimica': 'Chimica',
+  'res.combustibili_fossili': 'Combustibili fossili',
+  'res.energia': 'Energia',
+  'res.finanza': 'Finanza',
+  'res.industria': 'Industria',
+  'res.materiali_da_costruzione': 'Materiali da costruzione',
+  'res.metalli_preziosi_e_minerali': 'Metalli preziosi e minerali',
+  'res.tecnologia': 'Tecnologia',
+  'res.tessuti': 'Tessuti',
 
   // scritte fluttuanti (render/floatingText.ts)
   'float.squadronTransferStarted': 'squadrone in viaggio',

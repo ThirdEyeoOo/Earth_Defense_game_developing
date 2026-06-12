@@ -45,7 +45,7 @@ describe('dizionari', () => {
 
 describe('t()', () => {
   test('interpola i parametri', () => {
-    expect(t('cmd.insufficientCredits', { cost: 500 })).toBe('Crediti insufficienti (servono 500)');
+    expect(t('cmd.insufficientHumt', { cost: 500 })).toBe('HumT insufficienti (servono Ħ 500)');
   });
 
   test('lascia intatti i placeholder senza parametro', () => {
@@ -64,7 +64,7 @@ describe('lingua', () => {
     expect(getLanguage()).toBe('en');
     expect(getLocale()).toBe('en-US');
     expect(t('hud.save')).toBe('Save');
-    expect(t('cmd.insufficientCredits', { cost: 500 })).toBe('Insufficient credits (500 needed)');
+    expect(t('cmd.insufficientHumt', { cost: 500 })).toBe('Insufficient HumT (Ħ 500 needed)');
   });
 
   test('onLanguageChange notifica una volta per cambio e l’unsubscribe funziona', () => {
