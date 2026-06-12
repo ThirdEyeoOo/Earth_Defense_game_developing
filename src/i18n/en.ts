@@ -24,6 +24,14 @@ export const en: Record<MessageKey, string> = {
   'panel.build': 'Build squadron (Ħ {humt} + {ind} industry + {fuel} fuel)',
   'panel.squadronItem': 'Squadron #{id} — HP {hp}',
   'panel.transfer': 'Transfer',
+  'panel.networkHq': '★ Headquarters',
+  'panel.networkConnected': '● Connected to the network',
+  'panel.networkNeutral': '○ Neutral (off the network)',
+  'panel.resources': 'Resources',
+  'panel.productionPerDay': '+{n}/d',
+  'panel.foundHq': 'Found the Headquarters here (free)',
+  'panel.starterKit': 'Starter kit: Ħ {humt} + {ind} industry + {fuel} fuel + {agro} agri-food',
+  'panel.openEmbassy': 'Open embassy (Ħ {humt} + {agro} agri-food)',
 
   // radar
   'radar.title': 'Radar',
@@ -55,6 +63,8 @@ export const en: Record<MessageKey, string> = {
   'banner.gameSaved': 'Game saved',
   'banner.selectDestination': 'Select the destination city (Esc to cancel)',
   'banner.comingSoon': 'Coming soon',
+  'banner.chooseHq': 'The world has collapsed. Choose a city to found the Headquarters of the new humanity',
+  'banner.hqFounded': 'Headquarters founded in {city}',
 
   // bottom menu bar
   'bar.bilancio': 'Budget',

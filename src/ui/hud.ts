@@ -67,6 +67,8 @@ export function createHud(
         state.ufos.length > 0 ? t('hud.attackInProgress') : t('hud.nextWave', { days });
       for (const btn of speedsEl.querySelectorAll('button')) {
         btn.classList.toggle('active', Number(btn.dataset.speed) === state.speed);
+        // in fase di fondazione il tempo è congelato: la velocità non ha effetto
+        btn.disabled = state.hqCityId === null;
       }
     },
   };

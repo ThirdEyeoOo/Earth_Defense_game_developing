@@ -1,10 +1,20 @@
 import '@fontsource/michroma'; // font UI di default
 import '@fontsource/orbitron/400.css'; // nomi città sulla mappa
 import '@fontsource/orbitron/700.css';
-import { detectLanguage, getLanguage, onLanguageChange, setLanguage, t, type Lang } from './i18n';
+import {
+  cityName,
+  detectLanguage,
+  getLanguage,
+  onLanguageChange,
+  setLanguage,
+  t,
+  type Lang,
+} from './i18n';
 import { dayOfTick } from './sim/calendar';
 import {
+  cmdBuildEmbassy,
   cmdBuildSquadron,
+  cmdFoundHq,
   cmdRelocateSquadron,
   cmdSetSpeed,
   type CommandResult,
@@ -106,6 +116,23 @@ const cityPanel = createCityPanel(document.getElementById('city-panel')!, {
     transferringSquadronId = squadronId;
     showBanner(t('banner.selectDestination'), null); // resta finché si sceglie o si annulla
   },
+  onFoundHq: cityId => {
+    const result = cmdFoundHq(state, cityId);
+    if (!result.ok) {
+      showCommandError(result);
+      return;
+    }
+    const city = state.cities.find(c => c.id === cityId)!;
+    showBanner(t('banner.hqFounded', { city: cityName(city.id, city.name) }));
+    // l'autosave scatta solo al cambio giorno: senza questo, un refresh
+    // prima del giorno 1 perderebbe la fondazione (e l'intera partita)
+    try {
+      localStorage.setItem(SAVE_KEY, serialize(state));
+    } catch {
+      // storage non disponibile: si continua senza salvare
+    }
+  },
+  onBuildEmbassy: cityId => showCommandError(cmdBuildEmbassy(state, cityId)),
 });
 const endScreen = createEndScreen(document.getElementById('end-screen')!, () => startNewGame());
 
@@ -125,6 +152,8 @@ window.addEventListener('keydown', event => {
     transferringSquadronId = null;
     selectedCityId = null;
     banner.classList.add('hidden');
+    // in fase di fondazione l'istruzione resta a schermo
+    if (state && state.hqCityId === null) showBanner(t('banner.chooseHq'), null);
   }
 });
 
@@ -143,6 +172,7 @@ function bootGame(gameState: GameState): void {
   hpBars.reset(); // niente barre residue tra una partita e l'altra (gli id ripartono)
   floatingText.reset(state); // un salvataggio caricato non rigioca gli eventi conservati
   document.getElementById('start-screen')!.classList.add('hidden');
+  if (state.hqCityId === null) showBanner(t('banner.chooseHq'), null);
 }
 
 function startNewGame(): void {
@@ -189,7 +219,7 @@ let acc = 0;
 function frame(now: number): void {
   const dt = Math.min(now - last, 1000); // clamp per tab in background
   last = now;
-  if (state && state.outcome === 'playing' && state.speed > 0) {
+  if (state && state.outcome === 'playing' && state.speed > 0 && state.hqCityId !== null) {
     acc += dt / (3000 / state.speed); // 1x: 1 giorno = 60s = 20 tick
     while (acc >= 1) {
       acc -= 1;
@@ -239,6 +269,7 @@ onLanguageChange(() => {
   if (state) endScreen.refresh(state);
   const startScreen = document.getElementById('start-screen')!;
   if (!startScreen.classList.contains('hidden')) setupStartScreen();
+  else if (state && state.hqCityId === null) showBanner(t('banner.chooseHq'), null);
   settings.refresh();
   intro.refreshLabels();
 });

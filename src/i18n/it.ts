@@ -23,6 +23,14 @@ export const it = {
   'panel.build': 'Costruisci squadrone (Ħ {humt} + {ind} industria + {fuel} combustibili)',
   'panel.squadronItem': 'Squadrone #{id} — HP {hp}',
   'panel.transfer': 'Trasferisci',
+  'panel.networkHq': '★ Quartier Generale',
+  'panel.networkConnected': '● Collegata alla rete',
+  'panel.networkNeutral': '○ Neutrale (fuori rete)',
+  'panel.resources': 'Risorse',
+  'panel.productionPerDay': '+{n}/g',
+  'panel.foundHq': 'Fonda qui il Quartier Generale (gratis)',
+  'panel.starterKit': 'Kit di partenza: Ħ {humt} + {ind} industria + {fuel} combustibili + {agro} agroalimentare',
+  'panel.openEmbassy': 'Apri ambasciata (Ħ {humt} + {agro} agroalimentare)',
 
   // radar
   'radar.title': 'Radar',
@@ -54,6 +62,8 @@ export const it = {
   'banner.gameSaved': 'Partita salvata',
   'banner.selectDestination': 'Seleziona la città di destinazione (Esc per annullare)',
   'banner.comingSoon': 'Funzione in arrivo',
+  'banner.chooseHq': 'Il mondo è collassato. Scegli una città dove fondare il Quartier Generale della nuova umanità',
+  'banner.hqFounded': 'Quartier Generale fondato a {city}',
 
   // barra menu inferiore
   'bar.bilancio': 'Bilancio',
