@@ -39,6 +39,7 @@ import { createIntro } from './ui/intro';
 import { loadPrefs, savePrefs } from './ui/prefs';
 import { createRadar } from './ui/radar';
 import { createSettings } from './ui/settings';
+import { createTutorial } from './ui/tutorial';
 
 // --- stato applicativo ---
 let state: GameState;
@@ -113,6 +114,13 @@ const bottomBar = createBottomBar(document.getElementById('bottom-bar')!, action
 });
 const radar = createRadar(document.getElementById('radar-panel')!);
 const balancePanel = createBalancePanel(document.getElementById('balance-panel')!);
+// Terzo Occhio: in fondazione il fumetto guida; il banner-istruzione resta
+// solo come fallback quando il giocatore nasconde il tutorial (occhio chiuso)
+const tutorial = createTutorial(document.getElementById('tutorial-companion')!, hidden => {
+  if (!state || state.hqCityId !== null) return;
+  if (hidden) showBanner(t('banner.chooseHq'), null);
+  else banner.classList.add('hidden');
+});
 const cityPanel = createCityPanel(document.getElementById('city-panel')!, {
   onBuild: cityId => showCommandError(cmdBuildSquadron(state, cityId)),
   onStartTransfer: squadronId => {
@@ -125,8 +133,11 @@ const cityPanel = createCityPanel(document.getElementById('city-panel')!, {
       showCommandError(result);
       return;
     }
-    const city = state.cities.find(c => c.id === cityId)!;
-    showBanner(t('banner.hqFounded', { city: cityName(city.id, city.name) }));
+    // a tutorial visibile la conferma la dà il fumetto di Terzo Occhio
+    if (tutorial.isHidden()) {
+      const city = state.cities.find(c => c.id === cityId)!;
+      showBanner(t('banner.hqFounded', { city: cityName(city.id, city.name) }));
+    }
     // l'autosave scatta solo al cambio giorno: senza questo, un refresh
     // prima del giorno 1 perderebbe la fondazione (e l'intera partita)
     try {
@@ -155,8 +166,10 @@ window.addEventListener('keydown', event => {
     transferringSquadronId = null;
     selectedCityId = null;
     banner.classList.add('hidden');
-    // in fase di fondazione l'istruzione resta a schermo
-    if (state && state.hqCityId === null) showBanner(t('banner.chooseHq'), null);
+    // in fase di fondazione l'istruzione resta a schermo (solo a tutorial nascosto)
+    if (state && state.hqCityId === null && tutorial.isHidden()) {
+      showBanner(t('banner.chooseHq'), null);
+    }
   }
 });
 
@@ -175,7 +188,8 @@ function bootGame(gameState: GameState): void {
   hpBars.reset(); // niente barre residue tra una partita e l'altra (gli id ripartono)
   floatingText.reset(state); // un salvataggio caricato non rigioca gli eventi conservati
   document.getElementById('start-screen')!.classList.add('hidden');
-  if (state.hqCityId === null) showBanner(t('banner.chooseHq'), null);
+  tutorial.reset(state); // dopo il reset il tutorial è visibile → niente banner
+  if (state.hqCityId === null && tutorial.isHidden()) showBanner(t('banner.chooseHq'), null);
 }
 
 function startNewGame(): void {
@@ -243,6 +257,7 @@ function frame(now: number): void {
       hud.update(state, state.tick + tickFraction);
       radar.update(state);
       balancePanel.update(state);
+      tutorial.update(state);
       // il pannello ha pulsanti: si ricostruisce solo quando i dati cambiano,
       // non a ogni frame, altrimenti i click cadrebbero su elementi distrutti
       const embassies = state.cities.reduce((n, c) => n + (c.embassy ? 1 : 0), 0);
@@ -273,9 +288,12 @@ onLanguageChange(() => {
   if (state) endScreen.refresh(state);
   const startScreen = document.getElementById('start-screen')!;
   if (!startScreen.classList.contains('hidden')) setupStartScreen();
-  else if (state && state.hqCityId === null) showBanner(t('banner.chooseHq'), null);
+  else if (state && state.hqCityId === null && tutorial.isHidden()) {
+    showBanner(t('banner.chooseHq'), null);
+  }
   settings.refresh();
   intro.refreshLabels();
+  tutorial.refreshLabels();
 });
 
 // l'intro copre lo start screen (z-25) e si nasconde da sola a fine video;

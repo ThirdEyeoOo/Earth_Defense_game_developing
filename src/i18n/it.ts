@@ -55,6 +55,17 @@ export const it = {
   // intro (logo + video, ui/intro.ts)
   'intro.skipHint': 'Clicca o premi Esc per saltare',
 
+  // tutorial (compagno Terzo Occhio, ui/tutorial.ts)
+  'tutorial.step1':
+    'Ciao, sono Terzo Occhio, il tuo assistente personale. Siamo a inizio partita, quindi ti guiderò attraverso i concetti iniziali del gioco!',
+  'tutorial.step2':
+    "Con la sparizione improvvisa di quasi tutte le città terrestri, l'economia e la società sono di colpo collassate. Il sistema economico si è azzerato e il dollaro non ha più senso di esistere dopo il collasso. Solo l'istituzione di una nuova società può tentare di riavviare tutto. E tu sarai il fondatore di questa nuova società.",
+  'tutorial.step3': 'Scegli una città iniziale dove fondare il Quartier Generale.',
+  'tutorial.founded': 'Ben fatto! Quartier Generale fondato a {city}!',
+  'tutorial.next': '>',
+  'tutorial.nextLabel': 'Avanti',
+  'tutorial.toggleHint': 'Terzo Occhio — clicca per nascondere o mostrare il tutorial',
+
   // schermata iniziale e banner
   'start.continue': 'Continua',
   'start.newGame': 'Nuova partita',
