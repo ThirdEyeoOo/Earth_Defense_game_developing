@@ -2,3 +2,5 @@ node_modules/
 dist/
 lista aggiornamenti/
 graphify-out/
+
+.superpowers/
