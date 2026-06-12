@@ -29,6 +29,7 @@ import { createGlobe } from './render/globe';
 import { HpBarLayer } from './render/hpBars';
 import { createScene } from './render/scene';
 import { UnitLayer } from './render/units';
+import { createBalancePanel } from './ui/balancePanel';
 import { createBottomBar } from './ui/bottomBar';
 import { createCityPanel } from './ui/cityPanel';
 import { createEndScreen } from './ui/endScreen';
@@ -105,11 +106,13 @@ const hud = createHud(
   () => settings.open(),
 );
 const settings = createSettings(document.getElementById('settings-modal')!, selectLanguage);
-// barra inferiore: per ora ogni pulsante è un segnaposto ("Funzione in arrivo")
-const bottomBar = createBottomBar(document.getElementById('bottom-bar')!, () =>
-  showBanner(t('banner.comingSoon')),
-);
+// barra inferiore: Bilancio apre il pannello, gli altri sono ancora segnaposto
+const bottomBar = createBottomBar(document.getElementById('bottom-bar')!, action => {
+  if (action === 'bilancio') balancePanel.toggle();
+  else showBanner(t('banner.comingSoon'));
+});
 const radar = createRadar(document.getElementById('radar-panel')!);
+const balancePanel = createBalancePanel(document.getElementById('balance-panel')!);
 const cityPanel = createCityPanel(document.getElementById('city-panel')!, {
   onBuild: cityId => showCommandError(cmdBuildSquadron(state, cityId)),
   onStartTransfer: squadronId => {
@@ -239,6 +242,7 @@ function frame(now: number): void {
       floatingText.update(state, unitLayer, ctx.camera);
       hud.update(state, state.tick + tickFraction);
       radar.update(state);
+      balancePanel.update(state);
       // il pannello ha pulsanti: si ricostruisce solo quando i dati cambiano,
       // non a ogni frame, altrimenti i click cadrebbero su elementi distrutti
       const embassies = state.cities.reduce((n, c) => n + (c.embassy ? 1 : 0), 0);

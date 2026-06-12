@@ -65,6 +65,13 @@ export const it = {
   'banner.chooseHq': 'Il mondo è collassato. Scegli una città dove fondare il Quartier Generale della nuova umanità',
   'banner.hqFounded': 'Quartier Generale fondato a {city}',
 
+  // pannello bilancio
+  'balance.title': 'Bilancio',
+  'balance.stock': 'Scorta',
+  'balance.productionPerDay': 'Prod./g',
+  'balance.incomePerDay': 'Gettito giornaliero:',
+  'balance.connectedCities': 'Città collegate:',
+
   // barra menu inferiore
   'bar.bilancio': 'Bilancio',
   'bar.costruisci': 'Costruisci',

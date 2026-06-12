@@ -111,7 +111,7 @@ body {
   border-radius: 4px;
   z-index: 10;
 }
-#city-panel, #radar-panel {
+#city-panel, #radar-panel, #balance-panel {
   position: fixed;
   top: 56px;
   width: 280px;
@@ -125,7 +125,13 @@ body {
 }
 #city-panel { right: 12px; }
 #radar-panel { left: 12px; }
-#city-panel h2, #radar-panel h2 { margin-top: 0; font-size: 16px; }
+/* il bilancio si apre dalla barra inferiore: ancorato in basso a sinistra */
+#balance-panel { top: auto; bottom: 64px; left: 12px; width: 320px; }
+#city-panel h2, #radar-panel h2, #balance-panel h2 { margin-top: 0; font-size: 16px; }
+.balance-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.balance-table td, .balance-table th { padding: 2px 4px; text-align: left; }
+.balance-table .num { text-align: right; }
+.balance-table .gain { color: #6ee7a0; }
 #city-panel ul { padding-left: 16px; }
 .danger { color: #ff5566; }
 /* stato rete della città (rehaul economico) */

@@ -66,6 +66,13 @@ export const en: Record<MessageKey, string> = {
   'banner.chooseHq': 'The world has collapsed. Choose a city to found the Headquarters of the new humanity',
   'banner.hqFounded': 'Headquarters founded in {city}',
 
+  // balance panel
+  'balance.title': 'Budget',
+  'balance.stock': 'Stock',
+  'balance.productionPerDay': 'Prod./d',
+  'balance.incomePerDay': 'Daily income:',
+  'balance.connectedCities': 'Connected cities:',
+
   // bottom menu bar
   'bar.bilancio': 'Budget',
   'bar.costruisci': 'Build',
