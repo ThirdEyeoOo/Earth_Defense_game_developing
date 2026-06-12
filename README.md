@@ -2,6 +2,8 @@
 
 🇬🇧 [English](#english) · 🇮🇹 [Italiano](#italiano)
 
+[![Donate via PayPal](https://img.shields.io/badge/PayPal-Support%20the%20planetary%20defense%20☕-0070ba?logo=paypal&logoColor=white)](https://paypal.me/thirdeyeooo)
+
 ---
 
 ## English
@@ -106,6 +108,16 @@ Open that address in your browser — the game starts there. To stop it, go back
 npm run build    # production build (tsc + vite build)
 npm test         # Vitest test suite
 ```
+
+### ☕ Support the war effort
+
+Earth Defense is built by one human and one AI, fueled by coffee and **Claude Code** — and unlike the HumT, my subscription can't be paid in industry and agri-food resources. 😅
+
+If this little planetary defense effort made you smile, consider donating a **symbolic 1 €** (or more, the aliens won't judge you):
+
+**👉 [paypal.me/thirdeyeooo](https://paypal.me/thirdeyeooo)**
+
+> 🎯 **First declared goal: 200 €** — enough to cover the next month of Claude Code and keep the daily updates coming. Every euro is one more F-22 in the sky. 🛸💥
 
 ### License
 
@@ -215,6 +227,16 @@ Apri quell'indirizzo nel browser — il gioco parte lì. Per fermarlo, torna nel
 npm run build    # build di produzione (tsc + vite build)
 npm test         # suite di test Vitest
 ```
+
+### ☕ Sostieni lo sforzo bellico
+
+Earth Defense è sviluppato da un umano e un'IA, a forza di caffè e **Claude Code** — e purtroppo, a differenza dell'HumT, l'abbonamento non si paga in industria e agroalimentare. 😅
+
+Se questo piccolo sforzo di difesa planetaria ti ha strappato un sorriso, considera una donazione **simbolica di 1 €** (o di più, gli alieni non giudicano):
+
+**👉 [paypal.me/thirdeyeooo](https://paypal.me/thirdeyeooo)**
+
+> 🎯 **Primo obiettivo dichiarato: 200 €** — quanto basta a coprire il prossimo mese di Claude Code e a tenere in vita gli aggiornamenti quotidiani. Ogni euro è un F-22 in più in cielo. 🛸💥
 
 ### Licenza
 
