@@ -1,8 +1,35 @@
+import type { ResourceType } from './resources';
+
 export const CONFIG = {
   ticksPerDay: 20,
   startDateIso: '2026-01-01',
-  startingCredits: 1000,
-  taxPerMillionPerDay: 1,
+  startingCredits: 1000, // legacy, rimosso in fase 2 del rehaul economico
+  taxPerMillionPerDay: 1, // legacy, rimosso in fase 2 del rehaul economico
+  economy: {
+    // valore in HumT di 1 punto di capacità produttiva (vedi Economy-model/ECONOMIA.md):
+    // se cambiano, ricalcolare gdp_post_apoc_humt in cities.json
+    resourceWeights: {
+      agroalimentare: 10,
+      energia: 9,
+      chimica: 8,
+      combustibili_fossili: 8,
+      materiali_da_costruzione: 7,
+      industria: 6,
+      metalli_preziosi_e_minerali: 5,
+      tecnologia: 4,
+      tessuti: 3,
+      finanza: 1,
+    } satisfies Record<ResourceType, number>,
+    conversionRate: 0.1, // unità prodotte al giorno per punto di capacità
+    taxRatePerDay: 0.09, // gettito = Σ(peso×amount) × popFactor × aliquota (~52–203 Ħ/g per città)
+    embassy: { baseHumt: 150, baseAgro: 20, distanceDivisorKm: 5000 },
+    // riserve recuperate dalle macerie alla fondazione del QG: bastano per il
+    // primo squadrone subito, o squadrone + ambasciata vicina in 1-2 giorni
+    starterKit: {
+      humt: 450,
+      resources: { industria: 30, combustibili_fossili: 20, agroalimentare: 25 },
+    },
+  },
   squadron: {
     attack: 6,
     shotsPerTick: 1,

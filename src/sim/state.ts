@@ -1,6 +1,7 @@
 import citiesData from '../data/cities.json';
 import { CONFIG } from './config';
 import type { SimEvent } from './events';
+import type { CityResource } from './resources';
 import { stateRand } from './rng';
 
 export interface CityState {
@@ -13,6 +14,7 @@ export interface CityState {
   population: number;
   initialPopulation: number;
   alive: boolean;
+  resources: CityResource[]; // amount mutabili in partita (copiati dal JSON)
 }
 
 export interface TransferState {
@@ -83,6 +85,9 @@ interface CityRow {
   lat: number;
   lon: number;
   population: number;
+  gdp_billion_usd: number; // lore pre-apocalisse, non entra nello stato
+  gdp_post_apoc_humt: number; // ridondante (= Σ peso×amount), non entra nello stato
+  resources: CityResource[];
 }
 
 export function worldPopulation(state: GameState): number {
@@ -90,10 +95,19 @@ export function worldPopulation(state: GameState): number {
 }
 
 export function createNewGame(seed: number): GameState {
+  // mapping esplicito: i campi gdp_* restano nel JSON; deep-copy delle risorse
+  // perché il modulo JSON importato è un singleton e gli amount sono mutabili
   const cities: CityState[] = (citiesData as CityRow[]).map(c => ({
-    ...c,
+    id: c.id,
+    name: c.name,
+    country: c.country,
+    region: c.region,
+    lat: c.lat,
+    lon: c.lon,
+    population: c.population,
     initialPopulation: c.population,
     alive: true,
+    resources: c.resources.map(r => ({ ...r })),
   }));
   const state: GameState = {
     version: CONFIG.saveVersion,
