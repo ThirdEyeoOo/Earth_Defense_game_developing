@@ -3,8 +3,6 @@ import type { ResourceType } from './resources';
 export const CONFIG = {
   ticksPerDay: 20,
   startDateIso: '2026-01-01',
-  startingCredits: 1000, // legacy, rimosso in fase 2 del rehaul economico
-  taxPerMillionPerDay: 1, // legacy, rimosso in fase 2 del rehaul economico
   economy: {
     // valore in HumT di 1 punto di capacità produttiva (vedi Economy-model/ECONOMIA.md):
     // se cambiano, ricalcolare gdp_post_apoc_humt in cities.json
@@ -36,7 +34,10 @@ export const CONFIG = {
     hp: 100,
     armor: 2,
     speedKmPerDay: 24000,
-    baseCost: 500,
+    baseCost: 300, // in HumT; si aggiunge resourceCost
+    resourceCost: { industria: 25, combustibili_fossili: 15 } satisfies Partial<
+      Record<ResourceType, number>
+    >,
     costGrowth: 0.5,
   },
   ufoAbductor: {
@@ -65,5 +66,5 @@ export const CONFIG = {
     ufosPerWave: 1,
     victoryWaves: 10,
   },
-  saveVersion: 3,
+  saveVersion: 4,
 } as const;

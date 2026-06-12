@@ -3,11 +3,14 @@ import { CONFIG } from './config';
 import { createNewGame, worldPopulation } from './state';
 
 describe('state', () => {
-  it('createNewGame carica 50 città vive con popolazione iniziale', () => {
+  it('createNewGame carica 50 città vive e parte dal collasso: zero risorse, niente QG', () => {
     const s = createNewGame(123);
     expect(s.cities).toHaveLength(50);
     expect(s.cities.every(c => c.alive && c.population === c.initialPopulation)).toBe(true);
-    expect(s.credits).toBe(CONFIG.startingCredits);
+    expect(s.cities.every(c => !c.embassy)).toBe(true);
+    expect(s.humt).toBe(0);
+    expect(Object.values(s.resources).every(v => v === 0)).toBe(true);
+    expect(s.hqCityId).toBeNull();
     expect(s.outcome).toBe('playing');
     expect(s.tick).toBe(0);
   });

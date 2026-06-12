@@ -8,7 +8,7 @@ export const en: Record<MessageKey, string> = {
   // HUD
   'hud.radar': 'Radar',
   'hud.save': 'Save',
-  'hud.credits': '₡ {n}',
+  'hud.humt': 'Ħ {n}',
   'hud.pop': 'Pop. {n}',
   'hud.abductions': 'Abductions: {n}',
   'hud.dead': 'Deaths: {n}',
@@ -21,7 +21,7 @@ export const en: Record<MessageKey, string> = {
   'panel.ufosInArea': '⚠ UFOs in the area: {n}',
   'panel.squadrons': 'Squadrons ({n})',
   'panel.inbound': '{n} inbound',
-  'panel.build': 'Build squadron (₡ {cost})',
+  'panel.build': 'Build squadron (Ħ {humt} + {ind} industry + {fuel} fuel)',
   'panel.squadronItem': 'Squadron #{id} — HP {hp}',
   'panel.transfer': 'Transfer',
 
@@ -64,11 +64,27 @@ export const en: Record<MessageKey, string> = {
 
   // command errors
   'cmd.cityUnavailable': 'City unavailable',
-  'cmd.insufficientCredits': 'Insufficient credits ({cost} needed)',
+  'cmd.insufficientHumt': 'Insufficient HumT (Ħ {cost} needed)',
+  'cmd.insufficientResources': 'Insufficient resources: {amount} {resource} needed',
   'cmd.squadronNotFound': 'Squadron not found',
   'cmd.squadronInTransfer': 'Squadron already in transfer',
   'cmd.destinationUnavailable': 'Destination unavailable',
   'cmd.sameCity': 'The squadron is already here',
+  'cmd.hqAlreadyFounded': 'The Headquarters has already been founded',
+  'cmd.hqNotFounded': 'Found the Headquarters first',
+  'cmd.alreadyConnected': 'City already connected to the network',
+
+  // resources (key = ResourceType in sim/resources.ts)
+  'res.agroalimentare': 'Agri-food',
+  'res.chimica': 'Chemicals',
+  'res.combustibili_fossili': 'Fossil fuels',
+  'res.energia': 'Energy',
+  'res.finanza': 'Finance',
+  'res.industria': 'Industry',
+  'res.materiali_da_costruzione': 'Construction materials',
+  'res.metalli_preziosi_e_minerali': 'Precious metals & minerals',
+  'res.tecnologia': 'Technology',
+  'res.tessuti': 'Textiles',
 
   // floating texts
   'float.squadronTransferStarted': 'squadron en route',

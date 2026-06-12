@@ -61,7 +61,7 @@ body {
 }
 #hud span { display: inline-block; }
 #hud-date { min-width: 225px; }
-#hud-credits { min-width: 90px; }
+#hud-humt { min-width: 90px; }
 #hud-pop { min-width: 150px; }
 #hud-abd { min-width: 160px; color: #c8a4ff; }
 #hud-dead { min-width: 150px; color: #ff8a99; }

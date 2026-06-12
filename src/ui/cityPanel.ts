@@ -1,4 +1,5 @@
 import { cityName, countryName, t } from '../i18n';
+import type { ResourceType } from '../sim/resources';
 import { squadronCost } from '../sim/squadrons';
 import type { GameState } from '../sim/state';
 import { fmtInt } from './format';
@@ -23,6 +24,11 @@ export function createCityPanel(
       const stationed = state.squadrons.filter(s => s.cityId === city.id && s.transfer === null);
       const inbound = state.squadrons.filter(s => s.cityId === city.id && s.transfer !== null);
       const cost = squadronCost(state, city.id);
+      const affordable =
+        state.humt >= cost.humt &&
+        Object.entries(cost.resources).every(
+          ([type, amount]) => state.resources[type as ResourceType] >= amount,
+        );
       const ufosHere = state.ufos.filter(u => u.targetCityId === city.id).length;
       root.innerHTML = `
         <h2>${cityName(city.id, city.name)} <small>(${countryName(city.country)})</small></h2>
@@ -32,8 +38,12 @@ export function createCityPanel(
         <h3>${t('panel.squadrons', { n: stationed.length })}</h3>
         <ul id="squadron-list"></ul>
         ${inbound.length > 0 ? `<p>${t('panel.inbound', { n: inbound.length })}</p>` : ''}
-        <button id="build-btn" ${state.credits < cost || !city.alive ? 'disabled' : ''}>
-          ${t('panel.build', { cost: fmtInt(cost) })}
+        <button id="build-btn" ${!affordable || !city.alive ? 'disabled' : ''}>
+          ${t('panel.build', {
+            humt: fmtInt(cost.humt),
+            ind: cost.resources.industria ?? 0,
+            fuel: cost.resources.combustibili_fossili ?? 0,
+          })}
         </button>
         <p id="panel-error" class="danger"></p>
       `;

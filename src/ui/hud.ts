@@ -16,7 +16,7 @@ export function createHud(
 ): { update(state: GameState, tickFloat: number): void; refreshLabels(): void } {
   root.innerHTML = `
     <span id="hud-date"></span>
-    <span id="hud-credits"></span>
+    <span id="hud-humt"></span>
     <span id="hud-pop"></span>
     <span id="hud-abd"></span>
     <span id="hud-dead"></span>
@@ -50,8 +50,8 @@ export function createHud(
     update(state: GameState, tickFloat: number) {
       root.querySelector('#hud-date')!.textContent =
         `${fmtDate(state.tick)} — ${fmtClock(tickFloat)}`;
-      root.querySelector('#hud-credits')!.textContent = t('hud.credits', {
-        n: fmtInt(state.credits),
+      root.querySelector('#hud-humt')!.textContent = t('hud.humt', {
+        n: fmtInt(state.humt),
       });
       root.querySelector('#hud-pop')!.textContent = t('hud.pop', {
         n: fmtInt(worldPopulation(state)),

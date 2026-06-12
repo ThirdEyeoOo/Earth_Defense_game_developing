@@ -1,7 +1,8 @@
 import citiesData from '../data/cities.json';
 import { CONFIG } from './config';
 import type { SimEvent } from './events';
-import type { CityResource } from './resources';
+import type { CityResource, ResourceType } from './resources';
+import { emptyStockpile } from './resources';
 import { stateRand } from './rng';
 
 export interface CityState {
@@ -15,6 +16,7 @@ export interface CityState {
   initialPopulation: number;
   alive: boolean;
   resources: CityResource[]; // amount mutabili in partita (copiati dal JSON)
+  embassy: boolean; // collegata alla rete della nuova umanità (il QG non la richiede)
 }
 
 export interface TransferState {
@@ -63,7 +65,9 @@ export interface GameState {
   seed: number;
   tick: number;
   speed: 0 | 1 | 2 | 4 | 10;
-  credits: number;
+  humt: number; // Humanity Treasure, la valuta post-collasso
+  resources: Record<ResourceType, number>; // magazzino globale (float: la UI mostra il floor)
+  hqCityId: string | null; // null = fase di fondazione, la sim non avanza
   cities: CityState[];
   squadrons: SquadronState[];
   ufos: UfoState[];
@@ -108,13 +112,16 @@ export function createNewGame(seed: number): GameState {
     initialPopulation: c.population,
     alive: true,
     resources: c.resources.map(r => ({ ...r })),
+    embassy: false,
   }));
   const state: GameState = {
     version: CONFIG.saveVersion,
     seed,
     tick: 0,
     speed: 1,
-    credits: CONFIG.startingCredits,
+    humt: 0, // il mondo è collassato: si parte da zero, fino alla fondazione del QG
+    resources: emptyStockpile(),
+    hqCityId: null,
     cities,
     squadrons: [],
     ufos: [],

@@ -28,3 +28,9 @@ export function emptyStockpile(): Record<ResourceType, number> {
   for (const type of RESOURCE_TYPES) stock[type] = 0;
   return stock;
 }
+
+// costo composito di una costruzione: HumT + risorse dal magazzino globale
+export interface Cost {
+  humt: number;
+  resources: Partial<Record<ResourceType, number>>;
+}

@@ -3,6 +3,7 @@ import { CONFIG } from './config';
 import { cmdBuildSquadron, cmdRelocateSquadron } from './commands';
 import { EVENT_RETENTION_TICKS, emitEvent } from './events';
 import { createNewGame } from './state';
+import { newGameWithHq } from './testUtils';
 import { tick } from './tick';
 import { approachTicks, descentTicks, orbitTicks, progressUfos, spawnUfo } from './ufos';
 
@@ -33,7 +34,7 @@ describe('events', () => {
   });
 
   it('trasferimento squadrone: evento con la città di partenza; comando fallito non emette', () => {
-    const s = createNewGame(1);
+    const s = newGameWithHq(1);
     cmdBuildSquadron(s, 'rome');
     cmdRelocateSquadron(s, 1, 'rome'); // stessa città: fallisce
     expect(s.events).toEqual([]);
@@ -62,7 +63,7 @@ describe('events', () => {
 
   it('determinismo: stesso seed e stessi comandi → stesso registro eventi', () => {
     const run = () => {
-      const s = createNewGame(42);
+      const s = newGameWithHq(42);
       cmdBuildSquadron(s, 'rome');
       cmdRelocateSquadron(s, 1, 'tokyo');
       for (let i = 0; i < 400; i++) tick(s);
@@ -71,7 +72,7 @@ describe('events', () => {
     expect(run().events).toEqual(run().events);
   });
   it('trimming: gli eventi più vecchi della finestra spariscono, gli id non si riusano', () => {
-    const s = createNewGame(1);
+    const s = newGameWithHq(1);
     emitEvent(s, { type: 'ufoOrbiting', unitKind: 'ufo', unitId: 99, cityId: 'rome' });
     expect(s.events).toHaveLength(1);
     const firstId = s.events[0].id;

@@ -1,37 +1,132 @@
 import { describe, expect, it } from 'vitest';
-import { cmdBuildSquadron, cmdRelocateSquadron, cmdSetSpeed } from './commands';
+import {
+  cmdBuildEmbassy,
+  cmdBuildSquadron,
+  cmdFoundHq,
+  cmdRelocateSquadron,
+  cmdSetSpeed,
+} from './commands';
+import { CONFIG } from './config';
+import { embassyCost, isConnected } from './economy';
+import { squadronCost } from './squadrons';
 import { createNewGame } from './state';
+import { grantRiches, newGameWithHq } from './testUtils';
 
-describe('commands', () => {
-  it('cmdBuildSquadron: costruisce scalando i crediti', () => {
+describe('cmdFoundHq', () => {
+  it('fonda il QG una tantum e accredita il kit di partenza', () => {
     const s = createNewGame(1);
-    s.credits = 600;
+    expect(s.humt).toBe(0);
+    const r = cmdFoundHq(s, 'rome');
+    expect(r.ok).toBe(true);
+    expect(s.hqCityId).toBe('rome');
+    const kit = CONFIG.economy.starterKit;
+    expect(s.humt).toBe(kit.humt);
+    expect(s.resources.industria).toBe(kit.resources.industria);
+    expect(s.resources.combustibili_fossili).toBe(kit.resources.combustibili_fossili);
+    expect(s.resources.agroalimentare).toBe(kit.resources.agroalimentare);
+    expect(isConnected(s, s.cities.find(c => c.id === 'rome')!)).toBe(true);
+    // una seconda fondazione è rifiutata
+    expect(cmdFoundHq(s, 'paris')).toEqual({ ok: false, code: 'hqAlreadyFounded' });
+    expect(s.hqCityId).toBe('rome');
+  });
+
+  it('rifiuta città inesistenti o distrutte', () => {
+    const s = createNewGame(1);
+    expect(cmdFoundHq(s, 'atlantide')).toEqual({ ok: false, code: 'cityUnavailable' });
+    const rome = s.cities.find(c => c.id === 'rome')!;
+    rome.alive = false;
+    expect(cmdFoundHq(s, 'rome')).toEqual({ ok: false, code: 'cityUnavailable' });
+    expect(s.hqCityId).toBeNull();
+  });
+});
+
+describe('cmdBuildEmbassy', () => {
+  it('collega la città scalando HumT e agroalimentare', () => {
+    const s = newGameWithHq(1, 'rome');
+    grantRiches(s);
+    const cost = embassyCost(s, 'paris');
+    const humt = s.humt;
+    const agro = s.resources.agroalimentare;
+    const r = cmdBuildEmbassy(s, 'paris');
+    expect(r.ok).toBe(true);
+    expect(s.humt).toBe(humt - cost.humt);
+    expect(s.resources.agroalimentare).toBe(agro - cost.resources.agroalimentare!);
+    expect(s.cities.find(c => c.id === 'paris')!.embassy).toBe(true);
+  });
+
+  it('rifiuta senza QG, su città già collegate e senza fondi', () => {
+    const s = createNewGame(1);
+    expect(cmdBuildEmbassy(s, 'paris')).toEqual({ ok: false, code: 'hqNotFounded' });
+    cmdFoundHq(s, 'rome');
+    expect(cmdBuildEmbassy(s, 'rome')).toEqual({ ok: false, code: 'alreadyConnected' });
+    const cost = embassyCost(s, 'paris');
+    s.humt = cost.humt - 1;
+    expect(cmdBuildEmbassy(s, 'paris')).toEqual({
+      ok: false,
+      code: 'insufficientHumt',
+      params: { cost: cost.humt },
+    });
+    s.humt = 9999;
+    s.resources.agroalimentare = 0;
+    expect(cmdBuildEmbassy(s, 'paris')).toEqual({
+      ok: false,
+      code: 'insufficientResources',
+      params: { type: 'agroalimentare', amount: cost.resources.agroalimentare! },
+    });
+    expect(s.humt).toBe(9999); // un rifiuto non scala nulla
+    grantRiches(s);
+    cmdBuildEmbassy(s, 'paris');
+    expect(cmdBuildEmbassy(s, 'paris')).toEqual({ ok: false, code: 'alreadyConnected' });
+  });
+});
+
+describe('cmdBuildSquadron', () => {
+  it('costruisce scalando il costo composito (HumT + industria + combustibili)', () => {
+    const s = newGameWithHq(1, 'rome');
+    // il kit di partenza basta esattamente per il primo squadrone
+    const cost = squadronCost(s, 'rome');
+    const humt = s.humt;
+    const ind = s.resources.industria;
+    const fuel = s.resources.combustibili_fossili;
     const r = cmdBuildSquadron(s, 'rome');
     expect(r.ok).toBe(true);
-    expect(s.credits).toBe(100);
+    expect(s.humt).toBe(humt - cost.humt);
+    expect(s.resources.industria).toBe(ind - cost.resources.industria!);
+    expect(s.resources.combustibili_fossili).toBe(fuel - cost.resources.combustibili_fossili!);
     expect(s.squadrons).toHaveLength(1);
     expect(s.squadrons[0].cityId).toBe('rome');
   });
 
-  it('cmdBuildSquadron: rifiuta crediti insufficienti e città non valide', () => {
+  it('rifiuta senza QG, fondi insufficienti e città non valide', () => {
     const s = createNewGame(1);
-    s.credits = 100;
+    expect(cmdBuildSquadron(s, 'rome')).toEqual({ ok: false, code: 'hqNotFounded' });
+    cmdFoundHq(s, 'rome');
+    s.humt = 100;
     expect(cmdBuildSquadron(s, 'rome')).toEqual({
       ok: false,
-      code: 'insufficientCredits',
-      params: { cost: 500 },
+      code: 'insufficientHumt',
+      params: { cost: CONFIG.squadron.baseCost },
     });
-    s.credits = 9999;
+    grantRiches(s);
+    s.resources.industria = 0;
+    expect(cmdBuildSquadron(s, 'rome')).toEqual({
+      ok: false,
+      code: 'insufficientResources',
+      params: { type: 'industria', amount: CONFIG.squadron.resourceCost.industria },
+    });
+    grantRiches(s);
     expect(cmdBuildSquadron(s, 'atlantide')).toEqual({ ok: false, code: 'cityUnavailable' });
     const rome = s.cities.find(c => c.id === 'rome')!;
     rome.alive = false;
     expect(cmdBuildSquadron(s, 'rome')).toEqual({ ok: false, code: 'cityUnavailable' });
     expect(s.squadrons).toHaveLength(0);
   });
+});
 
-  it('cmdRelocateSquadron: avvia il trasferimento con durata da distanza', () => {
-    const s = createNewGame(1);
-    s.credits = 9999;
+describe('cmdRelocateSquadron', () => {
+  it('avvia il trasferimento con durata da distanza', () => {
+    const s = newGameWithHq(1, 'rome');
+    grantRiches(s);
     cmdBuildSquadron(s, 'rome');
     const sq = s.squadrons[0];
     const r = cmdRelocateSquadron(s, sq.id, 'tokyo');
@@ -42,9 +137,9 @@ describe('commands', () => {
     expect(sq.transfer!.ticksRemaining).toBeGreaterThan(1); // Roma-Tokyo è lontana
   });
 
-  it('cmdRelocateSquadron: rifiuta se già in volo, destinazione uguale o non valida', () => {
-    const s = createNewGame(1);
-    s.credits = 9999;
+  it('rifiuta se già in volo, destinazione uguale o non valida', () => {
+    const s = newGameWithHq(1, 'rome');
+    grantRiches(s);
     cmdBuildSquadron(s, 'rome');
     const sq = s.squadrons[0];
     expect(cmdRelocateSquadron(s, sq.id, 'rome')).toEqual({ ok: false, code: 'sameCity' });
@@ -63,19 +158,9 @@ describe('commands', () => {
     }); // già in volo
   });
 
-  it('cmdSetSpeed cambia la velocità', () => {
-    const s = createNewGame(1);
-    expect(cmdSetSpeed(s, 4).ok).toBe(true);
-    expect(s.speed).toBe(4);
-    cmdSetSpeed(s, 0);
-    expect(s.speed).toBe(0);
-    cmdSetSpeed(s, 10);
-    expect(s.speed).toBe(10);
-  });
-
-  it('cmdRelocateSquadron: l\'evacuazione da una città distrutta è permessa', () => {
-    const s = createNewGame(1);
-    s.credits = 9999;
+  it("l'evacuazione da una città distrutta è permessa", () => {
+    const s = newGameWithHq(1, 'rome');
+    grantRiches(s);
     cmdBuildSquadron(s, 'rome');
     const rome = s.cities.find(c => c.id === 'rome')!;
     rome.population = 0;
@@ -83,5 +168,17 @@ describe('commands', () => {
     const r = cmdRelocateSquadron(s, s.squadrons[0].id, 'paris');
     expect(r.ok).toBe(true);
     expect(s.squadrons[0].cityId).toBe('paris');
+  });
+});
+
+describe('cmdSetSpeed', () => {
+  it('cambia la velocità', () => {
+    const s = createNewGame(1);
+    expect(cmdSetSpeed(s, 4).ok).toBe(true);
+    expect(s.speed).toBe(4);
+    cmdSetSpeed(s, 0);
+    expect(s.speed).toBe(0);
+    cmdSetSpeed(s, 10);
+    expect(s.speed).toBe(10);
   });
 });

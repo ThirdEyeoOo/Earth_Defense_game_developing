@@ -8,14 +8,22 @@ function addSquadron(s: ReturnType<typeof createNewGame>, cityId: string) {
 }
 
 describe('squadrons', () => {
-  it('il costo cresce con gli squadroni già presenti nella città', () => {
+  it('il costo (tutte le componenti) cresce con gli squadroni già presenti nella città', () => {
     const s = createNewGame(1);
-    expect(squadronCost(s, 'rome')).toBe(500);
+    const base = CONFIG.squadron.baseCost;
+    const res = CONFIG.squadron.resourceCost;
+    expect(squadronCost(s, 'rome')).toEqual({ humt: base, resources: { ...res } });
     addSquadron(s, 'rome');
-    expect(squadronCost(s, 'rome')).toBe(750);
+    expect(squadronCost(s, 'rome')).toEqual({
+      humt: Math.round(base * 1.5),
+      resources: {
+        industria: Math.round(res.industria * 1.5),
+        combustibili_fossili: Math.round(res.combustibili_fossili * 1.5),
+      },
+    });
     addSquadron(s, 'rome');
-    expect(squadronCost(s, 'rome')).toBe(1000);
-    expect(squadronCost(s, 'tokyo')).toBe(500); // altra città non influenzata
+    expect(squadronCost(s, 'rome').humt).toBe(base * 2);
+    expect(squadronCost(s, 'tokyo').humt).toBe(base); // altra città non influenzata
   });
 
   it('transferTicks: distanza/velocità in tick, minimo 1', () => {

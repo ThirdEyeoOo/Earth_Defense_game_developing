@@ -48,6 +48,16 @@ function showBanner(text: string, ms: number | null = 2500): void {
 
 function showCommandError(result: CommandResult): void {
   if (result.ok) return;
+  // caso speciale: il nome della risorsa va tradotto (la sim passa solo il codice)
+  if (result.code === 'insufficientResources') {
+    showBanner(
+      t('cmd.insufficientResources', {
+        amount: result.params.amount,
+        resource: t(`res.${result.params.type}`),
+      }),
+    );
+    return;
+  }
   showBanner(t(`cmd.${result.code}`, 'params' in result ? result.params : undefined));
 }
 
@@ -201,7 +211,8 @@ function frame(now: number): void {
       radar.update(state);
       // il pannello ha pulsanti: si ricostruisce solo quando i dati cambiano,
       // non a ogni frame, altrimenti i click cadrebbero su elementi distrutti
-      const panelKey = `${selectedCityId}:${state.tick}:${state.credits}:${state.squadrons.length}`;
+      const embassies = state.cities.reduce((n, c) => n + (c.embassy ? 1 : 0), 0);
+      const panelKey = `${selectedCityId}:${state.tick}:${state.humt}:${state.squadrons.length}:${state.hqCityId}:${embassies}`;
       if (panelKey !== lastPanelKey) {
         lastPanelKey = panelKey;
         cityPanel.update(state, selectedCityId);
