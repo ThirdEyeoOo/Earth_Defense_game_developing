@@ -6,6 +6,8 @@
 
 ## English
 
+> 🚧 **Work in progress** — Earth Defense is in continuous, day-by-day development: the project receives updates daily, so features, balance and content change fast and often.
+
 **Earth Defense** is a browser-based planetary defense management game. The world has already collapsed: almost every city on Earth has vanished, the dollar is worthless paper, and what remains of humanity trades in a single currency — the **HumT** (Humanity Treasure). Your job is to rebuild a defense network from nothing and hold the line against the alien abduction waves that keep coming.
 
 ### Gameplay
@@ -45,6 +47,8 @@ Released under the [MIT License](LICENSE).
 ---
 
 ## Italiano
+
+> 🚧 **Lavori in corso** — Earth Defense è in continuo sviluppo giorno per giorno: il progetto riceve aggiornamenti quotidiani, quindi funzionalità, bilanciamento e contenuti cambiano in fretta e di frequente.
 
 **Earth Defense** è un gestionale di difesa planetaria nel browser. Il mondo è già collassato: quasi tutte le città della Terra sono sparite, il dollaro è carta straccia e ciò che resta dell'umanità commercia con un'unica valuta — l'**HumT** (Humanity Treasure). Il tuo compito è ricostruire dal nulla una rete di difesa e resistere alle ondate di rapimenti alieni che continuano ad arrivare.
 
