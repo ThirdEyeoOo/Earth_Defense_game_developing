@@ -22,6 +22,16 @@ body {
   border: 1px solid rgba(120, 170, 230, 0.35);
 }
 .city-label:hover { color: #e4f1ff; background: rgba(45, 74, 115, 0.65); }
+/* rete della nuova umanità: prima di --selected/--attack, che devono prevalere */
+.city-label--connected {
+  color: #8fe6b0;
+  border-color: rgba(110, 231, 160, 0.5);
+}
+.city-label--hq {
+  color: #ffd76a;
+  border-color: rgba(255, 215, 106, 0.65);
+}
+.city-label--hq::before { content: '★ '; }
 .city-label--selected {
   color: #ffe066;
   background: rgba(80, 64, 10, 0.6);
