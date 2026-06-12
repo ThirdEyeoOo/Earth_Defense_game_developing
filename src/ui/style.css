@@ -76,7 +76,8 @@ body {
 #hud-abd { min-width: 160px; color: #c8a4ff; }
 #hud-dead { min-width: 150px; color: #ff8a99; }
 #hud-wave { min-width: 190px; }
-#hud button, #city-panel button, .end-box button, #start-screen button, .settings-box button {
+#hud button, #city-panel button, .end-box button, #start-screen button, .settings-box button,
+#tutorial-companion button {
   font-family: inherit; /* i bottoni non ereditano il font di default */
   background: #15263f;
   color: #cfe3ff;
@@ -315,3 +316,41 @@ svg.intro-eye-closed .intro-dash { opacity: 1 !important; }
   from { transform: rotate(0turn) translateX(4px); }
   to   { transform: rotate(1turn) translateX(4px); }
 }
+
+/* tutorial: compagno "Terzo Occhio" + fumetto (ui/tutorial.ts).
+   L'occhio riusa le classi/animazioni intro-* qui sopra. */
+#tutorial-companion {
+  position: fixed;
+  top: 44px; /* appena sotto la data dell'HUD, fuori dalla barra */
+  left: 12px;
+  z-index: 15; /* sopra radar e banner, sotto start screen (20) */
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.tutorial-eye svg { width: 64px; height: auto; display: block; }
+.tutorial-eye { cursor: pointer; }
+.tutorial-bubble {
+  position: relative;
+  margin-top: 4px;
+  max-width: 340px;
+  background: rgba(13, 26, 48, 0.95);
+  border: 1px solid #f0c34e;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #cfe3ff;
+}
+.tutorial-bubble p { margin: 0; }
+/* codina comic verso l'occhio: due triangoli sovrapposti (bordo + riempimento) */
+.tutorial-bubble::before, .tutorial-bubble::after {
+  content: '';
+  position: absolute;
+  top: 16px;
+  border: 8px solid transparent;
+  border-left: 0;
+}
+.tutorial-bubble::before { left: -8px; border-right-color: #f0c34e; }
+.tutorial-bubble::after { left: -6.5px; border-right-color: #0d1a30; }
+.tutorial-next { display: block; margin: 8px 0 0 auto; padding: 2px 10px; }

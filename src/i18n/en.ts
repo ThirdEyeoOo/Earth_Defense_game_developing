@@ -56,6 +56,17 @@ export const en: Record<MessageKey, string> = {
   // intro (logo + video, ui/intro.ts)
   'intro.skipHint': 'Click or press Esc to skip',
 
+  // tutorial (Third Eye companion, ui/tutorial.ts)
+  'tutorial.step1':
+    "Hi, I'm Third Eye, your personal assistant. We're at the start of a new game, so I'll guide you through the basics!",
+  'tutorial.step2':
+    'With the sudden disappearance of almost every city on Earth, the economy and society collapsed overnight. The economic system was wiped out, and the dollar no longer has any reason to exist after the collapse. Only the founding of a new society can attempt to restart everything. And you will be the founder of this new society.',
+  'tutorial.step3': 'Choose a starting city where you will found the Headquarters.',
+  'tutorial.founded': 'Well done! Headquarters founded in {city}!',
+  'tutorial.next': '>',
+  'tutorial.nextLabel': 'Next',
+  'tutorial.toggleHint': 'Third Eye — click to hide or show the tutorial',
+
   // start screen and banners
   'start.continue': 'Continue',
   'start.newGame': 'New game',
