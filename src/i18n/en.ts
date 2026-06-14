@@ -84,6 +84,21 @@ export const en: Record<MessageKey, string> = {
   'balance.incomePerDay': 'Daily income:',
   'balance.connectedCities': 'Connected cities:',
 
+  // combat window (globe badge + ui/combatWindow.ts)
+  'combat.title': 'Battle over {city}',
+  'combat.close': 'Close',
+  'combat.defenders': 'Defenders',
+  'combat.attackers': 'Invaders',
+  'combat.squadron': 'Squadron #{id}',
+  'combat.ufo': 'UFO #{id}',
+  'combat.abductions': 'Abducted: {n}',
+  'combat.phase': 'Phase: {phase}',
+  'combat.phase.descending': 'Descent',
+  'combat.phase.abducting': 'Abduction',
+  'combat.phase.escaping': 'Escape',
+  'combat.ended': 'Battle over',
+  'combat.badgeAlt': 'Open the battle over {city}',
+
   // bottom menu bar
   'bar.bilancio': 'Budget',
   'bar.costruisci': 'Build',
@@ -120,6 +135,24 @@ export const en: Record<MessageKey, string> = {
   'float.ufoDescending': 'landing',
   'float.ufoAbducting': 'abductions in progress',
   'float.abductions': 'Abductions = {n}',
+
+  // encyclopedia ("?" button in the HUD + ui/encyclopedia.ts)
+  'enc.open': 'Encyclopedia',
+  'enc.title': 'Encyclopedia',
+  'enc.close': 'Close',
+  'enc.humt.title': 'HumT and daily income',
+  'enc.humt.body':
+    '<p><strong>HumT</strong> (Humanity Treasure) is the currency of the new humanity. After the collapse almost every city vanished: the dollar is worthless and every exchange goes through HumT.</p>' +
+    '<p><strong>Daily income</strong> is the sum of the taxes paid each day by the cities connected to the network (Headquarters and embassies). A city contributes only if it is alive, connected and not under abduction.</p>' +
+    '<p>For each city the income is:</p>' +
+    '<p class="enc-formula">GDP × population factor × tax rate</p>' +
+    '<ul>' +
+    '<li><strong>GDP</strong>: sum of (resource weight × capacity) over all the city resources. Capacity (0–100) can be damaged by enemies, lowering the GDP.</li>' +
+    '<li><strong>Population factor</strong>: current population ÷ initial population (drops if the city loses inhabitants).</li>' +
+    '<li><strong>Tax rate</strong>: 9% per day.</li>' +
+    '</ul>' +
+    '<p>Resource weights (HumT value per capacity point): agrifood 10, energy 9, chemicals 8, fossil fuels 8, construction materials 7, industry 6, precious metals & minerals 5, technology 4, textiles 3, finance 1.</p>' +
+    '<p>The total, rounded, is added to your HumT at every day change. An ongoing abduction suspends the income and production of the affected city.</p>',
 
   // settings menu
   'settings.title': 'Settings',

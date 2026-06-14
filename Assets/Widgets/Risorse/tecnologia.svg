@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <!-- Tecnologia: microchip -->
+  <g stroke="#5fe0c0" stroke-width="2" stroke-linecap="round">
+    <line x1="9" y1="4" x2="9" y2="7"/><line x1="12" y1="4" x2="12" y2="7"/><line x1="15" y1="4" x2="15" y2="7"/>
+    <line x1="9" y1="17" x2="9" y2="20"/><line x1="12" y1="17" x2="12" y2="20"/><line x1="15" y1="17" x2="15" y2="20"/>
+    <line x1="4" y1="9" x2="7" y2="9"/><line x1="4" y1="12" x2="7" y2="12"/><line x1="4" y1="15" x2="7" y2="15"/>
+    <line x1="17" y1="9" x2="20" y2="9"/><line x1="17" y1="12" x2="20" y2="12"/><line x1="17" y1="15" x2="20" y2="15"/>
+  </g>
+  <rect x="7" y="7" width="10" height="10" rx="1.5" fill="#5fe0c0"/>
+  <rect x="10" y="10" width="4" height="4" fill="#0b1424"/>
+</svg>

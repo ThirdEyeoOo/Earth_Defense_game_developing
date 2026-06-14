@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <!-- Metalli preziosi e minerali: gemma sfaccettata -->
+  <path d="M6 4 h12 l4 5 -10 11 L2 9 Z" fill="#5fd0ff"
+        stroke="#1f6a8c" stroke-width="0.8" stroke-linejoin="round"/>
+  <g fill="none" stroke="#cdeeff" stroke-width="0.8">
+    <path d="M2 9 h20"/>
+    <path d="M6 4 L9 9 L12 20"/>
+    <path d="M18 4 L15 9 L12 20"/>
+    <path d="M9 9 h6"/>
+  </g>
+</svg>

@@ -83,6 +83,21 @@ export const it = {
   'balance.incomePerDay': 'Gettito giornaliero:',
   'balance.connectedCities': 'Città collegate:',
 
+  // finestra di scontro (badge sul globo + ui/combatWindow.ts)
+  'combat.title': 'Scontro su {city}',
+  'combat.close': 'Chiudi',
+  'combat.defenders': 'Difensori',
+  'combat.attackers': 'Invasori',
+  'combat.squadron': 'Squadrone #{id}',
+  'combat.ufo': 'UFO #{id}',
+  'combat.abductions': 'Rapiti: {n}',
+  'combat.phase': 'Fase: {phase}',
+  'combat.phase.descending': 'Discesa',
+  'combat.phase.abducting': 'Rapimento',
+  'combat.phase.escaping': 'Fuga',
+  'combat.ended': 'Scontro terminato',
+  'combat.badgeAlt': 'Apri lo scontro su {city}',
+
   // barra menu inferiore
   'bar.bilancio': 'Bilancio',
   'bar.costruisci': 'Costruisci',
@@ -119,6 +134,24 @@ export const it = {
   'float.ufoDescending': 'atterraggio',
   'float.ufoAbducting': 'rapimenti in corso',
   'float.abductions': 'Abductions = {n}',
+
+  // enciclopedia (pulsante "?" nell'HUD + ui/encyclopedia.ts)
+  'enc.open': 'Enciclopedia',
+  'enc.title': 'Enciclopedia',
+  'enc.close': 'Chiudi',
+  'enc.humt.title': 'HumT e gettito giornaliero',
+  'enc.humt.body':
+    '<p><strong>HumT</strong> (Humanity Treasure) è la valuta della nuova umanità. Dopo il collasso quasi tutte le città sono sparite: il dollaro non vale più nulla e ogni scambio passa dagli HumT.</p>' +
+    '<p>Il <strong>gettito giornaliero</strong> è la somma delle tasse versate ogni giorno dalle città collegate alla rete (Quartier Generale e ambasciate). Una città contribuisce solo se è viva, collegata e non sotto rapimento.</p>' +
+    '<p>Per ogni città il gettito è:</p>' +
+    '<p class="enc-formula">PIL × fattore popolazione × aliquota</p>' +
+    '<ul>' +
+    '<li><strong>PIL</strong>: somma di (peso della risorsa × capacità) su tutte le risorse della città. La capacità (0–100) può essere danneggiata dai nemici, riducendo il PIL.</li>' +
+    '<li><strong>Fattore popolazione</strong>: popolazione attuale ÷ popolazione iniziale (scende se la città perde abitanti).</li>' +
+    '<li><strong>Aliquota</strong>: 9% al giorno.</li>' +
+    '</ul>' +
+    '<p>Pesi delle risorse (valore in HumT per punto di capacità): agroalimentare 10, energia 9, chimica 8, combustibili fossili 8, materiali da costruzione 7, industria 6, metalli preziosi e minerali 5, tecnologia 4, tessuti 3, finanza 1.</p>' +
+    '<p>Il totale, arrotondato, viene aggiunto agli HumT a ogni cambio di giorno. Un rapimento in corso sospende gettito e produzione della città colpita.</p>',
 
   // menu impostazioni
   'settings.title': 'Impostazioni',

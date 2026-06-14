@@ -77,7 +77,7 @@ body {
 #hud-dead { min-width: 150px; color: #ff8a99; }
 #hud-wave { min-width: 190px; }
 #hud button, #city-panel button, .end-box button, #start-screen button, .settings-box button,
-#tutorial-companion button {
+#tutorial-companion button, .enc-box button {
   font-family: inherit; /* i bottoni non ereditano il font di default */
   background: #15263f;
   color: #cfe3ff;
@@ -139,11 +139,31 @@ body {
 /* il bilancio si apre dalla barra inferiore: ancorato in basso a sinistra */
 #balance-panel { top: auto; bottom: 64px; left: 12px; width: 320px; }
 #city-panel h2, #radar-panel h2, #balance-panel h2 { margin-top: 0; font-size: 16px; }
-.balance-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.balance-table td, .balance-table th { padding: 2px 4px; text-align: left; }
-.balance-table .num { text-align: right; }
+/* table-layout fixed + larghezze esplicite: Michroma non ha cifre tabulari,
+   quindi senza colonne fisse i numeri che crescono farebbero slittare la tabella */
+.balance-table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+.balance-table td, .balance-table th { padding: 2px 4px; text-align: left; vertical-align: top; }
+/* le colonne numeriche restano su una riga e allineate a destra (bordo destro
+   fisso); il nome può andare a capo senza spostare i numeri */
+.balance-table .num { text-align: right; white-space: nowrap; }
 .balance-table .gain { color: #6ee7a0; }
+.balance-table .col-stock { width: 88px; }
+.balance-table .col-prod { width: 72px; }
 #city-panel ul { padding-left: 16px; }
+/* elenco risorse con icona: niente pallino, l'icona fa da marcatore */
+#city-panel .resource-list { list-style: none; padding-left: 0; }
+/* iconcina colorata accanto al nome di una risorsa (ui/resourceIcons.ts) */
+.res-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  vertical-align: -3px;
+  margin-right: 6px;
+}
+.res-icon svg { width: 100%; height: 100%; display: block; }
+/* nel bilancio il nome che va a capo si allinea sotto al testo, non sotto l'icona */
+.balance-table .res-name { display: flex; align-items: flex-start; }
+.balance-table .res-label { min-width: 0; }
 .danger { color: #ff5566; }
 /* stato rete della città (rehaul economico) */
 .network-hq { color: #ffd76a; }
@@ -151,7 +171,7 @@ body {
 .network-neutral { color: #8aa3c4; }
 .resource-list { font-size: 13px; }
 .resource-list small { color: #6ee7a0; }
-#end-screen, #start-screen, #settings-modal {
+#end-screen, #start-screen, #settings-modal, #encyclopedia-modal {
   position: fixed;
   inset: 0;
   display: flex;
@@ -174,11 +194,44 @@ body {
 .settings-box button.active { background: #2c4a73; }
 .settings-box h1 { font-size: 20px; }
 
+/* finestra Enciclopedia (ui/encyclopedia.ts): nav voci + contenuto */
+.enc-box {
+  display: flex;
+  flex-direction: column;
+  width: min(760px, 92vw);
+  max-height: 80vh;
+  background: #0b1424;
+  border: 1px solid #2c4a73;
+  border-radius: 8px;
+  padding: 18px 22px;
+  text-align: left;
+}
+.enc-header { display: flex; align-items: center; justify-content: space-between; }
+.enc-header h1 { margin: 0; font-size: 20px; }
+.enc-body { display: flex; gap: 18px; margin-top: 14px; min-height: 0; }
+.enc-nav { flex: 0 0 190px; display: flex; flex-direction: column; gap: 6px; }
+.enc-nav button { text-align: left; }
+.enc-nav button.active { background: #2c4a73; }
+.enc-content { flex: 1; min-width: 0; overflow-y: auto; font-size: 13px; line-height: 1.6; }
+.enc-content h2 { margin-top: 0; font-size: 16px; color: #ffd76a; }
+.enc-content ul { padding-left: 18px; }
+.enc-content li { margin: 3px 0; }
+.enc-formula {
+  font-size: 14px;
+  color: #6ee7a0;
+  background: rgba(110, 231, 160, 0.08);
+  border-left: 3px solid #6ee7a0;
+  padding: 6px 10px;
+  border-radius: 4px;
+}
+
 /* bottoni-icona (SVG inline, es. ingranaggio impostazioni) */
 .icon-btn { line-height: 0; }
 .icon-btn svg { display: block; }
-#hud-settings { margin-left: auto; padding: 1px; border: none; background: none; }
-#hud-settings svg { width: 26px; height: 26px; }
+/* coppia di icone in fondo all'HUD: ? (enciclopedia) a sinistra del gear */
+#hud-encyclopedia, #hud-settings { padding: 1px; border: none; background: none; }
+#hud-encyclopedia { margin-left: auto; } /* spinge la coppia a destra */
+#hud-encyclopedia svg, #hud-settings svg { width: 26px; height: 26px; }
 #start-settings {
   position: absolute;
   top: 8px;
@@ -354,3 +407,150 @@ svg.intro-eye-closed .intro-dash { opacity: 1 !important; }
 .tutorial-bubble::before { left: -8px; border-right-color: #f0c34e; }
 .tutorial-bubble::after { left: -6.5px; border-right-color: #0d1a30; }
 .tutorial-next { display: block; margin: 8px 0 0 auto; padding: 2px 10px; }
+
+/* badge "scontro in corso" sopra le città (render/battleBadges.ts):
+   l'animazione è sull'SVG interno, non sull'elemento esterno (CSS2DRenderer
+   sovrascrive il transform dell'esterno a ogni render) */
+.battle-badge { pointer-events: auto; cursor: pointer; line-height: 0; }
+.battle-badge svg {
+  display: block;
+  width: 26px;
+  height: 26px;
+  filter: drop-shadow(0 0 4px rgba(255, 85, 102, 0.8));
+  animation: battle-badge-pulse 0.9s ease-in-out infinite;
+}
+.battle-badge:hover svg { filter: drop-shadow(0 0 6px #ffd76a) brightness(1.2); }
+@keyframes battle-badge-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.18); }
+}
+
+/* finestra di scontro stile FTL (ui/combatWindow.ts): overlay centrato, sotto
+   start/end screen (20) e impostazioni (30), sopra banner (10)/tutorial (15) */
+#combat-window {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(3, 6, 12, 0.78);
+  z-index: 18;
+}
+.combat-box {
+  position: relative;
+  width: min(880px, 92vw);
+  background: rgba(8, 14, 26, 0.96);
+  border: 1px solid #2c4a73;
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+.combat-header { display: flex; align-items: center; justify-content: space-between; }
+.combat-header h2 { margin: 0; font-size: 17px; }
+.combat-close {
+  font-family: inherit;
+  background: #15263f;
+  color: #cfe3ff;
+  border: 1px solid #2c4a73;
+  border-radius: 4px;
+  padding: 2px 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.combat-close:hover { background: #2c4a73; }
+.combat-arena {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  margin: 14px 0;
+}
+.combat-side { flex: 1; min-width: 0; }
+.combat-side h3 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #8aa3c4;
+  text-align: center;
+}
+.combat-side:last-child h3 { color: #ff8a99; }
+.combat-units { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.combat-unit { width: 160px; }
+.combat-unit-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 96px;
+  overflow: visible;
+}
+.combat-unit-art svg { display: block; }
+/* il caccia è disegnato col muso in alto: lo si gira verso gli invasori (destra) */
+.combat-unit-art--jet svg { height: 104px; width: auto; transform: rotate(90deg); }
+.combat-unit-art--ufo svg { width: 104px; height: auto; }
+/* raggio traente acceso durante il rapimento */
+.combat-box--abducting .combat-unit-art--ufo {
+  filter: drop-shadow(0 10px 7px rgba(255, 233, 138, 0.85));
+}
+.combat-hp {
+  height: 7px;
+  margin: 6px 0 4px;
+  border: 1px solid #1d3450;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.45);
+}
+.combat-hp-fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  transition: width 0.2s linear, background 0.2s linear;
+}
+.combat-unit-label { font-size: 11px; text-align: center; color: #9fc3e8; }
+/* impatto: scuotimento + flash quando l'unità perde HP */
+.combat-unit--hit { animation: combat-hit 0.3s ease-out; }
+@keyframes combat-hit {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-4px); filter: brightness(2.2); }
+  60% { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+}
+/* corsia centrale: scambio di colpi continuo (puramente decorativo) */
+.combat-mid { position: relative; width: 80px; flex: 0 0 80px; }
+.combat-beam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: 2px;
+}
+.combat-beam--out {
+  top: 38%;
+  background: linear-gradient(90deg, transparent, #ffe066, transparent);
+  animation: combat-beam-out 0.7s linear infinite;
+}
+.combat-beam--in {
+  top: 60%;
+  background: linear-gradient(90deg, transparent, #ff5566, transparent);
+  animation: combat-beam-in 0.7s linear 0.35s infinite;
+}
+@keyframes combat-beam-out { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+@keyframes combat-beam-in { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+.combat-status {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #cfe3ff;
+  border-top: 1px solid #1d3450;
+  padding-top: 8px;
+}
+.combat-abductions { color: #c8a4ff; }
+.combat-ended {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(3, 6, 12, 0.7);
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: #ffd76a;
+}

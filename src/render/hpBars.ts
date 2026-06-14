@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import alienBarRaw from '../../Assets/Widgets/Barre/health-bar-aliens.svg?raw';
 import humanBarRaw from '../../Assets/Widgets/Barre/health-bar-humans.svg?raw';
-import { ENGAGEABLE_PHASES } from '../sim/combat';
+import { activeBattles, ENGAGEABLE_PHASES } from '../sim/combat';
 import { CONFIG } from '../sim/config';
 import type { GameState } from '../sim/state';
 import { isOccludedByGlobe } from './horizon';
@@ -54,20 +54,12 @@ export class HpBarLayer {
 
   update(state: GameState, units: UnitLayer, camera: THREE.Camera): void {
     const now = performance.now();
-    // ingaggio derivato dallo stato, specchiando le precondizioni di resolveCombat
-    const defended = new Set<string>();
-    for (const sq of state.squadrons) if (sq.transfer === null) defended.add(sq.cityId);
-    const attacked = new Set<string>();
-    for (const ufo of state.ufos) {
-      if (ENGAGEABLE_PHASES.has(ufo.phase)) attacked.add(ufo.targetCityId);
-    }
-    const aliveCity = (id: string) => state.cities.find(c => c.id === id)?.alive === true;
+    // città in combattimento: condizione condivisa con la sim (resolveCombat)
+    const engagedCities = new Set(activeBattles(state).map(b => b.cityId));
 
     const seen = new Set<string>();
     for (const ufo of state.ufos) {
-      const engaged =
-        ENGAGEABLE_PHASES.has(ufo.phase) && defended.has(ufo.targetCityId) &&
-        aliveCity(ufo.targetCityId);
+      const engaged = ENGAGEABLE_PHASES.has(ufo.phase) && engagedCities.has(ufo.targetCityId);
       seen.add(`u:${ufo.id}`);
       this.updateBar(
         `u:${ufo.id}`, 'alien', ufo.hp / CONFIG.ufoAbductor.hp, engaged,
@@ -75,7 +67,7 @@ export class HpBarLayer {
       );
     }
     for (const sq of state.squadrons) {
-      const engaged = sq.transfer === null && attacked.has(sq.cityId) && aliveCity(sq.cityId);
+      const engaged = sq.transfer === null && engagedCities.has(sq.cityId);
       seen.add(`s:${sq.id}`);
       this.updateBar(
         `s:${sq.id}`, 'human', sq.hp / CONFIG.squadron.hp, engaged,

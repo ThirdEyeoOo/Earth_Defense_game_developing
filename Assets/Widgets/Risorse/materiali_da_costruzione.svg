@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <!-- Materiali da costruzione: muro di mattoni -->
+  <g fill="#d2784a" stroke="#7a3f22" stroke-width="0.9">
+    <rect x="2"  y="5"  width="9" height="4.5"/>
+    <rect x="13" y="5"  width="9" height="4.5"/>
+    <rect x="2"  y="10" width="4" height="4.5"/>
+    <rect x="8"  y="10" width="9" height="4.5"/>
+    <rect x="19" y="10" width="3" height="4.5"/>
+    <rect x="2"  y="15" width="9" height="4.5"/>
+    <rect x="13" y="15" width="9" height="4.5"/>
+  </g>
+</svg>

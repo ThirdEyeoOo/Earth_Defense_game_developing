@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <!-- Chimica: beuta (matraccio di Erlenmeyer) -->
+  <path d="M9 3 h6 v2 h-1 v5 l5.2 9 a2 2 0 0 1 -1.8 3 H6.6 A2 2 0 0 1 4.8 19 L10 10 V5 H9 Z"
+        fill="#9b7bff" stroke="#4a3a80" stroke-width="0.9" stroke-linejoin="round"/>
+  <path d="M7.2 15 h9.6 l2.4 4.2 a1 1 0 0 1 -0.9 1.5 H5.7 a1 1 0 0 1 -0.9 -1.5 Z"
+        fill="#c9b8ff" opacity="0.7"/>
+</svg>

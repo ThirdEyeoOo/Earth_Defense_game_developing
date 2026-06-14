@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ENGAGEABLE_PHASES } from '../sim/combat';
+import { activeBattles } from '../sim/combat';
 import type { GameState } from '../sim/state';
 import { cityPosition } from './cities';
 import type { UnitLayer } from './units';
@@ -29,13 +29,10 @@ export class EffectsLayer {
     // traccianti: da ogni città difesa verso gli UFO ingaggiati
     const points: number[] = [];
     if (Math.floor(performance.now() / 120) % 2 === 0) {
-      for (const city of state.cities) {
-        if (!city.alive) continue;
-        const defended = state.squadrons.some(s => s.cityId === city.id && s.transfer === null);
-        if (!defended) continue;
-        for (const ufo of state.ufos) {
-          if (ufo.targetCityId !== city.id || !ENGAGEABLE_PHASES.has(ufo.phase)) continue;
-          const from = cityPosition(city, 1.03);
+      for (const battle of activeBattles(state)) {
+        const city = state.cities.find(c => c.id === battle.cityId)!;
+        const from = cityPosition(city, 1.03);
+        for (const ufo of battle.attackers) {
           const to = units.ufoPosition(ufo.id);
           if (!to) continue;
           points.push(from.x, from.y, from.z, to.x, to.y, to.z);

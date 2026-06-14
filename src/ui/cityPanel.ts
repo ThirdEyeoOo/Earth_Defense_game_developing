@@ -5,6 +5,7 @@ import type { Cost, ResourceType } from '../sim/resources';
 import { squadronCost } from '../sim/squadrons';
 import type { CityState, GameState } from '../sim/state';
 import { fmtInt } from './format';
+import { resourceIcon } from './resourceIcons';
 
 export interface CityPanelCallbacks {
   onBuild(cityId: string): void;
@@ -31,7 +32,7 @@ function resourcesHtml(state: GameState, city: CityState): string {
       const perDay = connected
         ? ` <small>${t('panel.productionPerDay', { n: prod[r.type]!.toFixed(1) })}</small>`
         : '';
-      return `<li>${t(`res.${r.type}`)}: <strong>${r.amount}</strong>${perDay}</li>`;
+      return `<li>${resourceIcon(r.type)}${t(`res.${r.type}`)}: <strong>${r.amount}</strong>${perDay}</li>`;
     })
     .join('');
   return `<h3>${t('panel.resources')}</h3><ul class="resource-list">${rows}</ul>`;

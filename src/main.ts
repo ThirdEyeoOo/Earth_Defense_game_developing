@@ -22,6 +22,7 @@ import {
 import { deserialize, SAVE_KEY, serialize } from './sim/save';
 import { createNewGame, type GameState } from './sim/state';
 import { tick } from './sim/tick';
+import { BattleBadgeLayer } from './render/battleBadges';
 import { CityLayer } from './render/cities';
 import { EffectsLayer } from './render/effects';
 import { FloatingTextLayer } from './render/floatingText';
@@ -32,6 +33,8 @@ import { UnitLayer } from './render/units';
 import { createBalancePanel } from './ui/balancePanel';
 import { createBottomBar } from './ui/bottomBar';
 import { createCityPanel } from './ui/cityPanel';
+import { createCombatWindow } from './ui/combatWindow';
+import { createEncyclopedia } from './ui/encyclopedia';
 import { createEndScreen } from './ui/endScreen';
 import { createHud } from './ui/hud';
 import { gearIcon } from './ui/icons';
@@ -87,6 +90,7 @@ function selectLanguage(lang: Lang): void {
 const ctx = createScene(document.getElementById('scene-container')!);
 createGlobe(ctx.scene);
 let cityLayer: CityLayer;
+let battleBadges: BattleBadgeLayer;
 const unitLayer = new UnitLayer(ctx.scene);
 const effects = new EffectsLayer(ctx.scene);
 const hpBars = new HpBarLayer(ctx.scene);
@@ -105,8 +109,10 @@ const hud = createHud(
     showBanner(t('banner.gameSaved'), 1500);
   },
   () => settings.open(),
+  () => encyclopedia.open(),
 );
 const settings = createSettings(document.getElementById('settings-modal')!, selectLanguage);
+const encyclopedia = createEncyclopedia(document.getElementById('encyclopedia-modal')!);
 // barra inferiore: Bilancio apre il pannello, gli altri sono ancora segnaposto
 const bottomBar = createBottomBar(document.getElementById('bottom-bar')!, action => {
   if (action === 'bilancio') balancePanel.toggle();
@@ -114,6 +120,8 @@ const bottomBar = createBottomBar(document.getElementById('bottom-bar')!, action
 });
 const radar = createRadar(document.getElementById('radar-panel')!);
 const balancePanel = createBalancePanel(document.getElementById('balance-panel')!);
+// finestra di scontro stile FTL: si apre dal badge di battaglia sul globo
+const combatWindow = createCombatWindow(document.getElementById('combat-window')!);
 // Terzo Occhio: in fondazione il fumetto guida; il banner-istruzione resta
 // solo come fallback quando il giocatore nasconde il tutorial (occhio chiuso)
 const tutorial = createTutorial(document.getElementById('tutorial-companion')!, hidden => {
@@ -185,6 +193,14 @@ function bootGame(gameState: GameState): void {
     cityLayer.dispose();
   }
   cityLayer = new CityLayer(ctx.scene, state.cities, handleCityClick);
+  if (battleBadges) {
+    ctx.scene.remove(battleBadges.group);
+    battleBadges.dispose();
+  }
+  battleBadges = new BattleBadgeLayer(ctx.scene, state.cities, cityId =>
+    combatWindow.open(cityId, state),
+  );
+  combatWindow.close(); // niente finestra di scontro residua tra una partita e l'altra
   hpBars.reset(); // niente barre residue tra una partita e l'altra (gli id ripartono)
   floatingText.reset(state); // un salvataggio caricato non rigioca gli eventi conservati
   document.getElementById('start-screen')!.classList.add('hidden');
@@ -250,10 +266,12 @@ function frame(now: number): void {
     // un errore cosmetico non deve fermare la simulazione né il loop
     try {
       cityLayer.update(state, selectedCityId, ctx.camera);
+      battleBadges.update(state, ctx.camera);
       unitLayer.update(state, tickFraction, ctx.camera);
       effects.update(state, unitLayer);
       hpBars.update(state, unitLayer, ctx.camera);
       floatingText.update(state, unitLayer, ctx.camera);
+      combatWindow.update(state);
       hud.update(state, state.tick + tickFraction);
       radar.update(state);
       balancePanel.update(state);
@@ -285,6 +303,8 @@ onLanguageChange(() => {
   bottomBar.refreshLabels();
   lastPanelKey = ''; // il pannello città si ricostruisce solo al cambio dati: forzalo
   if (cityLayer) cityLayer.refreshNames();
+  if (battleBadges) battleBadges.refreshLabels();
+  combatWindow.refreshLabels();
   if (state) endScreen.refresh(state);
   const startScreen = document.getElementById('start-screen')!;
   if (!startScreen.classList.contains('hidden')) setupStartScreen();
@@ -292,6 +312,7 @@ onLanguageChange(() => {
     showBanner(t('banner.chooseHq'), null);
   }
   settings.refresh();
+  encyclopedia.refresh();
   intro.refreshLabels();
   tutorial.refreshLabels();
 });

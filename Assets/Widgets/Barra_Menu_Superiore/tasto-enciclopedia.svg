@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <g id="btn-enciclopedia" style="cursor:pointer">
+    <title>Enciclopedia</title>
+    <rect x="0.5" y="0.5" width="47" height="47" rx="6" fill="#121B33" stroke="#2B3D63"/>
+    <path d="M17 19 C17 12 32 12 31 19 C30.2 24 24 23.5 24 29"
+          fill="none" stroke="#A9BCD9" stroke-width="3.2"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="24" cy="35.5" r="2.4" fill="#A9BCD9"/>
+  </g>
+</svg>

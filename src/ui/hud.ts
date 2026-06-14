@@ -3,7 +3,7 @@ import { dayOfTick } from '../sim/calendar';
 import type { GameState } from '../sim/state';
 import { worldPopulation } from '../sim/state';
 import { fmtClock, fmtDate, fmtInt } from './format';
-import { gearIcon } from './icons';
+import { encyclopediaIcon, gearIcon } from './icons';
 
 const SPEEDS: Array<0 | 1 | 2 | 4 | 10> = [0, 1, 2, 4, 10];
 
@@ -13,6 +13,7 @@ export function createHud(
   onToggleRadar: () => void,
   onSave: () => void,
   onOpenSettings: () => void,
+  onOpenEncyclopedia: () => void,
 ): { update(state: GameState, tickFloat: number): void; refreshLabels(): void } {
   root.innerHTML = `
     <span id="hud-date"></span>
@@ -24,6 +25,7 @@ export function createHud(
     <span id="hud-speeds"></span>
     <button id="hud-radar"></button>
     <button id="hud-save"></button>
+    <button id="hud-encyclopedia" class="icon-btn">${encyclopediaIcon}</button>
     <button id="hud-settings" class="icon-btn">${gearIcon}</button>
   `;
   const speedsEl = root.querySelector('#hud-speeds')!;
@@ -36,11 +38,13 @@ export function createHud(
   }
   root.querySelector('#hud-radar')!.addEventListener('click', onToggleRadar);
   root.querySelector('#hud-save')!.addEventListener('click', onSave);
+  root.querySelector('#hud-encyclopedia')!.addEventListener('click', onOpenEncyclopedia);
   root.querySelector('#hud-settings')!.addEventListener('click', onOpenSettings);
 
   function refreshLabels(): void {
     root.querySelector('#hud-radar')!.textContent = t('hud.radar');
     root.querySelector('#hud-save')!.textContent = t('hud.save');
+    root.querySelector('#hud-encyclopedia')!.setAttribute('title', t('enc.open'));
     root.querySelector('#hud-settings')!.setAttribute('title', t('settings.open'));
   }
   refreshLabels();
