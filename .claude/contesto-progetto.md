@@ -1,6 +1,7 @@
 # Earth Defense — Contesto operativo
 
-Aggiornato: 2026-06-12 (chiusura sessione 05, commit #73, main pulito, v0.111.0 rilasciata)
+Aggiornato: 2026-06-14 (chiusura sessione 06, commit #79, main pulito, v0.112.0 rilasciata)
+Repo pubblico: github.com/ThirdEyeoOo/Earth_Defense_game_developing (README bilingue, MIT, FUNDING).
 
 ## Cos'è
 Gestionale di difesa planetaria nel browser (TypeScript + Vite + Three.js + Vitest).
@@ -30,6 +31,10 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
   pannello Bilancio (vedi sezione Economia).
 - **v0.111.0** — tutorial "Terzo Occhio" (`src/ui/tutorial.ts`): l'occhio del logo come
   compagno sotto la data dell'HUD, fumetto a step in fase di fondazione.
+- **v0.112.0** — finestra di scontro stile FTL (sola lettura) da badge battaglia +
+  helper sim `activeBattles`; 10 icone risorse colorate + fix spaziatura Bilancio
+  (table-layout fixed) + ordinamento per peso; finestra Enciclopedia (pulsante "?")
+  con prima voce su HumT e gettito. Repo pubblicato su GitHub (README/MIT/FUNDING).
 - Release: a ogni merge chiedere il nome semver all'utente (proponendone uno) e aggiornare
   `lista aggiornamenti/releases.txt` (nuova voce IN ALTO; il file è locale, la cartella è
   gitignorata) con recap + delta byte (somma dimensioni `git ls-files`); tag ANNOTATO.
@@ -77,6 +82,27 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
 - Test: parità chiavi e placeholder it/en, sync con cities.json (50 città, 40 paesi tradotti).
 
 ## UI (oltre l'HUD)
+- **Finestra di scontro FTL** (`src/ui/combatWindow.ts` + `src/render/battleBadges.ts`,
+  v0.112.0): visualizzazione cinematica SOLA LETTURA. Un badge CSS2D lampeggiante
+  (`battle-badge`) sopra le città in combattimento → click → overlay centrato z-18
+  (`#combat-window`) con F-22/UFO inline (SVG riusati: per l'UFO togliere `raggio_traente`,
+  mostrato via CSS solo in rapimento), barre HP, traccianti, flash d'impatto, esito.
+  Tempo live; pattern toggle/update; chiusura Esc capture-phase. La condizione "città in
+  combattimento" è l'helper PURO `activeBattles(state)` (+`interface Battle`) in
+  `src/sim/combat.ts`: unica fonte usata da `resolveCombat`, `hpBars`, `effects`, badge e
+  finestra (niente più duplicazione; confine sim rispettato, nessun i18n).
+- **Enciclopedia** (`src/ui/encyclopedia.ts` + `encyclopediaEntries.ts`, v0.112.0):
+  pulsante "?" a sinistra dell'ingranaggio nell'HUD (`tasto-enciclopedia.svg` 48×48 come il
+  gear; `margin-left:auto` sul "?" per tenere la coppia a destra). Modale nav-voci+contenuto
+  (z-20), voci COME DATI estendibili (`{id, titleKey, bodyKey}`). Prima voce: HumT e gettito.
+  Corpo HTML dentro le stringhe i18n MA senza `{ }` (altrimenti `t()` li scambia per
+  placeholder e rompe il test di parità).
+- **Icone risorse** (`src/ui/resourceIcons.ts`, v0.112.0): 10 SVG colorate in
+  `Assets/Widgets/Risorse/<ResourceType>.svg`, inline via `?raw`+`stripForInline` (ora
+  esportata da `icons.ts`); usate in Bilancio e pannello Città. Nel Bilancio le risorse sono
+  ordinate per peso (`CONFIG.economy.resourceWeights`, 10→1) e la tabella ha colonne a
+  larghezza fissa (`table-layout: fixed` + `<colgroup>`) così i numeri non slittano
+  (Michroma non ha cifre tabulari); nome a capo allineato sotto le lettere (cella flex).
 - **Tutorial "Terzo Occhio"** (`src/ui/tutorial.ts` + `tutorialSteps.ts`, v0.111.0):
   l'occhio del logo estratto A RUNTIME da `Logo_intro.svg?raw` (DOMParser, viewBox
   ritagliato `320 105 80 50`, importare i `<g>` INTERI: fill/font vivono sui genitori),
@@ -146,8 +172,16 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
   `is-critical` su `#hb-root` ≤25%; colori con `--hb-fill-a/b` inline su `#hb-root`.
   Font testo: Michroma (dichiarato nello `<style>` interno). Testi "HP"/"%"/"LOW" non tradotti.
 
-### `Assets/Widgets/Barra_Menu_Superiore/tasto-impostazioni.svg` (48×48)
-- Ingranaggio del menu impostazioni; inline via `?raw` (gearIcon in icons.ts).
+### `Assets/Widgets/Barra_Menu_Superiore/tasto-{impostazioni,enciclopedia}.svg` (48×48)
+- Ingranaggio (gearIcon) ed Enciclopedia "?" (encyclopediaIcon), stesso stile (rect arrotondato
+  `#121B33`/`#2B3D63`, glifo a stroke `#A9BCD9`); inline via `?raw`+`stripForInline` in icons.ts.
+
+### `Assets/Widgets/Risorse/<ResourceType>.svg` (viewBox 24×24, v0.112.0)
+- 10 icone risorsa colorate (nome = `ResourceType`), inline DOM via `src/ui/resourceIcons.ts`.
+
+### `Assets/Widgets/badge-scontro.svg` (viewBox 32×32, v0.112.0)
+- Badge "scontro in corso": disco rosso con spade incrociate; CSS2D pulsante sopra le città
+  in combattimento (render/battleBadges.ts), nessun `<text>`.
 
 ### `Assets/Widgets/Barra_Menu_Inferiore/Pulsanti/tasto-{bilancio,costruisci,ricerca,citta}.svg` (190×48)
 - Pulsanti barra inferiore, gruppo `btn-*`, icona stroke + `<text>` segnaposto vuoto (i18n).
@@ -195,10 +229,14 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
 1. Pannelli veri per i 3 pulsanti rimasti della barra inferiore (Costruisci, Ricerca, Città)
    — Bilancio è fatto (v0.110.0); gli altri sono placeholder "Funzione in arrivo".
 2. Economia: edifici di produzione, torri difensive, mercato/vendita surplus, nemici che
-   danneggiano gli amount delle risorse (stato già predisposto); icone risorse e SVG
-   QG/ambasciata (oggi placeholder funzionali); bilanciamento col playtest (CONFIG.economy).
+   danneggiano gli amount delle risorse (stato già predisposto); SVG QG/ambasciata (oggi
+   placeholder funzionali); bilanciamento col playtest (CONFIG.economy). Icone risorse FATTE
+   (v0.112.0).
 3. Tutorial: step futuri (primo squadrone, prima ambasciata, prima ondata) — la sequenza
    a dati in tutorialSteps.ts è già pronta; eventuale accenno al collasso nell'intro.
 4. Stat di velocità per-fase di viaggio per ogni nemico/difesa (config già strutturata).
 5. Meta-progressione / albero tecnologico (pulsante Ricerca già pronto) — post-MVP, da spec.
 6. Eventuale: HUD responsive sotto i ~1460px (oggi sfora, l'ingranaggio esce dal viewport).
+7. Enciclopedia: nuove voci (squadroni, ambasciate, ondate UFO, combattimento) — struttura
+   a dati pronta in encyclopediaEntries.ts.
+8. Finestra di scontro: eventuale audio/animazioni più ricche; oggi è sola lettura.
