@@ -4,7 +4,7 @@ import { emitEvent } from './events';
 import { greatCircleKm } from './geo';
 import type { Cost, ResourceType } from './resources';
 import { squadronCost, transferTicks } from './squadrons';
-import type { GameState } from './state';
+import type { GameSpeed, GameState } from './state';
 
 // La sim non conosce i testi: gli errori sono codici (+ parametri)
 // che la UI traduce con t(`cmd.${code}`) — vedi src/i18n/.
@@ -112,7 +112,7 @@ export function cmdRelocateSquadron(
   return { ok: true };
 }
 
-export function cmdSetSpeed(state: GameState, speed: 0 | 1 | 2 | 4 | 10): CommandResult {
+export function cmdSetSpeed(state: GameState, speed: GameSpeed): CommandResult {
   state.speed = speed;
   return { ok: true };
 }

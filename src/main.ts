@@ -97,10 +97,20 @@ const hpBars = new HpBarLayer(ctx.scene);
 const floatingText = new FloatingTextLayer(ctx.scene);
 
 // --- ui ---
+// ">>>": salto al prossimo attacco. È intento di riproduzione (non si salva):
+// 1000x finché il primo UFO non incrocia la distanza lunare, poi torna a 1x.
+let skipArmed = false;
 const hud = createHud(
   document.getElementById('hud')!,
   speed => {
     if (state) cmdSetSpeed(state, speed);
+    skipArmed = false; // una scelta manuale di velocità annulla il salto
+  },
+  () => {
+    if (state && state.hqCityId !== null) {
+      cmdSetSpeed(state, 1000);
+      skipArmed = true;
+    }
   },
   () => radar.toggle(),
   () => {
@@ -244,6 +254,13 @@ function autosave(): void {
   }
 }
 
+// ">>>": vero appena il PRIMO UFO in arrivo ha incrociato la distanza lunare
+function firstUfoReachedLunar(gameState: GameState): boolean {
+  return gameState.ufos.some(
+    u => u.phase === 'approaching' && u.phaseTotalTicks - u.ticksRemaining >= u.lunarCrossTick,
+  );
+}
+
 // --- loop principale ---
 let last = performance.now();
 // accumulatore in UNITÀ DI TICK (non ms): così la frazione corrente non
@@ -253,10 +270,17 @@ function frame(now: number): void {
   const dt = Math.min(now - last, 1000); // clamp per tab in background
   last = now;
   if (state && state.outcome === 'playing' && state.speed > 0 && state.hqCityId !== null) {
-    acc += dt / (3000 / state.speed); // 1x: 1 giorno = 60s = 20 tick
+    acc += dt / (72000 / state.speed); // 1x: 1 s reale = 1 min-gioco (1 giorno = 24 min reali = 20 tick)
     while (acc >= 1) {
       acc -= 1;
       tick(state);
+      // controllo DENTRO il loop: a 1000x si fanno molti tick/frame e bisogna
+      // scendere a 1x esattamente al tick d'incrocio, senza sorpassarlo
+      if (skipArmed && firstUfoReachedLunar(state)) {
+        cmdSetSpeed(state, 1);
+        skipArmed = false;
+        break;
+      }
     }
     autosave();
   }

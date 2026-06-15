@@ -1,36 +1,93 @@
 import { CONFIG } from './config';
 import { emitEvent } from './events';
+import { latLonToVec3 } from './geo';
+import {
+  computeCaptureSweep,
+  cruiseTicks,
+  freefallTicks,
+  lunarCrossTick,
+  orbitPhaseTicks,
+  type OrbitalParams,
+} from './orbit';
 import { stateRand } from './rng';
-import type { GameState } from './state';
+import type { GameState, UfoPhase, UfoState } from './state';
 
-export function approachTicks(): number {
-  return Math.ceil(CONFIG.ufoAbductor.travel.approachDays * CONFIG.ticksPerDay);
+type LatLon = { lat: number; lon: number };
+
+// accelerazione di spinta dell'UFO (F/m): cattura, hover e salita sono propulse
+function abductorThrust(): number {
+  return CONFIG.ufoAbductor.thrust / CONFIG.ufoAbductor.mass;
 }
 
-export function orbitTicks(): number {
-  const t = CONFIG.ufoAbductor.travel;
-  return Math.ceil(t.orbits * t.orbitDaysPerOrbit * CONFIG.ticksPerDay);
+// distanza FISICA di comparsa (raggi): governa il TEMPO di crociera (non il render)
+function physicalStartDistance(): number {
+  return CONFIG.ufoAbductor.startDistanceAu * CONFIG.physics.auInRadii;
 }
 
-export function descentTicks(): number {
-  const t = CONFIG.ufoAbductor.travel;
-  return Math.ceil((t.descentKm / t.atmosphereKmPerDay) * CONFIG.ticksPerDay);
+// direzione (unitaria) della città bersaglio: stessa formula del render (geo)
+function cityDirection(city: LatLon): { x: number; y: number; z: number } {
+  const v = latLonToVec3(city.lat, city.lon, 1);
+  const l = Math.hypot(v.x, v.y, v.z);
+  return { x: v.x / l, y: v.y / l, z: v.z / l };
+}
+
+// parametri di traiettoria per un UFO diretto a `city`
+export function buildOrbit(spawnDir: OrbitalParams['spawnDir'], city: LatLon): OrbitalParams {
+  const phys = CONFIG.physics;
+  const base: OrbitalParams = {
+    spawnDir,
+    cityDir: cityDirection(city),
+    startDistance: phys.visualStartDistance,
+    orbitRadius: phys.orbitRadius,
+    surfaceRadius: phys.surfaceRadius,
+    orbits: CONFIG.ufoAbductor.orbits,
+    mu: phys.mu,
+    aThrust: abductorThrust(),
+    captureSweep: 0,
+  };
+  // virata di cattura tarata sulla durata di crociera → arrivo tangente all'orbita
+  return { ...base, captureSweep: computeCaptureSweep(base, approachDuration()) };
+}
+
+// durate di fase derivate dalla fisica (tick interi)
+export function approachDuration(): number {
+  return cruiseTicks(physicalStartDistance(), abductorThrust());
+}
+export function orbitDuration(orbit: OrbitalParams): number {
+  return orbitPhaseTicks(orbit);
+}
+export function descentDuration(orbit: OrbitalParams): number {
+  return freefallTicks(orbit.orbitRadius, orbit.surfaceRadius, orbit.mu);
 }
 
 export function spawnUfo(state: GameState, targetCityId: string): void {
+  const city = state.cities.find(c => c.id === targetCityId)!;
   // direzione di arrivo uniforme sulla sfera (deterministica dal seed)
   const z = 2 * stateRand(state) - 1;
   const theta = 2 * Math.PI * stateRand(state);
   const r = Math.sqrt(Math.max(0, 1 - z * z));
+  const spawnDir = { x: r * Math.cos(theta), y: z, z: r * Math.sin(theta) };
+  const orbit = buildOrbit(spawnDir, city);
+  const cruise = approachDuration();
   state.ufos.push({
     id: state.nextUfoId++,
     hp: CONFIG.ufoAbductor.hp,
     targetCityId,
     phase: 'approaching',
-    ticksRemaining: approachTicks(),
+    ticksRemaining: cruise,
+    phaseTotalTicks: cruise,
     abducted: 0,
-    spawnDir: { x: r * Math.cos(theta), y: z, z: r * Math.sin(theta) },
+    spawnDir,
+    orbit,
+    lunarCrossTick: lunarCrossTick(physicalStartDistance(), CONFIG.physics.lunarDistance, cruise),
   });
+}
+
+// imposta la fase successiva con la durata fisica corrispondente
+function enterPhase(ufo: UfoState, phase: UfoPhase, duration: number): void {
+  ufo.phase = phase;
+  ufo.ticksRemaining = duration;
+  ufo.phaseTotalTicks = duration;
 }
 
 export function progressUfos(state: GameState): void {
@@ -40,8 +97,7 @@ export function progressUfos(state: GameState): void {
   for (const ufo of [...state.ufos]) {
     const city = state.cities.find(c => c.id === ufo.targetCityId)!;
     if (!city.alive && ufo.phase !== 'escaping') {
-      ufo.phase = 'escaping';
-      ufo.ticksRemaining = descentTicks();
+      enterPhase(ufo, 'escaping', descentDuration(ufo.orbit));
       continue;
     }
     ufo.ticksRemaining--;
@@ -51,20 +107,16 @@ export function progressUfos(state: GameState): void {
     }
     if (ufo.ticksRemaining > 0) continue;
     if (ufo.phase === 'approaching') {
-      ufo.phase = 'orbiting';
-      ufo.ticksRemaining = orbitTicks();
+      enterPhase(ufo, 'orbiting', orbitDuration(ufo.orbit));
       emitEvent(state, { type: 'ufoOrbiting', unitKind: 'ufo', unitId: ufo.id, cityId: city.id });
     } else if (ufo.phase === 'orbiting') {
-      ufo.phase = 'descending';
-      ufo.ticksRemaining = descentTicks();
+      enterPhase(ufo, 'descending', descentDuration(ufo.orbit));
       emitEvent(state, { type: 'ufoDescending', unitKind: 'ufo', unitId: ufo.id, cityId: city.id });
     } else if (ufo.phase === 'descending') {
-      ufo.phase = 'abducting';
-      ufo.ticksRemaining = abductionTicks;
+      enterPhase(ufo, 'abducting', abductionTicks);
       emitEvent(state, { type: 'ufoAbducting', unitKind: 'ufo', unitId: ufo.id, cityId: city.id });
     } else if (ufo.phase === 'abducting') {
-      ufo.phase = 'escaping';
-      ufo.ticksRemaining = descentTicks();
+      enterPhase(ufo, 'escaping', descentDuration(ufo.orbit));
     } else {
       removeUfo(state, ufo.id, 'escaped');
     }

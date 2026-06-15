@@ -2,13 +2,11 @@ import * as THREE from 'three';
 import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
 import ufoSvgRaw from '../../Assets/Alieni/UFO/ufo_disco_volante.svg?raw';
 import fighterSvgRaw from '../../Assets/Umani/Velivoli/f22_raptor_animabile.svg?raw';
-import { CONFIG } from '../sim/config';
+import { positionAt } from '../sim/orbit';
 import type { GameState, UfoState } from '../sim/state';
-import { approachTicks, descentTicks, orbitTicks } from '../sim/ufos';
 import { cityPosition } from './cities';
 import { ATMOSPHERE_ALTITUDE } from './globe';
 
-const DEEP_ALTITUDE = 8; // spawn nello spazio profondo, in raggi
 const ORBIT_ALTITUDE = 1.6; // quota dell'orbita
 const SURFACE_ALTITUDE = 1.02; // quota di atterraggio
 const CRUISE_ALTITUDE = ATMOSPHERE_ALTITUDE - 0.005; // crociera: dentro l'atmosfera, vicino al limite
@@ -101,13 +99,6 @@ function buildSvgModel(
 function phaseProgress(ticksRemaining: number, totalTicks: number, tickFraction: number): number {
   const done = totalTicks - ticksRemaining;
   return Math.min(1, Math.max(0, (done + tickFraction) / totalTicks));
-}
-
-// angolo (0..2π) per andare da `a` a `b` ruotando attorno ad `axis`
-function angleAround(a: THREE.Vector3, b: THREE.Vector3, axis: THREE.Vector3): number {
-  const angle = a.angleTo(b);
-  const cross = new THREE.Vector3().crossVectors(a, b);
-  return cross.dot(axis) >= 0 ? angle : Math.PI * 2 - angle;
 }
 
 // orienta un oggetto piatto: piano tangente al globo (normale = radiale) e "muso" (+Y locale) lungo forward
@@ -214,7 +205,7 @@ export class UnitLayer {
       const group = this.ufoMeshes.get(ufo.id)!;
       // posizione assegnata direttamente: il moto fluido viene dal
       // progresso continuo (tick + frazione), non dall'inseguimento
-      group.position.copy(this.ufoTarget(state, ufo, tickFraction));
+      group.position.copy(this.ufoTarget(ufo, tickFraction));
       // billboard allineato allo schermo: il profilo del disco resta sempre
       // orizzontale, senza flip né distorsioni (la camera non rolla mai)
       group.quaternion.copy(camera.quaternion);
@@ -352,47 +343,12 @@ export class UnitLayer {
     }
   }
 
-  private ufoTarget(state: GameState, ufo: UfoState, tickFraction: number): THREE.Vector3 {
-    const city = state.cities.find(c => c.id === ufo.targetCityId)!;
-    const cityDir = cityPosition(city, 1).normalize();
-    const spawnDir = new THREE.Vector3(ufo.spawnDir.x, ufo.spawnDir.y, ufo.spawnDir.z).normalize();
-    const surface = cityPosition(city, SURFACE_ALTITUDE);
-
-    if (ufo.phase === 'approaching') {
-      const p = phaseProgress(ufo.ticksRemaining, approachTicks(), tickFraction);
-      // decelerazione: ease-out quadratico dallo spazio profondo alla quota orbitale
-      const r = ORBIT_ALTITUDE + (DEEP_ALTITUDE - ORBIT_ALTITUDE) * (1 - p) * (1 - p);
-      return spawnDir.clone().multiplyScalar(r);
-    }
-
-    if (ufo.phase === 'orbiting') {
-      const p = phaseProgress(ufo.ticksRemaining, orbitTicks(), tickFraction);
-      let axis = new THREE.Vector3().crossVectors(spawnDir, cityDir);
-      if (axis.lengthSq() < 1e-6) {
-        // spawn quasi allineato (o antipodale) alla città: asse ortogonale qualsiasi
-        const helper =
-          Math.abs(spawnDir.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
-        axis = new THREE.Vector3().crossVectors(spawnDir, helper);
-      }
-      axis.normalize();
-      // l'orbita parte dal punto di inserimento e termina esattamente sulla
-      // verticale della città dopo N giri completi più l'arco residuo
-      const delta = angleAround(spawnDir, cityDir, axis);
-      const totalAngle = CONFIG.ufoAbductor.travel.orbits * Math.PI * 2 + delta;
-      return spawnDir.clone().applyAxisAngle(axis, totalAngle * p).multiplyScalar(ORBIT_ALTITUDE);
-    }
-
-    const aboveCity = cityDir.clone().multiplyScalar(ORBIT_ALTITUDE);
-    if (ufo.phase === 'descending') {
-      const p = phaseProgress(ufo.ticksRemaining, descentTicks(), tickFraction);
-      return aboveCity.lerp(surface, p);
-    }
-    if (ufo.phase === 'abducting') {
-      return surface;
-    }
-    // escaping: risalita radiale, poi despawn
-    const p = phaseProgress(ufo.ticksRemaining, descentTicks(), tickFraction);
-    return surface.clone().lerp(aboveCity, p);
+  // La traiettoria è calcolata dal modulo fisico condiviso (src/sim/orbit.ts):
+  // qui si traduce solo il progresso continuo (tick + frazione) in posizione 3D.
+  private ufoTarget(ufo: UfoState, tickFraction: number): THREE.Vector3 {
+    const progress = phaseProgress(ufo.ticksRemaining, ufo.phaseTotalTicks, tickFraction);
+    const p = positionAt(ufo.phase, progress, ufo.orbit);
+    return new THREE.Vector3(p.x, p.y, p.z);
   }
 
   private sync(

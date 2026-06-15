@@ -3,17 +3,15 @@ import { CONFIG } from './config';
 import { cmdBuildSquadron, cmdRelocateSquadron } from './commands';
 import { EVENT_RETENTION_TICKS, emitEvent } from './events';
 import { createNewGame } from './state';
-import { newGameWithHq } from './testUtils';
+import { advanceUfoToPhase, advanceUfosUntilGone, newGameWithHq } from './testUtils';
 import { tick } from './tick';
-import { approachTicks, descentTicks, orbitTicks, progressUfos, spawnUfo } from './ufos';
+import { progressUfos, spawnUfo } from './ufos';
 
 describe('events', () => {
   it('catena di fasi UFO: emette ufoOrbiting → ufoDescending → ufoAbducting e nient\'altro', () => {
     const s = createNewGame(1);
     spawnUfo(s, 'rome');
-    const abductionTicks = CONFIG.ufoAbductor.abductionDays * CONFIG.ticksPerDay;
-    const total = approachTicks() + orbitTicks() + descentTicks() + abductionTicks + descentTicks();
-    for (let i = 0; i < total; i++) progressUfos(s);
+    advanceUfosUntilGone(s);
     expect(s.ufos).toHaveLength(0); // ciclo completo: l'UFO è uscito di scena
     expect(s.events.map(e => e.type)).toEqual(['ufoOrbiting', 'ufoDescending', 'ufoAbducting']);
     for (const e of s.events) {
@@ -51,7 +49,7 @@ describe('events', () => {
   it('abductedTotal accumula durante i rapimenti, coerente con il contatore di bordo', () => {
     const s = createNewGame(1);
     spawnUfo(s, 'rome');
-    for (let i = 0; i < approachTicks() + orbitTicks() + descentTicks(); i++) progressUfos(s);
+    advanceUfoToPhase(s, 'abducting');
     expect(s.ufos[0].phase).toBe('abducting');
     expect(s.stats.abductedTotal).toBe(0);
     const n = 6;

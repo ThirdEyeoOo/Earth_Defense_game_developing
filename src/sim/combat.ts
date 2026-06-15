@@ -1,6 +1,21 @@
 import { CONFIG } from './config';
+import { altitudeAt } from './orbit';
 import type { GameState, SquadronState, UfoPhase, UfoState } from './state';
 import { removeUfo } from './ufos';
+
+// progresso (in tick interi) della fase corrente: usato per la quota d'ingaggio.
+// Senza tickFraction (decisione di gioco deterministica, non visiva).
+function phaseFraction(ufo: UfoState): number {
+  return ufo.phaseTotalTicks > 0 ? (ufo.phaseTotalTicks - ufo.ticksRemaining) / ufo.phaseTotalTicks : 1;
+}
+
+// un UFO è ingaggiabile se è in una fase atmosferica E sotto la quota d'ingaggio
+export function isEngageable(ufo: UfoState): boolean {
+  return (
+    ENGAGEABLE_PHASES.has(ufo.phase) &&
+    altitudeAt(ufo.phase, phaseFraction(ufo), ufo.orbit) <= CONFIG.physics.engageAltitude
+  );
+}
 
 const PHASE_RANK: Record<UfoPhase, number> = {
   abducting: 0,
@@ -33,9 +48,7 @@ export function activeBattles(state: GameState): Battle[] {
     if (!city.alive) continue;
     const defenders = state.squadrons.filter(s => s.cityId === city.id && s.transfer === null);
     if (defenders.length === 0) continue;
-    const attackers = state.ufos.filter(
-      u => u.targetCityId === city.id && ENGAGEABLE_PHASES.has(u.phase),
-    );
+    const attackers = state.ufos.filter(u => u.targetCityId === city.id && isEngageable(u));
     if (attackers.length === 0) continue;
     battles.push({ cityId: city.id, defenders, attackers });
   }

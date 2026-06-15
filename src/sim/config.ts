@@ -40,6 +40,19 @@ export const CONFIG = {
     >,
     costGrowth: 0.5,
   },
+  // Fisica orbitale (vedi src/sim/orbit.ts). Tutto in RAGGI terrestri (globo = 1)
+  // e TICK. Costanti "reali scalate": μ deriva da g reale con τ = 4320 s-gioco/tick
+  // (= 1 giorno-gioco / 20). Le durate delle fasi NON sono più costanti: la sim le
+  // deriva da questi parametri e le salva come tick interi (deterministico).
+  physics: {
+    mu: 28.7, // G·M ≈ 28,7 raggi³/tick² (g reale, τ=4320 s/tick) → periodo LEO ~2,4 tick
+    orbitRadius: 1.6, // quota dell'orbita di parcheggio
+    surfaceRadius: 1.02, // quota di hover in superficie (rapimento)
+    visualStartDistance: 8, // quota di comparsa per il RENDER (il timing viene dalla distanza fisica)
+    auInRadii: 23482, // 1 UA in raggi terrestri: per il timing fisico della crociera flip-and-burn
+    lunarDistance: 60, // raggi: soglia (fisica) di rientro a 1x del tasto ">>>"
+    engageAltitude: 1.6, // quota sotto cui i caccia possono ingaggiare (default = quota d'orbita)
+  },
   ufoAbductor: {
     attack: 4,
     shotsPerTick: 1,
@@ -47,14 +60,10 @@ export const CONFIG = {
     armor: 1,
     abductionPerDay: 10,
     abductionDays: 1,
-    // velocità per fase di viaggio: in futuro ogni nemico/difesa avrà le sue
-    travel: {
-      approachDays: 1, // spazio profondo → inserimento in orbita
-      orbits: 3, // orbite complete prima della discesa
-      orbitDaysPerOrbit: 1 / 3, // durata di una singola orbita
-      descentKm: 2000, // discesa atmosferica (e fuga)
-      atmosphereKmPerDay: 8000,
-    },
+    mass: 1, // massa (cancella nella gravità: conta solo con la spinta)
+    thrust: 30, // spinta → a_spinta = thrust/mass (≥ g_superficie per poter fare hover/atterrare)
+    startDistanceAu: 1, // distanza di comparsa in UA (timing crociera; 2 UA ≈ 1,41× il tempo)
+    orbits: 3, // giri completi prima della discesa
   },
   waves: {
     firstWaveDayMin: 10,
@@ -66,5 +75,5 @@ export const CONFIG = {
     ufosPerWave: 1,
     victoryWaves: 10,
   },
-  saveVersion: 4,
+  saveVersion: 5,
 } as const;

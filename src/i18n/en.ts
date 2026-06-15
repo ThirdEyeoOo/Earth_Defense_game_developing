@@ -14,6 +14,7 @@ export const en: Record<MessageKey, string> = {
   'hud.dead': 'Deaths: {n}',
   'hud.attackInProgress': '⚠ UNDER ATTACK',
   'hud.nextWave': 'Next wave: {days}d',
+  'hud.skipToNextAttack': 'Skip to next attack',
 
   // city panel
   'panel.population': 'Population:',

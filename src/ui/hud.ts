@@ -1,15 +1,17 @@
 import { t } from '../i18n';
 import { dayOfTick } from '../sim/calendar';
-import type { GameState } from '../sim/state';
+import type { GameSpeed, GameState } from '../sim/state';
 import { worldPopulation } from '../sim/state';
 import { fmtClock, fmtDate, fmtInt } from './format';
 import { encyclopediaIcon, gearIcon } from './icons';
 
-const SPEEDS: Array<0 | 1 | 2 | 4 | 10> = [0, 1, 2, 4, 10];
+// 1000x non è un pulsante normale: ci si arriva solo col tasto ">>>"
+const SPEEDS: Array<0 | 1 | 2 | 4 | 10 | 100> = [0, 1, 2, 4, 10, 100];
 
 export function createHud(
   root: HTMLElement,
-  onSetSpeed: (speed: 0 | 1 | 2 | 4 | 10) => void,
+  onSetSpeed: (speed: GameSpeed) => void,
+  onSkipToNextAttack: () => void,
   onToggleRadar: () => void,
   onSave: () => void,
   onOpenSettings: () => void,
@@ -36,6 +38,12 @@ export function createHud(
     btn.addEventListener('click', () => onSetSpeed(sp));
     speedsEl.appendChild(btn);
   }
+  // ">>>": salta al prossimo attacco (1000x, torna a 1x a distanza lunare)
+  const skipBtn = document.createElement('button');
+  skipBtn.id = 'hud-skip';
+  skipBtn.textContent = '≫';
+  skipBtn.addEventListener('click', () => onSkipToNextAttack());
+  speedsEl.appendChild(skipBtn);
   root.querySelector('#hud-radar')!.addEventListener('click', onToggleRadar);
   root.querySelector('#hud-save')!.addEventListener('click', onSave);
   root.querySelector('#hud-encyclopedia')!.addEventListener('click', onOpenEncyclopedia);
@@ -46,6 +54,7 @@ export function createHud(
     root.querySelector('#hud-save')!.textContent = t('hud.save');
     root.querySelector('#hud-encyclopedia')!.setAttribute('title', t('enc.open'));
     root.querySelector('#hud-settings')!.setAttribute('title', t('settings.open'));
+    skipBtn.setAttribute('title', t('hud.skipToNextAttack'));
   }
   refreshLabels();
 
@@ -70,10 +79,14 @@ export function createHud(
       root.querySelector('#hud-wave')!.textContent =
         state.ufos.length > 0 ? t('hud.attackInProgress') : t('hud.nextWave', { days });
       for (const btn of speedsEl.querySelectorAll('button')) {
-        btn.classList.toggle('active', Number(btn.dataset.speed) === state.speed);
         // in fase di fondazione il tempo è congelato: la velocità non ha effetto
         btn.disabled = state.hqCityId === null;
       }
+      for (const btn of speedsEl.querySelectorAll<HTMLButtonElement>('[data-speed]')) {
+        btn.classList.toggle('active', Number(btn.dataset.speed) === state.speed);
+      }
+      // ">>>" attivo durante il salto (1000x)
+      skipBtn.classList.toggle('active', state.speed === 1000);
     },
   };
 }

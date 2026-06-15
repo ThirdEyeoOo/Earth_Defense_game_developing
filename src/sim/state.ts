@@ -1,6 +1,7 @@
 import citiesData from '../data/cities.json';
 import { CONFIG } from './config';
 import type { SimEvent } from './events';
+import type { OrbitalParams } from './orbit';
 import type { CityResource, ResourceType } from './resources';
 import { emptyStockpile } from './resources';
 import { stateRand } from './rng';
@@ -41,8 +42,11 @@ export interface UfoState {
   targetCityId: string;
   phase: UfoPhase;
   ticksRemaining: number; // tick alla fine della fase corrente
+  phaseTotalTicks: number; // durata totale della fase corrente (fisica, intera); per il progresso continuo
   abducted: number; // contatore di bordo, accumula 0.5/tick in abducting
   spawnDir: { x: number; y: number; z: number }; // direzione di arrivo dallo spazio profondo (unitaria)
+  orbit: OrbitalParams; // parametri di traiettoria (condivisi sim↔render via orbit.ts)
+  lunarCrossTick: number; // tick di crociera in cui incrocia la distanza lunare (tasto ">>>")
 }
 
 export interface WaveState {
@@ -60,11 +64,14 @@ export interface GameStats {
 
 export type Outcome = 'playing' | 'victory' | 'defeat';
 
+// 0 = pausa. 1000 si raggiunge solo col tasto ">>>" (salta al prossimo attacco).
+export type GameSpeed = 0 | 1 | 2 | 4 | 10 | 100 | 1000;
+
 export interface GameState {
   version: number;
   seed: number;
   tick: number;
-  speed: 0 | 1 | 2 | 4 | 10;
+  speed: GameSpeed;
   humt: number; // Humanity Treasure, la valuta post-collasso
   resources: Record<ResourceType, number>; // magazzino globale (float: la UI mostra il floor)
   hqCityId: string | null; // null = fase di fondazione, la sim non avanza

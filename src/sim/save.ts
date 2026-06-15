@@ -1,8 +1,10 @@
 import citiesData from '../data/cities.json';
 import { CONFIG } from './config';
+import { lunarCrossTick } from './orbit';
 import type { CityResource } from './resources';
 import { emptyStockpile } from './resources';
 import type { GameState } from './state';
+import { approachDuration, buildOrbit, descentDuration, orbitDuration } from './ufos';
 
 export const SAVE_KEY = 'earth-defense-save';
 
@@ -78,6 +80,41 @@ const MIGRATIONS: Record<number, Migration> = {
     };
     delete out.credits;
     return out;
+  },
+  // v4 → v5: fisica orbitale. Gli UFO acquisiscono orbit/phaseTotalTicks/lunarCrossTick;
+  // li ricostruiamo deterministicamente da spawnDir + città bersaglio (lat/lon dal dataset).
+  4: raw => {
+    const ufos = Array.isArray(raw.ufos) ? (raw.ufos as Record<string, unknown>[]) : [];
+    const cityById = new Map(
+      (citiesData as { id: string; lat: number; lon: number }[]).map(c => [c.id, c]),
+    );
+    const phys = CONFIG.physics;
+    const u = CONFIG.ufoAbductor;
+    const physicalStart = u.startDistanceAu * phys.auInRadii;
+    const abductionTicks = u.abductionDays * CONFIG.ticksPerDay;
+    for (const ufo of ufos) {
+      if (ufo.orbit) continue;
+      const sd = ufo.spawnDir as { x: number; y: number; z: number } | undefined;
+      const spawnDir = sd ?? { x: 1, y: 0, z: 0 };
+      const c = cityById.get(ufo.targetCityId as string);
+      const orbit = buildOrbit(spawnDir, { lat: c?.lat ?? 0, lon: c?.lon ?? 0 });
+      ufo.orbit = orbit;
+      const phase = ufo.phase as string;
+      const duration =
+        phase === 'approaching'
+          ? approachDuration()
+          : phase === 'orbiting'
+            ? orbitDuration(orbit)
+            : phase === 'abducting'
+              ? abductionTicks
+              : descentDuration(orbit); // descending / escaping
+      ufo.phaseTotalTicks = duration;
+      // i salvataggi vecchi avevano durate diverse: ricomprimi ticksRemaining nel nuovo range
+      const tr = typeof ufo.ticksRemaining === 'number' ? ufo.ticksRemaining : duration;
+      ufo.ticksRemaining = Math.max(1, Math.min(tr, duration));
+      ufo.lunarCrossTick = lunarCrossTick(physicalStart, phys.lunarDistance, approachDuration());
+    }
+    return { ...raw, version: 5 };
   },
 };
 

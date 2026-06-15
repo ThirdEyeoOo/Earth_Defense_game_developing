@@ -13,6 +13,7 @@ export const it = {
   'hud.dead': 'Morti: {n}',
   'hud.attackInProgress': '⚠ ATTACCO IN CORSO',
   'hud.nextWave': 'Prossima ondata: {days}g',
+  'hud.skipToNextAttack': 'Salta al prossimo attacco',
 
   // pannello città
   'panel.population': 'Popolazione:',
