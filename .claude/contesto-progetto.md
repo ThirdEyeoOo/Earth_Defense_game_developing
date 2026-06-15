@@ -1,6 +1,6 @@
 # Earth Defense — Contesto operativo
 
-Aggiornato: 2026-06-14 (chiusura sessione 06, commit #79, main pulito, v0.112.0 rilasciata)
+Aggiornato: 2026-06-15 (chiusura sessione 07, commit #82, main pulito, v0.113.0 rilasciata)
 Repo pubblico: github.com/ThirdEyeoOo/Earth_Defense_game_developing (README bilingue, MIT, FUNDING).
 
 ## Cos'è
@@ -35,6 +35,12 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
   helper sim `activeBattles`; 10 icone risorse colorate + fix spaziatura Bilancio
   (table-layout fixed) + ordinamento per peso; finestra Enciclopedia (pulsante "?")
   con prima voce su HumT e gettito. Repo pubblicato su GitHub (README/MIT/FUNDING).
+- **v0.113.0** — **fisica orbitale realistica** degli UFO (modulo puro `src/sim/orbit.ts`):
+  crociera flip-and-burn, inserimento tangente con spirale di cattura, orbita kepleriana,
+  caduta 1/r², salvataggi **v5**; **scala tempo** 1x = 1 s reale → 1 min-gioco, velocità
+  **100x/1000x** + tasto **">>>"** (salta al prossimo attacco); nuovo asset UFO animato
+  `alien_abductor.svg` reso come **overlay DOM CSS2D** (non più mesh) nel globo e nella
+  finestra di scontro. (Vedi "Fisica orbitale" più sotto.)
 - Release: a ogni merge chiedere il nome semver all'utente (proponendone uno) e aggiornare
   `lista aggiornamenti/releases.txt` (nuova voce IN ALTO; il file è locale, la cartella è
   gitignorata) con recap + delta byte (somma dimensioni `git ls-files`); tag ANNOTATO.
@@ -85,8 +91,9 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
 - **Finestra di scontro FTL** (`src/ui/combatWindow.ts` + `src/render/battleBadges.ts`,
   v0.112.0): visualizzazione cinematica SOLA LETTURA. Un badge CSS2D lampeggiante
   (`battle-badge`) sopra le città in combattimento → click → overlay centrato z-18
-  (`#combat-window`) con F-22/UFO inline (SVG riusati: per l'UFO togliere `raggio_traente`,
-  mostrato via CSS solo in rapimento), barre HP, traccianti, flash d'impatto, esito.
+  (`#combat-window`) con F-22 inline e UFO (`alien_abductor`) in SHADOW DOM per istanza
+  (l'inline+id-strip romperebbe le animazioni dell'asset), classe `.on` (raggio) solo in
+  rapimento; barre HP, traccianti, flash d'impatto, esito.
   Tempo live; pattern toggle/update; chiusura Esc capture-phase. La condizione "città in
   combattimento" è l'helper PURO `activeBattles(state)` (+`interface Battle`) in
   `src/sim/combat.ts`: unica fonte usata da `resolveCombat`, `hpBars`, `effects`, badge e
@@ -162,9 +169,15 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
 - `boost_sx_esterno/interno`, `boost_dx_esterno/interno` — fiamme, pivot ugelli (y SVG = 264).
 - `luce_nav_sx` (rossa), `luce_nav_dx` (verde), `luce_strobo_coda` (bianca).
 
-### `Assets/Alieni/UFO/ufo_disco_volante.svg` (viewBox 240×200, profilo, centro disco 120,95)
-- Statici: `disco_corpo`, `mozzo_inferiore`.
-- `cupola`, `luce_cupola`, `luce_1`…`luce_7`, `raggio_traente` (pivot y SVG = 108, nascosto di default).
+### `Assets/Alieni/UFO/alien_abductor.svg` (viewBox 600×860, v0.113.0)
+- Sostituisce `ufo_disco_volante.svg`. SVG **DOM ricco** (gradienti/filtri/animazioni CSS):
+  **NON passa da SVGLoader** → reso come overlay DOM/CSS2D in shadow root (`render/ufoLayer.ts`)
+  e nella finestra di scontro. Gruppi separabili: nave `#ufo` (sempre) + raggio/suolo `#beam`
+  (rapito/detriti/erba/terreno bruciato). Hardpoint armi `#hardpoint-left/right` (feature futura).
+- Adattato a **on-demand** (regola README dell'asset): a riposo ante chiuse + raggio spento;
+  la classe **`.on`** sul root (toggle in fase `abducting`) apre le ante e accende `#beam` con
+  transizioni. Animazioni idle della nave in loop (levitazione, visor, beacon, rimlight, glifi).
+- Inbox per asset sostitutivi futuri: `AssetsReplacedbydev/` (gitignored; integrare in `Assets/`).
 
 ### `Assets/Widgets/Barre/health-bar-{humans,aliens}.svg` (viewBox 530×92)
 - **Non passano da SVGLoader** (gradienti/filtri/testo): inline nel DOM, uno shadow root per
@@ -198,23 +211,46 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
 - Luci nav in controfase sfasate, strobo coda ~90 ms ogni 1,5 s; boost solo in trasferimento
   (crescita eased + flicker); pattugliamento circolare rasoterra a scala 0.5, decollo/atterraggio
   smoothstep (12% della rotta) fino a crociera 1.045 a scala 1.
-### UFO
-- Billboard (`quaternion.copy(camera.quaternion)`); luci 1–7 in sequenza rotante (2,5× in volo,
-  lenta nel rapimento); cupola+luce pulsanti (lampeggio 150 ms nel rapimento); raggio traente
-  esteso a terra durante il rapimento; scala 1 (orbita) → 0.5 (suolo) smoothstep sulla quota.
+### UFO (v0.113.0 — overlay DOM, non più mesh Three.js)
+- Reso da `render/ufoLayer.ts`: una istanza CSS2D in shadow DOM per UFO (asset `alien_abductor`,
+  animazioni interne via CSS). Posizione 3D da `UnitLayer.ufoPosition` (UnitLayer resta l'autorità,
+  calcolata da `orbit.positionAt`, letta anche da hpBars/effects/floatingText). **Shrink prospettico**
+  per distanza dalla camera (`px = W·H/(2·d·tan(fov/2))`, scala clampata); occlusione dietro il globo
+  (`isOccludedByGlobe`); classe `.on` (raggio+ante) solo in `abducting`. Manopole in `ufoLayer.ts`:
+  `WORLD_WIDTH` (dimensione), `MIN/MAX_SCALE`, `SHIP_OFFSET_PX`.
 ### Feedback (layer CSS2D separati)
 - `hpBars.ts`: barre visibili solo se danneggiati/ingaggiati (linger 1,2 s), colori continui,
   critico ≤25% con LOW. `floatingText.ts`: toast dagli eventi sim (chiavi `float.*`), cursore
   `lastSeenId`; contatore "Abductions = n". `horizon.ts`: `isOccludedByGlobe` anche in quota.
 - Gotcha CSS2D: offset/animazioni su elementi INTERNI; `element.remove()` manuale alla rimozione.
 
+## Fisica orbitale (v0.113.0) — `src/sim/orbit.ts` (modulo PURO, condiviso sim↔render)
+- Unica fonte di verità della traiettoria nemica (come `combat.activeBattles`): zero import
+  esterni, ritorni plain `{x,y,z}`, niente THREE/i18n. Sim e render la condividono.
+- Modello ibrido (l'UFO ha i motori): crociera **flip-and-burn** (timing da distanza UA,
+  `cruiseTicks`), **spirale di cattura** che arriva TANGENTE all'orbita con velocità che combacia
+  (continuità C1, niente scatti — `computeCaptureSweep`/`captureSweep`, manopola `CAPTURE_FRACTION`),
+  orbita kepleriana (`orbitalPeriodTicks`, `orbitPhaseTicks`), caduta 1/r² (`freefallTicks`),
+  hover propulso, fuga.
+- **Determinismo blindato**: la sim usa solo tick interi precalcolati; i float trascendentali
+  vivono solo nel pixel disegnato. Parametri in `CONFIG.physics` (μ, quote, scala UA, distanza
+  lunare, `engageAltitude`) + `CONFIG.ufoAbductor` (massa, spinta, `startDistanceAu`, giri).
+  Costanti "reali scalate" (μ da g reale, τ = 4320 s-gioco/tick); **leva di taratura principale =
+  quota d'orbita**.
+- **Tasto ">>>"** (main.ts): 1000x finché il primo UFO incrocia la distanza lunare (`lunarCrossTick`),
+  poi 1x (one-shot; controllo DENTRO il loop tick per non sorpassare). `GameSpeed` = 0|1|2|4|10|100|1000.
+- Test: `src/sim/orbit.test.ts` (20, incl. regressione **continuità di velocità** avvicinamento→orbita);
+  `ufos`/`events` test osservano le transizioni (durate non più costanti → `advanceUfoToPhase` in testUtils).
+
 ## Gameplay/sim — punti chiave
-- UFO: spazio profondo → ~1 giorno avvicinamento → 3 orbite da ⅓ giorno → discesa → rapimento
-  (10 persone/giorno) → fuga. Ingaggiabile solo da discesa in poi (`ENGAGEABLE_PHASES`).
-- Perdita popolazione = rapiti a bordo all'uscita di scena. Config velocità per fase in
-  `CONFIG.ufoAbductor.travel` (predisposta per stat per-fase future).
+- UFO: spazio profondo → avvicinamento → orbita (N giri) → discesa → rapimento (10 persone/giorno)
+  → fuga. **Durate ora derivate dalla fisica** (vedi sopra), non più costanti da CONFIG.
+- Ingaggio **per quota** (`combat.isEngageable`: fase atmosferica + `altitudeAt ≤ engageAltitude`;
+  default `engageAltitude` = quota d'orbita ⇒ comportamento come prima). `UfoState` += `orbit`/
+  `phaseTotalTicks`/`lunarCrossTick`/`captureSweep`. Perdita popolazione = rapiti a bordo all'uscita.
 - Registro eventi sim (`state.events`): id monotoni, trim a 40 tick; UI legge col cursore.
-- Salvataggi versionati (**v4**) con migrazioni; la velocità viene salvata (pausa ⇒ riparte in pausa).
+- Salvataggi versionati (**v5**, migrazione v4→v5: ricostruisce `orbit` da spawnDir + città); la
+  velocità viene salvata (pausa ⇒ riparte in pausa).
 
 ## Knowledge graph (graphify)
 - Grafo del codebase in `graphify-out/` (gitignored), ~570 nodi. Hook git aggiornano la parte
@@ -234,7 +270,10 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
    (v0.112.0).
 3. Tutorial: step futuri (primo squadrone, prima ambasciata, prima ondata) — la sequenza
    a dati in tutorialSteps.ts è già pronta; eventuale accenno al collasso nell'intro.
-4. Stat di velocità per-fase di viaggio per ogni nemico/difesa (config già strutturata).
+4. Taratura visiva del nuovo UFO (`WORLD_WIDTH`/scala in `ufoLayer.ts`, offset, alone abducting in
+   style.css) e bilanciamento della fisica orbitale col playtest (CONFIG.physics, quota d'orbita).
+   Stat per-nemico già parziali (massa/spinta/UA su `ufoAbductor`); orientamento UFO sul globo oggi
+   billboard verticale (raggio verso il basso-schermo), polish futuro.
 5. Meta-progressione / albero tecnologico (pulsante Ricerca già pronto) — post-MVP, da spec.
 6. Eventuale: HUD responsive sotto i ~1460px (oggi sfora, l'ingranaggio esce dal viewport).
 7. Enciclopedia: nuove voci (squadroni, ambasciate, ondate UFO, combattimento) — struttura
