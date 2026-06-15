@@ -1,18 +1,19 @@
 import f22Raw from '../../Assets/Umani/Velivoli/f22_raptor_animabile.svg?raw';
-import ufoRaw from '../../Assets/Alieni/UFO/ufo_disco_volante.svg?raw';
+import ufoArtRaw from '../../Assets/Alieni/UFO/alien_abductor.svg?raw';
 import { cityName, t } from '../i18n';
 import { activeBattles, type Battle } from '../sim/combat';
 import { CONFIG } from '../sim/config';
 import type { GameState, UfoPhase, UfoState } from '../sim/state';
 
-// Arte riusata dal globo, inline nel DOM: via gli id (collisioni nel DOM) e gli
-// eventuali <title>. Per l'UFO si toglie anche il raggio traente: nella finestra
-// lo disegniamo via CSS solo durante il rapimento.
+// F-22: arte inline (niente <style> interno), via gli id (collisioni DOM) e i <title>.
 function sanitize(svg: string): string {
   return svg.replace(/ id="[^"]*"/g, '').replace(/<title>[\s\S]*?<\/title>\s*/g, '');
 }
 const F22_ART = sanitize(f22Raw);
-const UFO_ART = sanitize(ufoRaw.replace(/<path id="raggio_traente"[\s\S]*?\/>\s*/, ''));
+// L'UFO (alien_abductor) ha <style>/id/animazioni interni: NON si può inlineare
+// id-stripped → ogni nave va in uno SHADOW ROOT (vedi rebuild). Il raggio (#beam)
+// si accende con la classe `.on` solo in rapimento.
+const UFO_ART_HEIGHT_PX = 92;
 
 // fase "rappresentativa" dello scontro: la più avanzata verso il rapimento
 const PHASE_PRIORITY: UfoPhase[] = ['abducting', 'descending', 'escaping'];
@@ -51,6 +52,7 @@ export function createCombatWindow(
   let cityId: string | null = null;
   let lastKey = ''; // ricostruisce il DOM solo quando cambia l'insieme di unità
   const prevHp = new Map<string, number>(); // 's:id' | 'u:id' → hp del frame precedente
+  const ufoArt = new Map<number, SVGSVGElement>(); // id UFO → <svg> nello shadow (per toggle `.on`)
 
   function battleFor(state: GameState): Battle | null {
     if (cityId === null) return null;
@@ -78,7 +80,7 @@ export function createCombatWindow(
       .map(s => unitHtml('s', s.id, F22_ART, t('combat.squadron', { id: s.id })))
       .join('');
     const attackers = battle.attackers
-      .map(u => unitHtml('u', u.id, UFO_ART, t('combat.ufo', { id: u.id })))
+      .map(u => unitHtml('u', u.id, '', t('combat.ufo', { id: u.id })))
       .join('');
     root.innerHTML = `
       <div class="combat-box">
@@ -108,6 +110,19 @@ export function createCombatWindow(
       </div>
     `;
     root.querySelector('.combat-close')!.addEventListener('click', close);
+    // ogni UFO in uno shadow root con l'asset animato (isola id/<style>, niente
+    // collisioni fra istanze); il raggio si accende via `.on` in update().
+    ufoArt.clear();
+    for (const u of battle.attackers) {
+      const artEl = root.querySelector(`.combat-unit[data-key="u:${u.id}"] .combat-unit-art--ufo`);
+      if (!artEl) continue;
+      const shadow = artEl.attachShadow({ mode: 'open' });
+      shadow.innerHTML = ufoArtRaw;
+      const svg = shadow.querySelector('svg') as SVGSVGElement;
+      svg.setAttribute('height', String(UFO_ART_HEIGHT_PX));
+      svg.setAttribute('width', ((UFO_ART_HEIGHT_PX * 600) / 860).toFixed(0));
+      ufoArt.set(u.id, svg);
+    }
   }
 
   function patchUnits(
@@ -163,6 +178,10 @@ export function createCombatWindow(
     root
       .querySelector('.combat-box')!
       .classList.toggle('combat-box--abducting', battle.attackers.some(u => u.phase === 'abducting'));
+    // raggio dell'asset (#beam) acceso per ogni UFO che sta rapendo
+    for (const u of battle.attackers) {
+      ufoArt.get(u.id)?.classList.toggle('on', u.phase === 'abducting');
+    }
   }
 
   function open(id: string, state: GameState): void {

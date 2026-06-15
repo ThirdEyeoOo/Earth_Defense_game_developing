@@ -1,14 +1,11 @@
 import * as THREE from 'three';
 import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
-import ufoSvgRaw from '../../Assets/Alieni/UFO/ufo_disco_volante.svg?raw';
 import fighterSvgRaw from '../../Assets/Umani/Velivoli/f22_raptor_animabile.svg?raw';
 import { positionAt } from '../sim/orbit';
 import type { GameState, UfoState } from '../sim/state';
 import { cityPosition } from './cities';
 import { ATMOSPHERE_ALTITUDE } from './globe';
 
-const ORBIT_ALTITUDE = 1.6; // quota dell'orbita
-const SURFACE_ALTITUDE = 1.02; // quota di atterraggio
 const CRUISE_ALTITUDE = ATMOSPHERE_ALTITUDE - 0.005; // crociera: dentro l'atmosfera, vicino al limite
 const GROUND_SCALE = 0.5; // dimensioni a terra (pattugliamento) rispetto alla crociera
 const CLIMB_FRACTION = 0.12; // frazione di rotta usata per decollo e atterraggio
@@ -30,17 +27,9 @@ function liftProfile(frac: number): number {
   return 1;
 }
 
-// --- UFO da SVG (Assets/Alieni/UFO/ufo_disco_volante.svg, vista di profilo) ---
-const UFO_WIDTH = 0.05; // larghezza del disco in unità mondo
-const UFO_SVG_WIDTH = 240;
-const UFO_SVG_HEIGHT = 200;
-const BEAM_ATTACH_Y = 108; // y (in coordinate SVG) dell'attacco del raggio al mozzo
-const RIM_LIGHTS = ['luce_1', 'luce_2', 'luce_3', 'luce_4', 'luce_5', 'luce_6', 'luce_7'];
-
 type SvgParts = Record<string, THREE.Mesh[]>;
 
 const fighterPaths = new SVGLoader().parse(fighterSvgRaw).paths;
-const ufoPaths = new SVGLoader().parse(ufoSvgRaw).paths;
 
 // Costruisce un gruppo piatto da path SVG: una mesh per shape (+ stroke),
 // indicizzate per id. pivotOverrides sposta il pivot di certi id (es. il
@@ -152,31 +141,13 @@ function buildSquadron(): THREE.Group {
   return squadron;
 }
 
-// Disco volante: vista di profilo, renderizzato come billboard verticale
-function buildUfo(): THREE.Group {
-  const ufo = new THREE.Group();
-  const { model, parts } = buildSvgModel(
-    ufoPaths,
-    UFO_SVG_WIDTH,
-    UFO_SVG_HEIGHT,
-    (UFO_WIDTH * UFO_SVG_HEIGHT) / UFO_SVG_WIDTH,
-    { raggio_traente: BEAM_ATTACH_Y },
-  );
-  ufo.add(model);
-  ufo.userData.parts = parts;
-  ufo.userData.beamLevel = 0;
-  // il raggio traente parte nascosto
-  for (const mesh of parts.raggio_traente ?? []) mesh.visible = false;
-  return ufo;
-}
-
 function setOpacity(meshes: THREE.Mesh[] | undefined, opacity: number): void {
   if (!meshes) return;
   for (const mesh of meshes) (mesh.material as THREE.MeshBasicMaterial).opacity = opacity;
 }
 
 export class UnitLayer {
-  private ufoMeshes = new Map<number, THREE.Object3D>();
+  private ufoPositions = new Map<number, THREE.Vector3>();
   private squadronMeshes = new Map<number, THREE.Object3D>();
   readonly group = new THREE.Group();
 
@@ -185,38 +156,26 @@ export class UnitLayer {
   }
 
   ufoPosition(ufoId: number): THREE.Vector3 | null {
-    return this.ufoMeshes.get(ufoId)?.position.clone() ?? null;
+    return this.ufoPositions.get(ufoId)?.clone() ?? null;
   }
 
   squadronPosition(squadronId: number): THREE.Vector3 | null {
     return this.squadronMeshes.get(squadronId)?.position.clone() ?? null;
   }
 
-  update(state: GameState, tickFraction: number, camera: THREE.Camera): void {
+  update(state: GameState, tickFraction: number): void {
     const now = performance.now();
-    this.sync(this.ufoMeshes, state.ufos.map(u => u.id), buildUfo);
     this.sync(
       this.squadronMeshes,
       state.squadrons.map(s => s.id),
       buildSquadron,
     );
 
+    // Gli UFO sono renderizzati come overlay DOM (UfoLayer): qui UnitLayer resta
+    // l'autorità delle loro POSIZIONI 3D, lette da hpBars/effects/floatingText.
+    this.ufoPositions.clear();
     for (const ufo of state.ufos) {
-      const group = this.ufoMeshes.get(ufo.id)!;
-      // posizione assegnata direttamente: il moto fluido viene dal
-      // progresso continuo (tick + frazione), non dall'inseguimento
-      group.position.copy(this.ufoTarget(ufo, tickFraction));
-      // billboard allineato allo schermo: il profilo del disco resta sempre
-      // orizzontale, senza flip né distorsioni (la camera non rolla mai)
-      group.quaternion.copy(camera.quaternion);
-      // effetto vicino/lontano: pieno in quota, dimezzato al suolo
-      const altitude = group.position.length();
-      const t = Math.min(
-        1,
-        Math.max(0, (altitude - SURFACE_ALTITUDE) / (ORBIT_ALTITUDE - SURFACE_ALTITUDE)),
-      );
-      group.scale.setScalar(0.5 + 0.5 * t * t * (3 - 2 * t));
-      this.animateUfo(group, ufo, now);
+      this.ufoPositions.set(ufo.id, this.ufoTarget(ufo, tickFraction));
     }
 
     for (const sq of state.squadrons) {
@@ -263,47 +222,6 @@ export class UnitLayer {
         orientTangent(group, group.position, forward);
       }
       this.animateFighters(group, now, boostTarget);
-    }
-  }
-
-  // Animazioni UFO da specifica: luci del bordo in sequenza rotante (più
-  // veloci in movimento), luce cupola che pulsa (lampeggia nel rapimento),
-  // cupola in sincrono, raggio traente che si estende/ritira dal mozzo.
-  private animateUfo(group: THREE.Object3D, ufo: UfoState, now: number): void {
-    const parts = group.userData.parts as SvgParts;
-    const abducting = ufo.phase === 'abducting';
-    const moving = !abducting;
-
-    // luci del bordo: testa della sequenza che scorre 1→7, le altre attenuate
-    const speed = moving ? 0.01 : 0.004; // luci/ms: accelerano in movimento
-    const head = (now * speed) % RIM_LIGHTS.length;
-    for (let i = 0; i < RIM_LIGHTS.length; i++) {
-      const dist = Math.min(
-        Math.abs(i - head),
-        RIM_LIGHTS.length - Math.abs(i - head),
-      );
-      setOpacity(parts[RIM_LIGHTS[i]], dist < 1.5 ? 1 - 0.5 * (dist / 1.5) : 0.2);
-    }
-
-    // luce cupola: pulsazione lenta in volo, lampeggio veloce nel rapimento
-    const domeLight = abducting
-      ? ((now % 300) < 150 ? 1 : 0.15)
-      : 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(now * 0.002));
-    setOpacity(parts.luce_cupola, domeLight);
-    // cupola: leggero pulse sincronizzato con la luce interna durante il rapimento
-    setOpacity(parts.cupola, abducting ? 0.55 + 0.35 * domeLight : 0.92);
-
-    // raggio traente: si estende dal mozzo durante il rapimento, poi si ritira
-    const level = THREE.MathUtils.lerp(
-      group.userData.beamLevel as number,
-      abducting ? 1 : 0,
-      0.1,
-    );
-    group.userData.beamLevel = level;
-    for (const mesh of parts.raggio_traente ?? []) {
-      mesh.visible = level > 0.02;
-      mesh.scale.y = level;
-      (mesh.material as THREE.MeshBasicMaterial).opacity = level * (0.55 + 0.15 * Math.random());
     }
   }
 

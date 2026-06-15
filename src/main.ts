@@ -29,6 +29,7 @@ import { FloatingTextLayer } from './render/floatingText';
 import { createGlobe } from './render/globe';
 import { HpBarLayer } from './render/hpBars';
 import { createScene } from './render/scene';
+import { UfoLayer } from './render/ufoLayer';
 import { UnitLayer } from './render/units';
 import { createBalancePanel } from './ui/balancePanel';
 import { createBottomBar } from './ui/bottomBar';
@@ -92,6 +93,7 @@ createGlobe(ctx.scene);
 let cityLayer: CityLayer;
 let battleBadges: BattleBadgeLayer;
 const unitLayer = new UnitLayer(ctx.scene);
+const ufoLayer = new UfoLayer(ctx.scene);
 const effects = new EffectsLayer(ctx.scene);
 const hpBars = new HpBarLayer(ctx.scene);
 const floatingText = new FloatingTextLayer(ctx.scene);
@@ -212,6 +214,7 @@ function bootGame(gameState: GameState): void {
   );
   combatWindow.close(); // niente finestra di scontro residua tra una partita e l'altra
   hpBars.reset(); // niente barre residue tra una partita e l'altra (gli id ripartono)
+  ufoLayer.reset(); // niente UFO residui tra una partita e l'altra
   floatingText.reset(state); // un salvataggio caricato non rigioca gli eventi conservati
   document.getElementById('start-screen')!.classList.add('hidden');
   tutorial.reset(state); // dopo il reset il tutorial è visibile → niente banner
@@ -291,7 +294,8 @@ function frame(now: number): void {
     try {
       cityLayer.update(state, selectedCityId, ctx.camera);
       battleBadges.update(state, ctx.camera);
-      unitLayer.update(state, tickFraction, ctx.camera);
+      unitLayer.update(state, tickFraction);
+      ufoLayer.update(state, unitLayer, ctx.camera);
       effects.update(state, unitLayer);
       hpBars.update(state, unitLayer, ctx.camera);
       floatingText.update(state, unitLayer, ctx.camera);

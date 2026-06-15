@@ -254,6 +254,12 @@ body {
 }
 .unit-hp-host--fading { opacity: 0; }
 
+/* UFO sopra il globo (asset SVG animato in shadow DOM, vedi render/ufoLayer.ts).
+   scala/offset li imposta ufoLayer per frame sull'elemento interno (host);
+   CSS2DRenderer gestisce il transform dell'ancora esterna. */
+.ufo-anchor { pointer-events: none; }
+.ufo-host { transform-origin: center center; will-change: transform; }
+
 /* scritte di feedback fluttuanti (render/floatingText.ts) */
 .float-text-anchor { pointer-events: none; }
 .float-text {
