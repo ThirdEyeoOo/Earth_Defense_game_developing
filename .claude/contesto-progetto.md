@@ -1,6 +1,6 @@
 # Earth Defense — Contesto operativo
 
-Aggiornato: 2026-06-15 (chiusura sessione 07, commit #82, main pulito, v0.113.0 rilasciata)
+Aggiornato: 2026-06-16 (chiusura sessione 08, commit #84, main pulito, v0.113.1 rilasciata)
 Repo pubblico: github.com/ThirdEyeoOo/Earth_Defense_game_developing (README bilingue, MIT, FUNDING).
 
 ## Cos'è
@@ -41,6 +41,14 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
   **100x/1000x** + tasto **">>>"** (salta al prossimo attacco); nuovo asset UFO animato
   `alien_abductor.svg` reso come **overlay DOM CSS2D** (non più mesh) nel globo e nella
   finestra di scontro. (Vedi "Fisica orbitale" più sotto.)
+- **v0.113.1** — **albero della Ricerca (anteprima struttura)**: pannello modale dal pulsante
+  Ricerca che disegna il **DAG** dei nodi in SVG (sola lettura); nodi come **dati** in
+  `src/sim/researchTree.ts` (3 rami / 8 nodi, campi gameplay non ancora consumati); modello
+  completo in **`docs/research-model.md`** (funzionalità di gioco rimandate, finestre da
+  ridisegnare). **Sistema di tracciamento dimensionale**: click su UFO/squadrone → etichetta
+  flottante con **quota/velocità/ETA** in misure reali (vedi "Tracciamento dimensionale" più
+  sotto). Rifiniture rendering UFO: base del raggio sopra il nome città in rapimento, "atterrato"
+  a 2/3 con shrink in discesa, orientamento fisso (vista di profilo).
 - Release: a ogni merge chiedere il nome semver all'utente (proponendone uno) e aggiornare
   `lista aggiornamenti/releases.txt` (nuova voce IN ALTO; il file è locale, la cartella è
   gitignorata) con recap + delta byte (somma dimensioni `git ls-files`); tag ANNOTATO.
@@ -252,6 +260,36 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
 - Salvataggi versionati (**v5**, migrazione v4→v5: ricostruisce `orbit` da spawnDir + città); la
   velocità viene salvata (pausa ⇒ riparte in pausa).
 
+## Tracciamento dimensionale (v0.113.1) — `src/sim/measure.ts` (modulo PURO)
+- Conversioni unità-gioco→reali: `altitudeKm`/`speedKmH` (1 raggio render = `EARTH_RADIUS_KM`
+  = 6371 km; `GAME_SECONDS_PER_TICK` = 86400/`ticksPerDay` = 4320). La fisica è già in scala:
+  velocità orbitale a 1.6 raggi ≈ 22.500 km/h (valore reale). Helper UFO: quota da `altitudeAt`,
+  velocità per differenza centrale di `positionAt`, **ETA** = tick residui fino al rapimento
+  (somma durate fasi via `orbitPhaseTicks`/`freefallTicks`, `null` in abducting/escaping); helper
+  squadrone (15 km, 2250 km/h, ETA dal transfer). `kmToMiles`/`kmToFeet` per le unità americane.
+- **Etichetta flottante** `src/render/trackingLabel.ts` (CSS2D, una sola label sull'oggetto
+  selezionato, occlusa dietro il globo, ricostruita ogni frame; formatta con solo i18n, niente
+  import da `ui/`). Mostra titolo + Quota + Velocità + **ETA → città**. **ETA continuo**: sottrae
+  `tickFraction` → scorre in tempo reale (non a scatti di tick). **Unità per lingua**: EN ⇒
+  americane (altitudine in **piedi**, velocità in **mph**); IT ⇒ km/km/h; l'ETA è tempo (g/h IT,
+  d/h EN). Chiavi `track.*` in it/en.
+- **Picking**: UFO (DOM) via handler `click` sull'anchor in `ufoLayer.ts` (guardia anti-drag,
+  `.ufo-anchor/.ufo-host` `pointer-events:auto`); squadroni (mesh) via **THREE.Raycaster** sul
+  canvas in `main.ts` (risale a `userData.squadronId`; click nel vuoto deseleziona). Stato
+  `selectedUnit` in main.ts (Esc/nuova partita azzerano; auto-clear se l'oggetto sparisce).
+- **Squadroni**: il rendering resta a quota esagerata (modelli ~223 km ingranditi per visibilità);
+  i 15 km / 2250 km/h vivono **solo nel readout**. `CONFIG.squadron.speedKmPerDay` 24000→54000
+  (crociera 2250 km/h, velocità di trasferimento effettiva) + `cruiseAltitudeKm: 15`.
+
+## Albero della Ricerca (v0.113.1) — anteprima struttura, funzionalità da fare
+- Nodi come **dati** puri in `src/sim/researchTree.ts` (`ResearchNode`: ramo, tier, prereq,
+  coordinate, costo/punti/effetto **non ancora consumati**); 3 rami / 8 nodi nella v1. Modello
+  completo e razionali in **`docs/research-model.md`** (progressione a tempo, velocità da
+  produzione _tecnologia_ + lab futuri, **DAG** con coordinate manuali, effetti dichiarativi →
+  modificatori derivati, stato `research` + migrazione salvataggi v5→v6 da implementare).
+- `src/ui/researchPanel.ts`: modale dal pulsante Ricerca che disegna il **DAG in SVG** (sola
+  lettura, `tech.*` i18n). Le **finestre verranno ridisegnate** prima di agganciare la meccanica.
+
 ## Knowledge graph (graphify)
 - Grafo del codebase in `graphify-out/` (gitignored), ~570 nodi. Hook git aggiornano la parte
   codice a ogni commit/checkout/merge (AST, background, log in `~/.cache/graphify-rebuild.log`);
@@ -274,7 +312,10 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
    style.css) e bilanciamento della fisica orbitale col playtest (CONFIG.physics, quota d'orbita).
    Stat per-nemico già parziali (massa/spinta/UA su `ufoAbductor`); orientamento UFO sul globo oggi
    billboard verticale (raggio verso il basso-schermo), polish futuro.
-5. Meta-progressione / albero tecnologico (pulsante Ricerca già pronto) — post-MVP, da spec.
+5. Meta-progressione / **albero tecnologico**: struttura+anteprima FATTE (v0.113.1, vedi sezione
+   "Albero della Ricerca" e `docs/research-model.md`). Da fare: ridisegno finestre poi meccanica
+   vera — stato `research`, comandi `cmdStartResearch`, avanzamento nei tick, effetti→modificatori,
+   migrazione salvataggi v5→v6 (tutto già speccato nel doc).
 6. Eventuale: HUD responsive sotto i ~1460px (oggi sfora, l'ingranaggio esce dal viewport).
 7. Enciclopedia: nuove voci (squadroni, ambasciate, ondate UFO, combattimento) — struttura
    a dati pronta in encyclopediaEntries.ts.
