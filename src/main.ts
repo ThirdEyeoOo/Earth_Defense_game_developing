@@ -1,6 +1,7 @@
 import '@fontsource/michroma'; // font UI di default
 import '@fontsource/orbitron/400.css'; // nomi città sulla mappa
 import '@fontsource/orbitron/700.css';
+import * as THREE from 'three';
 import {
   cityName,
   detectLanguage,
@@ -29,6 +30,7 @@ import { FloatingTextLayer } from './render/floatingText';
 import { createGlobe } from './render/globe';
 import { HpBarLayer } from './render/hpBars';
 import { createScene } from './render/scene';
+import { TrackingLabel, type TrackedUnit } from './render/trackingLabel';
 import { UfoLayer } from './render/ufoLayer';
 import { UnitLayer } from './render/units';
 import { createBalancePanel } from './ui/balancePanel';
@@ -42,6 +44,7 @@ import { gearIcon } from './ui/icons';
 import { createIntro } from './ui/intro';
 import { loadPrefs, savePrefs } from './ui/prefs';
 import { createRadar } from './ui/radar';
+import { createResearchPanel } from './ui/researchPanel';
 import { createSettings } from './ui/settings';
 import { createTutorial } from './ui/tutorial';
 
@@ -49,6 +52,7 @@ import { createTutorial } from './ui/tutorial';
 let state: GameState;
 let selectedCityId: string | null = null;
 let transferringSquadronId: number | null = null;
+let selectedUnit: TrackedUnit = null; // UFO/squadrone tracciato col click
 let lastSavedDay = -1;
 let lastPanelKey = '';
 
@@ -93,10 +97,38 @@ createGlobe(ctx.scene);
 let cityLayer: CityLayer;
 let battleBadges: BattleBadgeLayer;
 const unitLayer = new UnitLayer(ctx.scene);
-const ufoLayer = new UfoLayer(ctx.scene);
+const ufoLayer = new UfoLayer(ctx.scene, id => {
+  selectedUnit = { kind: 'ufo', id };
+});
 const effects = new EffectsLayer(ctx.scene);
 const hpBars = new HpBarLayer(ctx.scene);
 const floatingText = new FloatingTextLayer(ctx.scene);
+const trackingLabel = new TrackingLabel(ctx.scene);
+
+// picking degli squadroni (mesh Three.js): raycaster sul canvas, con guardia
+// anti-drag come per le targhette città. Gli UFO sono DOM → gestiti in UfoLayer.
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+let canvasDownAt = { x: 0, y: 0 };
+ctx.renderer.domElement.addEventListener('pointerdown', event => {
+  canvasDownAt = { x: event.clientX, y: event.clientY };
+});
+ctx.renderer.domElement.addEventListener('click', event => {
+  if (Math.hypot(event.clientX - canvasDownAt.x, event.clientY - canvasDownAt.y) > 5) return;
+  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(pointer, ctx.camera);
+  const hit = raycaster.intersectObjects(unitLayer.group.children, true)[0];
+  const id = hit ? squadronIdOf(hit.object) : null;
+  // hit su uno squadrone → traccia; click nel vuoto → deseleziona
+  selectedUnit = id !== null ? { kind: 'squadron', id } : null;
+});
+function squadronIdOf(obj: THREE.Object3D | null): number | null {
+  for (let o: THREE.Object3D | null = obj; o; o = o.parent) {
+    if (typeof o.userData.squadronId === 'number') return o.userData.squadronId;
+  }
+  return null;
+}
 
 // --- ui ---
 // ">>>": salto al prossimo attacco. È intento di riproduzione (non si salva):
@@ -128,10 +160,13 @@ const encyclopedia = createEncyclopedia(document.getElementById('encyclopedia-mo
 // barra inferiore: Bilancio apre il pannello, gli altri sono ancora segnaposto
 const bottomBar = createBottomBar(document.getElementById('bottom-bar')!, action => {
   if (action === 'bilancio') balancePanel.toggle();
+  else if (action === 'ricerca') researchPanel.toggle();
   else showBanner(t('banner.comingSoon'));
 });
 const radar = createRadar(document.getElementById('radar-panel')!);
 const balancePanel = createBalancePanel(document.getElementById('balance-panel')!);
+// pannello Ricerca: per ora sola anteprima della struttura dell'albero (funzionalità in arrivo)
+const researchPanel = createResearchPanel(document.getElementById('research-modal')!);
 // finestra di scontro stile FTL: si apre dal badge di battaglia sul globo
 const combatWindow = createCombatWindow(document.getElementById('combat-window')!);
 // Terzo Occhio: in fondazione il fumetto guida; il banner-istruzione resta
@@ -185,6 +220,7 @@ window.addEventListener('keydown', event => {
   if (event.key === 'Escape') {
     transferringSquadronId = null;
     selectedCityId = null;
+    selectedUnit = null;
     banner.classList.add('hidden');
     // in fase di fondazione l'istruzione resta a schermo (solo a tutorial nascosto)
     if (state && state.hqCityId === null && tutorial.isHidden()) {
@@ -198,6 +234,8 @@ function bootGame(gameState: GameState): void {
   state = gameState;
   selectedCityId = null;
   transferringSquadronId = null;
+  selectedUnit = null;
+  trackingLabel.reset();
   acc = 0;
   lastSavedDay = dayOfTick(state.tick);
   if (cityLayer) {
@@ -295,10 +333,19 @@ function frame(now: number): void {
       cityLayer.update(state, selectedCityId, ctx.camera);
       battleBadges.update(state, ctx.camera);
       unitLayer.update(state, tickFraction);
-      ufoLayer.update(state, unitLayer, ctx.camera);
+      ufoLayer.update(state, unitLayer, ctx.camera, tickFraction);
       effects.update(state, unitLayer);
       hpBars.update(state, unitLayer, ctx.camera);
       floatingText.update(state, unitLayer, ctx.camera);
+      // tracciamento: se l'oggetto selezionato è uscito di scena, azzera
+      if (selectedUnit) {
+        const alive =
+          selectedUnit.kind === 'ufo'
+            ? state.ufos.some(u => u.id === selectedUnit!.id)
+            : state.squadrons.some(s => s.id === selectedUnit!.id);
+        if (!alive) selectedUnit = null;
+      }
+      trackingLabel.update(state, selectedUnit, unitLayer, ctx.camera, tickFraction);
       combatWindow.update(state);
       hud.update(state, state.tick + tickFraction);
       radar.update(state);
@@ -341,6 +388,7 @@ onLanguageChange(() => {
   }
   settings.refresh();
   encyclopedia.refresh();
+  researchPanel.refresh();
   intro.refreshLabels();
   tutorial.refreshLabels();
 });

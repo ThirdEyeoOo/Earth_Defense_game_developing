@@ -33,7 +33,8 @@ export const CONFIG = {
     shotsPerTick: 1,
     hp: 100,
     armor: 2,
-    speedKmPerDay: 24000,
+    speedKmPerDay: 54000, // crociera 2250 km/h (= 54000/24): velocità effettiva di trasferimento
+    cruiseAltitudeKm: 15, // quota realistica riportata dal tracciamento (il rendering resta esagerato per visibilità)
     baseCost: 300, // in HumT; si aggiunge resourceCost
     resourceCost: { industria: 25, combustibili_fossili: 15 } satisfies Partial<
       Record<ResourceType, number>

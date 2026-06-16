@@ -180,6 +180,7 @@ export class UnitLayer {
 
     for (const sq of state.squadrons) {
       const group = this.squadronMeshes.get(sq.id)!;
+      group.userData.squadronId = sq.id; // per il picking (raycaster in main.ts)
       let boostTarget = 0;
       if (sq.transfer) {
         // in rotta lungo l'arco di cerchio massimo, boost accesi

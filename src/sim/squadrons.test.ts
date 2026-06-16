@@ -27,8 +27,8 @@ describe('squadrons', () => {
   });
 
   it('transferTicks: distanza/velocità in tick, minimo 1', () => {
-    // 12000 km a 24000 km/giorno = 0.5 giorni = 10 tick
-    expect(transferTicks(12000)).toBe(10);
+    // 12000 km a 54000 km/giorno = 0.222 giorni × 20 tick = 4.44 → 5 tick (ceil)
+    expect(transferTicks(12000)).toBe(5);
     expect(transferTicks(1)).toBe(1);
   });
 

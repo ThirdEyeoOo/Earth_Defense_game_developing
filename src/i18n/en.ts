@@ -106,6 +106,31 @@ export const en: Record<MessageKey, string> = {
   'bar.ricerca': 'Research',
   'bar.citta': 'Cities',
 
+  // research tree (ui/researchPanel.ts + sim/researchTree.ts)
+  // NB: structure preview only — gameplay functionality comes later
+  'tech.title': 'Research Tree',
+  'tech.subtitle': 'Structure preview — functionality coming soon',
+  'tech.close': 'Close',
+  'tech.branch.combat': 'Combat',
+  'tech.branch.economy': 'Economy',
+  'tech.branch.orbital': 'Orbital countermeasures',
+  'tech.combat-ap.title': 'Armor-piercing rounds',
+  'tech.combat-ap.desc': 'Increases squadron attack.',
+  'tech.combat-armor.title': 'Reinforced plating',
+  'tech.combat-armor.desc': 'Increases squadron armor.',
+  'tech.combat-nextgen.title': 'Next-generation fighter',
+  'tech.combat-nextgen.desc': 'Tougher aircraft: more hit points for squadrons.',
+  'tech.economy-extraction.title': 'Extraction optimization',
+  'tech.economy-extraction.desc': 'Increases resource production of connected cities.',
+  'tech.economy-tax.title': 'Fiscal reform',
+  'tech.economy-tax.desc': 'Increases tax income.',
+  'tech.economy-diplomacy.title': 'Efficient diplomacy',
+  'tech.economy-diplomacy.desc': 'Reduces the cost of embassies.',
+  'tech.orbital-radar.title': 'Long-range radar',
+  'tech.orbital-radar.desc': 'Longer warning of incoming attacks.',
+  'tech.orbital-interceptors.title': 'Suborbital interceptors',
+  'tech.orbital-interceptors.desc': 'Lets you engage UFOs at higher altitudes.',
+
   // command errors
   'cmd.cityUnavailable': 'City unavailable',
   'cmd.insufficientHumt': 'Insufficient HumT (Ħ {cost} needed)',
@@ -136,6 +161,17 @@ export const en: Record<MessageKey, string> = {
   'float.ufoDescending': 'landing',
   'float.ufoAbducting': 'abductions in progress',
   'float.abductions': 'Abductions = {n}',
+
+  // dimensional tracking (click a UFO/squadron → real altitude/speed/ETA)
+  'track.ufo': 'UFO #{id}',
+  'track.squadron': 'Squadron #{id}',
+  'track.altitude': 'Altitude: {km} ft',
+  'track.speed': 'Speed: {kmh} mph',
+  'track.eta': 'ETA {eta} → {city}',
+  'track.etaNone': 'ETA —',
+  'track.unit.d': 'd',
+  'track.unit.h': 'h',
+  'track.unit.m': 'm',
 
   // encyclopedia ("?" button in the HUD + ui/encyclopedia.ts)
   'enc.open': 'Encyclopedia',

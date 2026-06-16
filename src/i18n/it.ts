@@ -105,6 +105,31 @@ export const it = {
   'bar.ricerca': 'Ricerca',
   'bar.citta': 'Città',
 
+  // albero della ricerca (ui/researchPanel.ts + sim/researchTree.ts)
+  // NB: anteprima della sola struttura — le funzionalità di gioco arriveranno dopo
+  'tech.title': 'Albero della Ricerca',
+  'tech.subtitle': 'Anteprima della struttura — le funzionalità arriveranno presto',
+  'tech.close': 'Chiudi',
+  'tech.branch.combat': 'Combattimento',
+  'tech.branch.economy': 'Economia',
+  'tech.branch.orbital': 'Contromisure orbitali',
+  'tech.combat-ap.title': 'Munizioni perforanti',
+  'tech.combat-ap.desc': 'Aumenta l’attacco degli squadroni.',
+  'tech.combat-armor.title': 'Blindatura rinforzata',
+  'tech.combat-armor.desc': 'Aumenta l’armatura degli squadroni.',
+  'tech.combat-nextgen.title': 'Caccia di nuova generazione',
+  'tech.combat-nextgen.desc': 'Velivoli più robusti: più punti vita per gli squadroni.',
+  'tech.economy-extraction.title': 'Ottimizzazione estrattiva',
+  'tech.economy-extraction.desc': 'Aumenta la produzione di risorse delle città collegate.',
+  'tech.economy-tax.title': 'Riforma fiscale',
+  'tech.economy-tax.desc': 'Aumenta il gettito delle tasse.',
+  'tech.economy-diplomacy.title': 'Diplomazia efficiente',
+  'tech.economy-diplomacy.desc': 'Riduce il costo delle ambasciate.',
+  'tech.orbital-radar.title': 'Radar a lungo raggio',
+  'tech.orbital-radar.desc': 'Preavviso più lungo sugli attacchi in arrivo.',
+  'tech.orbital-interceptors.title': 'Intercettori suborbitali',
+  'tech.orbital-interceptors.desc': 'Permette di ingaggiare gli UFO a quote più alte.',
+
   // errori dei comandi (codici da sim/commands.ts: la sim non conosce i testi)
   'cmd.cityUnavailable': 'Città non disponibile',
   'cmd.insufficientHumt': 'HumT insufficienti (servono Ħ {cost})',
@@ -135,6 +160,17 @@ export const it = {
   'float.ufoDescending': 'atterraggio',
   'float.ufoAbducting': 'rapimenti in corso',
   'float.abductions': 'Abductions = {n}',
+
+  // tracciamento dimensionale (click su UFO/squadrone → quota/velocità/ETA reali)
+  'track.ufo': 'UFO #{id}',
+  'track.squadron': 'Squadrone #{id}',
+  'track.altitude': 'Quota: {km} km',
+  'track.speed': 'Velocità: {kmh} km/h',
+  'track.eta': 'ETA {eta} → {city}',
+  'track.etaNone': 'ETA —',
+  'track.unit.d': 'g',
+  'track.unit.h': 'h',
+  'track.unit.m': 'm',
 
   // enciclopedia (pulsante "?" nell'HUD + ui/encyclopedia.ts)
   'enc.open': 'Enciclopedia',
