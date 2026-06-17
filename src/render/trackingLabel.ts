@@ -69,6 +69,11 @@ export class TrackingLabel {
         this.el.classList.add('hidden');
         return;
       }
+      // durante il rapimento la targhetta sparisce (animazione in primo piano)
+      if (ufo.phase === 'abducting') {
+        this.el.classList.add('hidden');
+        return;
+      }
       position = units.ufoPosition(ufo.id);
       html = this.box(
         t('track.ufo', { id: ufo.id }),
