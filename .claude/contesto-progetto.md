@@ -1,6 +1,6 @@
 # Earth Defense — Contesto operativo
 
-Aggiornato: 2026-06-16 (chiusura sessione 08, commit #84, main pulito, v0.113.1 rilasciata)
+Aggiornato: 2026-06-17 (chiusura sessione 09, commit #86, main pulito, v0.113.2 rilasciata)
 Repo pubblico: github.com/ThirdEyeoOo/Earth_Defense_game_developing (README bilingue, MIT, FUNDING).
 
 ## Cos'è
@@ -49,6 +49,9 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
   flottante con **quota/velocità/ETA** in misure reali (vedi "Tracciamento dimensionale" più
   sotto). Rifiniture rendering UFO: base del raggio sopra il nome città in rapimento, "atterrato"
   a 2/3 con shrink in discesa, orientamento fisso (vista di profilo).
+- **v0.113.2** — fix: la targhetta di tracciamento agganciata all'UFO selezionato ora **scompare
+  durante il rapimento** (guardia `phase === 'abducting'` nel ramo UFO di `trackingLabel.update()`):
+  prima restava visibile sovrapponendosi al raggio traente; ricompare da sé al cambio fase.
 - Release: a ogni merge chiedere il nome semver all'utente (proponendone uno) e aggiornare
   `lista aggiornamenti/releases.txt` (nuova voce IN ALTO; il file è locale, la cartella è
   gitignorata) con recap + delta byte (somma dimensioni `git ls-files`); tag ANNOTATO.
