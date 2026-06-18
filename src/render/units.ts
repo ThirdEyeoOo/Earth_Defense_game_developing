@@ -5,6 +5,8 @@ import { positionAt } from '../sim/orbit';
 import type { GameState, UfoState } from '../sim/state';
 import { cityPosition } from './cities';
 import { ATMOSPHERE_ALTITUDE } from './globe';
+import { isOccludedByGlobe } from './horizon';
+import type { ScreenRect } from './selection';
 
 const CRUISE_ALTITUDE = ATMOSPHERE_ALTITUDE - 0.005; // crociera: dentro l'atmosfera, vicino al limite
 const GROUND_SCALE = 0.5; // dimensioni a terra (pattugliamento) rispetto alla crociera
@@ -14,7 +16,7 @@ const CLIMB_FRACTION = 0.12; // frazione di rotta usata per decollo e atterraggi
 const FIGHTER_LENGTH = 0.035; // lunghezza del singolo caccia in unità mondo
 const SVG_WIDTH = 200;
 const SVG_HEIGHT = 300;
-const BOOST_ATTACH_Y = 264; // y (in coordinate SVG) dell'attacco fiamme agli ugelli
+const BOOST_ATTACH_Y = 275; // y (in coordinate SVG) dell'attacco fiamme agli ugelli (vedi asset F-22)
 const PATROL_ALTITUDE = 1.008; // rasoterra, con margine anti-compenetrazione col globo
 const PATROL_RADIUS = 0.05; // raggio del pattugliamento attorno al nome della città
 const PATROL_SPEED = 0.0005; // rad/ms
@@ -115,28 +117,23 @@ const FIGHTER_BOOST_PIVOTS = {
   boost_dx_interno: BOOST_ATTACH_Y,
 };
 
-// Formazione a ^: leader davanti, due gregari dietro ai lati
+// dimensione del singolo caccia che rappresenta lo squadrone sul globo: un po'
+// più grande del vecchio velivolo in formazione (che era FIGHTER_LENGTH)
+const SQUADRON_FIGHTER_LENGTH = FIGHTER_LENGTH * 1.6;
+
+// Lo squadrone è reso come UN solo F-22 (un po' più grande), non più come
+// formazione a ^ di tre velivoli.
 function buildSquadron(): THREE.Group {
   const squadron = new THREE.Group();
-  const offsets = [
-    new THREE.Vector3(0, FIGHTER_LENGTH * 0.55, 0),
-    new THREE.Vector3(-FIGHTER_LENGTH * 0.55, -FIGHTER_LENGTH * 0.4, 0),
-    new THREE.Vector3(FIGHTER_LENGTH * 0.55, -FIGHTER_LENGTH * 0.4, 0),
-  ];
-  const partsAll: SvgParts[] = [];
-  for (const offset of offsets) {
-    const { model, parts } = buildSvgModel(
-      fighterPaths,
-      SVG_WIDTH,
-      SVG_HEIGHT,
-      FIGHTER_LENGTH,
-      FIGHTER_BOOST_PIVOTS,
-    );
-    model.position.copy(offset);
-    squadron.add(model);
-    partsAll.push(parts);
-  }
-  squadron.userData.parts = partsAll;
+  const { model, parts } = buildSvgModel(
+    fighterPaths,
+    SVG_WIDTH,
+    SVG_HEIGHT,
+    SQUADRON_FIGHTER_LENGTH,
+    FIGHTER_BOOST_PIVOTS,
+  );
+  squadron.add(model);
+  squadron.userData.parts = [parts];
   squadron.userData.boostLevel = 0;
   return squadron;
 }
@@ -161,6 +158,24 @@ export class UnitLayer {
 
   squadronPosition(squadronId: number): THREE.Vector3 | null {
     return this.squadronMeshes.get(squadronId)?.position.clone() ?? null;
+  }
+
+  // Rettangolo (px schermo) del velivolo, per il reticolo di selezione: proietta
+  // la dimensione-mondo del caccia (scalata col gruppo) alla sua distanza dalla
+  // camera. null se non trovato o occluso dal globo.
+  squadronRect(id: number, camera: THREE.PerspectiveCamera): ScreenRect | null {
+    const obj = this.squadronMeshes.get(id);
+    if (!obj || isOccludedByGlobe(obj.position, camera)) return null;
+    const ndc = obj.position.clone().project(camera);
+    if (ndc.z > 1) return null; // dietro la camera
+    const cx = (ndc.x * 0.5 + 0.5) * window.innerWidth;
+    const cy = (1 - ndc.y) * 0.5 * window.innerHeight;
+    const worldH = SQUADRON_FIGHTER_LENGTH * obj.scale.x; // scala uniforme del gruppo
+    const worldW = worldH * (SVG_WIDTH / SVG_HEIGHT);
+    const d = obj.position.distanceTo(camera.position);
+    const halfFovTan = Math.tan((camera.fov * Math.PI) / 360);
+    const pxPerWorld = window.innerHeight / (2 * Math.max(0.001, d) * halfFovTan);
+    return { cx, cy, w: worldW * pxPerWorld, h: worldH * pxPerWorld };
   }
 
   update(state: GameState, tickFraction: number): void {

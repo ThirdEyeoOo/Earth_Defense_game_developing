@@ -287,16 +287,29 @@ body {
 /* UFO sopra il globo (asset SVG animato in shadow DOM, vedi render/ufoLayer.ts).
    scala/offset li imposta ufoLayer per frame sull'elemento interno (host);
    CSS2DRenderer gestisce il transform dell'ancora esterna. */
-.ufo-anchor { pointer-events: auto; cursor: pointer; }
-.ufo-host { transform-origin: center center; will-change: transform; pointer-events: auto; }
+/* il riquadro/raggio dell'UFO è "trasparente" ai click: solo la nave (#ufo,
+   pointer-events:auto impostato in ufoLayer) li cattura, così durante un
+   rapimento il click sulla città sottostante (es. destinazione di trasferimento)
+   non viene rubato dall'overlay. */
+.ufo-anchor { pointer-events: none; }
+.ufo-host { transform-origin: center center; will-change: transform; pointer-events: none; }
 
-/* etichetta di tracciamento (render/trackingLabel.ts): box sopra l'oggetto selezionato */
-.tracking-label { position: relative; pointer-events: none; }
-.tracking-label .track-box {
-  position: absolute;
-  left: 50%;
-  bottom: 10px;
-  transform: translateX(-50%);
+/* widget di selezione (render/selection.ts): reticolo a parentesi d'angolo
+   adattato al corpo dell'oggetto, telemetria sopra, barra HP sotto.
+   Overlay in coordinate-schermo, sopra globo/targhette ma sotto le modali. */
+#selection-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 16; }
+.sel-reticle { position: absolute; }
+.sel-corner { position: absolute; box-sizing: border-box; border: 0 solid #ffe066; }
+.sel-corner--tl { left: 0; top: 0; border-top-width: 2px; border-left-width: 2px; }
+.sel-corner--tr { right: 0; top: 0; border-top-width: 2px; border-right-width: 2px; }
+.sel-corner--bl { left: 0; bottom: 0; border-bottom-width: 2px; border-left-width: 2px; }
+.sel-corner--br { right: 0; bottom: 0; border-bottom-width: 2px; border-right-width: 2px; }
+/* telemetria: ancorata col bordo basso al punto (cx, top-gap) */
+.sel-telemetry { position: absolute; transform: translate(-50%, -100%); }
+/* HP: ancorata col bordo alto al punto (cx, bottom+gap); niente offset del bar */
+.sel-hp { position: absolute; transform: translateX(-50%); }
+.sel-hp .unit-hp-host { transform: none; width: auto; transition: none; }
+.track-box {
   white-space: nowrap;
   background: rgba(8, 14, 26, 0.9);
   border: 1px solid #2c4a73;
@@ -305,8 +318,8 @@ body {
   font: 11px/1.4 'Michroma', system-ui, sans-serif;
   color: #cfe3ff;
 }
-.tracking-label .track-title { color: #ffd76a; margin-bottom: 2px; }
-.tracking-label .track-eta { color: #8fe6b0; }
+.track-title { color: #ffd76a; margin-bottom: 2px; }
+.track-eta { color: #8fe6b0; }
 
 /* scritte di feedback fluttuanti (render/floatingText.ts) */
 .float-text-anchor { pointer-events: none; }

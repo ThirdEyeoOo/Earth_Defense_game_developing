@@ -1,48 +1,51 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 300" width="200" height="300">
-  <!-- Caccia stile F-22, vista dall'alto, muso verso l'alto.
+  <!-- Caccia stile F-22, vista dall'alto, muso verso l'alto (ridisegno da Claude Design).
        Compatibile Three.js SVGLoader: fill solidi, niente gradienti/filtri/defs/use.
        Parti animabili su path separati con id. -->
 
   <!-- BOOST: fiamme dei motori, da accendere/spegnere e far "tremolare" in codice.
-       Strato esterno (arancione) + nucleo interno (giallo), per ogni motore. -->
-  <path id="boost_sx_esterno" d="M 91 264 L 99 264 L 97 292 L 95 298 L 93 292 Z" fill="#ff6a00"/>
-  <path id="boost_sx_interno" d="M 93 264 L 97 264 L 95 284 Z" fill="#ffd24a"/>
-  <path id="boost_dx_esterno" d="M 101 264 L 109 264 L 107 292 L 105 298 L 103 292 Z" fill="#ff6a00"/>
-  <path id="boost_dx_interno" d="M 103 264 L 107 264 L 105 284 Z" fill="#ffd24a"/>
+       Attaccano agli ugelli a y=275 (vedi BOOST_ATTACH_Y in render/units.ts: il pivot
+       di scala delle fiamme DEVE combaciare con questa y). -->
+  <path id="boost_sx_esterno" d="M 93 275 L 98 275 L 97 294 L 95 298 L 94 294 Z" fill="#ff6a00"/>
+  <path id="boost_sx_interno" d="M 94 275 L 97 275 L 95 289 Z" fill="#ffd24a"/>
+  <path id="boost_dx_esterno" d="M 102 275 L 107 275 L 106 294 L 105 298 L 103 294 Z" fill="#ff6a00"/>
+  <path id="boost_dx_interno" d="M 103 275 L 106 275 L 105 289 Z" fill="#ffd24a"/>
 
-  <!-- FUSOLIERA: corpo principale con ali a diamante e stabilatori -->
-  <path id="fusoliera" d="M 100 6
-           L 107 42 L 111 100 L 119 122
-           L 187 176 L 181 193 L 127 184
-           L 158 224 L 151 240 L 113 230
-           L 112 258 L 104 266 L 100 262
-           L 96 266 L 88 258 L 87 230
-           L 49 240 L 42 224 L 73 184
-           L 19 193 L 13 176 L 81 122
-           L 89 100 L 93 42 Z"
-        fill="#a3a3a3" stroke="#2e2e2e" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Stabilatori orizzontali posteriori -->
+  <path id="stab_sx" d="M 92 230 L 48 267 L 55 276 L 97 260 Z" fill="#a7abb3" stroke="#34373d" stroke-width="1.2" stroke-linejoin="round"/>
+  <path id="stab_dx" d="M 108 230 L 152 267 L 145 276 L 103 260 Z" fill="#a7abb3" stroke="#34373d" stroke-width="1.2" stroke-linejoin="round"/>
+
+  <!-- Ali a diamante + dettaglio -->
+  <path id="ala_sx" d="M 87 117 L 12 199 L 21 213 L 93 233 Z" fill="#b6bac1" stroke="#34373d" stroke-width="1.2" stroke-linejoin="round"/>
+  <path id="ala_dx" d="M 113 117 L 188 199 L 179 213 L 107 233 Z" fill="#b6bac1" stroke="#34373d" stroke-width="1.2" stroke-linejoin="round"/>
+  <path id="dettaglio_ala_sx" d="M 75 142 L 29 197 L 65 207 L 78 167 Z" fill="#a7abb3"/>
+  <path id="dettaglio_ala_dx" d="M 125 142 L 171 197 L 135 207 L 122 167 Z" fill="#a7abb3"/>
+
+  <!-- Fusoliera (corpo principale) -->
+  <path id="fusoliera" d="M 97.5 13 C 97.5 10 102.5 10 102.5 13 C 105 30 109 57 113 79 L 121 118 L 118 158 L 114 201 L 109 241 L 104 267 L 100 273 L 96 267 L 91 241 L 86 201 L 82 158 L 79 118 L 87 79 C 91 57 95 30 97.5 13 Z" fill="#c2c6cc" stroke="#34373d" stroke-width="1.2" stroke-linejoin="round"/>
+
+  <!-- Dettagli longitudinali del corpo -->
+  <path id="dettaglio_spina" d="M 100 95 L 106 118 L 104 229 L 100 237 L 96 229 L 94 118 Z" fill="#b2b6bd"/>
+  <path id="dettaglio_muso" d="M 100 17 C 104 35 106 57 103 77 L 100 73 L 97 77 C 94 57 96 35 100 17 Z" fill="#d8dce1"/>
 
   <!-- Derive verticali inclinate -->
-  <path id="deriva_dx" d="M 116 188 L 140 206 L 133 238 L 113 224 Z"
-        fill="#8a8a8a" stroke="#2e2e2e" stroke-width="1.5" stroke-linejoin="round"/>
-  <path id="deriva_sx" d="M 84 188 L 60 206 L 67 238 L 87 224 Z"
-        fill="#8a8a8a" stroke="#2e2e2e" stroke-width="1.5" stroke-linejoin="round"/>
-
-  <!-- Prese d'aria -->
-  <path id="presa_dx" d="M 109 103 L 117 121 L 111 123 L 105 107 Z" fill="#7a7a7a"/>
-  <path id="presa_sx" d="M 91 103 L 83 121 L 89 123 L 95 107 Z" fill="#7a7a7a"/>
+  <path id="deriva_sx" d="M 92 201 L 73 237 L 77 254 L 95 229 Z" fill="#9498a0" stroke="#34373d" stroke-width="1.2" stroke-linejoin="round"/>
+  <path id="deriva_dx" d="M 108 201 L 127 237 L 123 254 L 105 229 Z" fill="#9498a0" stroke="#34373d" stroke-width="1.2" stroke-linejoin="round"/>
 
   <!-- Ugelli motori -->
-  <path id="ugello_sx" d="M 91 250 L 99 250 L 98 264 L 92 262 Z" fill="#3a3a3a"/>
-  <path id="ugello_dx" d="M 101 250 L 109 250 L 108 262 L 102 264 Z" fill="#3a3a3a"/>
+  <path id="ugello_sx" d="M 98 260 L 93 260 L 94 275 L 98 275 Z" fill="#303338"/>
+  <path id="ugello_dx" d="M 102 260 L 107 260 L 106 275 L 102 275 Z" fill="#303338"/>
+
+  <!-- Prese d'aria -->
+  <path id="presa_sx" d="M 90 110 L 83 136 L 89 139 L 95 114 Z" fill="#6c7077"/>
+  <path id="presa_dx" d="M 110 110 L 117 136 L 111 139 L 105 114 Z" fill="#6c7077"/>
 
   <!-- Abitacolo -->
-  <path id="abitacolo" d="M 100 44 C 106 50 107 72 100 84 C 93 72 94 50 100 44 Z"
-        fill="#2b2b2b" stroke="#1a1a1a" stroke-width="1"/>
+  <path id="abitacolo" d="M 100 57 C 111 65 111 90 100 98 C 89 90 89 65 100 57 Z" fill="#2b2b2b" stroke="#1a1a1a" stroke-width="1"/>
 
   <!-- LUCI DI POSIZIONE (convenzione aeronautica):
        rossa su estremità ala sinistra, verde su ala destra, strobo bianco in coda -->
-  <circle id="luce_nav_sx" cx="21" cy="184" r="3.5" fill="#ff2a2a"/>
-  <circle id="luce_nav_dx" cx="179" cy="184" r="3.5" fill="#2aff5e"/>
-  <circle id="luce_strobo_coda" cx="100" cy="258" r="3" fill="#ffffff"/>
+  <circle id="luce_nav_sx" cx="16" cy="205" r="2.8" fill="#ff2a2a"/>
+  <circle id="luce_nav_dx" cx="184" cy="205" r="2.8" fill="#2aff5e"/>
+  <circle id="luce_strobo_coda" cx="100" cy="259" r="2.4" fill="#ffffff"/>
 </svg>

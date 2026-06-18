@@ -1,47 +1,24 @@
 import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-import alienBarRaw from '../../Assets/Widgets/Barre/health-bar-aliens.svg?raw';
-import humanBarRaw from '../../Assets/Widgets/Barre/health-bar-humans.svg?raw';
 import { activeBattles, ENGAGEABLE_PHASES } from '../sim/combat';
 import { CONFIG } from '../sim/config';
 import type { GameState } from '../sim/state';
+import { createHpBar, type Faction } from './hpBar';
 import { isOccludedByGlobe } from './horizon';
+import type { TrackedUnit } from './selection';
 import type { UnitLayer } from './units';
 
 // dopo la fine dell'ingaggio la barra di un'unità integra resta visibile
 // ancora un attimo, poi dissolve (le unità danneggiate la tengono sempre)
 const LINGER_MS = 1200;
-const CRITICAL_RATIO = 0.25;
 const BAR_WIDTH_PX = 72;
-
-type Faction = 'human' | 'alien';
 
 interface Bar {
   object: CSS2DObject;
   anchor: HTMLDivElement;
   host: HTMLDivElement;
-  svgEl: SVGSVGElement;
-  fillGroup: HTMLElement;
-  valueText: HTMLElement;
+  update: (ratio: number) => void;
   lastRelevantMs: number;
-  lastRatio: number;
-}
-
-// Colori del riempimento richiesti dal design (interpolazione continua sugli
-// HP); impostati inline su #hb-root perché lo stile interno dell'asset
-// dichiara le variabili --hb-* sullo stesso elemento e vincerebbe sul valore
-// ereditato dallo shadow host.
-function fillColors(faction: Faction, ratio: number): { a: string; b: string } {
-  if (faction === 'human') {
-    // verde (100%) → giallo (50%) → rosso (0%)
-    const hue = 120 * ratio;
-    return { a: `hsl(${hue}, 90%, 55%)`, b: `hsl(${hue}, 90%, 40%)` };
-  }
-  // verde acido (100%) → viola scuro (0%), passando per il blu bioluminescente
-  const hue = 75 + (277 - 75) * (1 - ratio);
-  const sat = 95 - 33 * (1 - ratio);
-  const light = 56 - 29 * (1 - ratio);
-  return { a: `hsl(${hue}, ${sat}%, ${light + 8}%)`, b: `hsl(${hue}, ${sat}%, ${light - 6}%)` };
 }
 
 export class HpBarLayer {
@@ -52,29 +29,45 @@ export class HpBarLayer {
     scene.add(this.group);
   }
 
-  update(state: GameState, units: UnitLayer, camera: THREE.Camera): void {
+  // `selected` = unità mostrata dal widget di selezione (render/selection.ts):
+  // la sua barra HP la disegna quel widget, quindi qui la si salta (no doppioni).
+  update(
+    state: GameState,
+    units: UnitLayer,
+    camera: THREE.Camera,
+    selected: TrackedUnit,
+  ): void {
     const now = performance.now();
     // città in combattimento: condizione condivisa con la sim (resolveCombat)
     const engagedCities = new Set(activeBattles(state).map(b => b.cityId));
+    const selKey = selected
+      ? selected.kind === 'ufo'
+        ? `u:${selected.id}`
+        : `s:${selected.id}`
+      : null;
 
     const seen = new Set<string>();
     for (const ufo of state.ufos) {
+      const key = `u:${ufo.id}`;
+      if (key === selKey) continue;
       const engaged = ENGAGEABLE_PHASES.has(ufo.phase) && engagedCities.has(ufo.targetCityId);
-      seen.add(`u:${ufo.id}`);
+      seen.add(key);
       this.updateBar(
-        `u:${ufo.id}`, 'alien', ufo.hp / CONFIG.ufoAbductor.hp, engaged,
+        key, 'alien', ufo.hp / CONFIG.ufoAbductor.hp, engaged,
         units.ufoPosition(ufo.id), now, camera,
       );
     }
     for (const sq of state.squadrons) {
+      const key = `s:${sq.id}`;
+      if (key === selKey) continue;
       const engaged = sq.transfer === null && engagedCities.has(sq.cityId);
-      seen.add(`s:${sq.id}`);
+      seen.add(key);
       this.updateBar(
-        `s:${sq.id}`, 'human', sq.hp / CONFIG.squadron.hp, engaged,
+        key, 'human', sq.hp / CONFIG.squadron.hp, engaged,
         units.squadronPosition(sq.id), now, camera,
       );
     }
-    // unità uscite di scena: via subito anche la barra
+    // unità uscite di scena (o ora selezionate): via la barra fluttuante
     for (const key of [...this.bars.keys()]) {
       if (!seen.has(key)) this.removeBar(key);
     }
@@ -109,50 +102,17 @@ export class HpBarLayer {
     bar.host.classList.toggle('unit-hp-host--fading', !relevant);
     if (position) bar.object.position.copy(position);
     bar.object.visible = position !== null && !isOccludedByGlobe(bar.object.position, camera);
-
-    const clamped = Math.max(0, Math.min(1, ratio));
-    if (Math.abs(clamped - bar.lastRatio) < 0.0005) return;
-    bar.lastRatio = clamped;
-    bar.fillGroup.style.transform = `scaleX(${clamped})`;
-    bar.valueText.textContent = `${Math.round(clamped * 100)}%`;
-    bar.svgEl.classList.toggle('is-critical', clamped <= CRITICAL_RATIO);
-    const { a, b } = fillColors(faction, clamped);
-    bar.svgEl.style.setProperty('--hb-fill-a', a);
-    bar.svgEl.style.setProperty('--hb-fill-b', b);
+    bar.update(ratio);
   }
 
   private createBar(faction: Faction): Bar {
     const anchor = document.createElement('div');
     anchor.className = 'unit-hp-anchor';
-    const host = document.createElement('div');
-    host.className = 'unit-hp-host';
-    anchor.appendChild(host);
-    // shadow DOM: isola id e stili dell'asset, replicato in N istanze
-    const shadow = host.attachShadow({ mode: 'open' });
-    shadow.innerHTML = faction === 'human' ? humanBarRaw : alienBarRaw;
-    if (faction === 'alien') {
-      // in stato critico l'asset forza il gradiente acido hardcoded; la
-      // specifica vuole invece la scala continua fino al viola scuro
-      const override = document.createElement('style');
-      override.textContent = '#hb-root.is-critical #hb-fill { fill: url(#hb-grad-fill); }';
-      shadow.appendChild(override);
-    }
-    const svgEl = shadow.querySelector('#hb-root') as SVGSVGElement;
-    const height = (92 / 530) * BAR_WIDTH_PX;
-    svgEl.setAttribute('width', String(BAR_WIDTH_PX));
-    svgEl.setAttribute('height', height.toFixed(1));
-    const bar: Bar = {
-      object: new CSS2DObject(anchor),
-      anchor,
-      host,
-      svgEl,
-      fillGroup: shadow.querySelector('#hb-fill-group') as HTMLElement,
-      valueText: shadow.querySelector('#hb-value') as HTMLElement,
-      lastRelevantMs: 0,
-      lastRatio: -1,
-    };
-    this.group.add(bar.object);
-    return bar;
+    const hp = createHpBar(faction, BAR_WIDTH_PX);
+    anchor.appendChild(hp.host);
+    const object = new CSS2DObject(anchor);
+    this.group.add(object);
+    return { object, anchor, host: hp.host, update: hp.update, lastRelevantMs: 0 };
   }
 
   private removeBar(key: string): void {

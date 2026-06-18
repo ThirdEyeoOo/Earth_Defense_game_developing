@@ -30,7 +30,7 @@ import { FloatingTextLayer } from './render/floatingText';
 import { createGlobe } from './render/globe';
 import { HpBarLayer } from './render/hpBars';
 import { createScene } from './render/scene';
-import { TrackingLabel, type TrackedUnit } from './render/trackingLabel';
+import { SelectionWidget, type TrackedUnit } from './render/selection';
 import { UfoLayer } from './render/ufoLayer';
 import { UnitLayer } from './render/units';
 import { createBalancePanel } from './ui/balancePanel';
@@ -103,7 +103,7 @@ const ufoLayer = new UfoLayer(ctx.scene, id => {
 const effects = new EffectsLayer(ctx.scene);
 const hpBars = new HpBarLayer(ctx.scene);
 const floatingText = new FloatingTextLayer(ctx.scene);
-const trackingLabel = new TrackingLabel(ctx.scene);
+const selection = new SelectionWidget();
 
 // picking degli squadroni (mesh Three.js): raycaster sul canvas, con guardia
 // anti-drag come per le targhette città. Gli UFO sono DOM → gestiti in UfoLayer.
@@ -235,7 +235,7 @@ function bootGame(gameState: GameState): void {
   selectedCityId = null;
   transferringSquadronId = null;
   selectedUnit = null;
-  trackingLabel.reset();
+  selection.reset();
   acc = 0;
   lastSavedDay = dayOfTick(state.tick);
   if (cityLayer) {
@@ -335,7 +335,7 @@ function frame(now: number): void {
       unitLayer.update(state, tickFraction);
       ufoLayer.update(state, unitLayer, ctx.camera, tickFraction);
       effects.update(state, unitLayer);
-      hpBars.update(state, unitLayer, ctx.camera);
+      hpBars.update(state, unitLayer, ctx.camera, selectedUnit);
       floatingText.update(state, unitLayer, ctx.camera);
       // tracciamento: se l'oggetto selezionato è uscito di scena, azzera
       if (selectedUnit) {
@@ -345,7 +345,7 @@ function frame(now: number): void {
             : state.squadrons.some(s => s.id === selectedUnit!.id);
         if (!alive) selectedUnit = null;
       }
-      trackingLabel.update(state, selectedUnit, unitLayer, ctx.camera, tickFraction);
+      selection.update(state, selectedUnit, unitLayer, ufoLayer, ctx.camera, tickFraction);
       combatWindow.update(state);
       hud.update(state, state.tick + tickFraction);
       radar.update(state);

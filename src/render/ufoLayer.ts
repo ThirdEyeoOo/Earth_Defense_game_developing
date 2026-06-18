@@ -4,6 +4,7 @@ import ufoArtRaw from '../../Assets/Alieni/UFO/alien_abductor.svg?raw';
 import type { GameState, UfoState } from '../sim/state';
 import { cityPosition } from './cities';
 import { isOccludedByGlobe } from './horizon';
+import type { ScreenRect } from './selection';
 import type { UnitLayer } from './units';
 
 // L'UFO è un SVG DOM ricco (gradienti/filtri/animazioni CSS) → non può essere una
@@ -45,6 +46,7 @@ interface Ufo {
   anchor: HTMLDivElement;
   host: HTMLDivElement;
   svgEl: SVGSVGElement;
+  ship: SVGGraphicsElement | null; // gruppo #ufo (solo la nave, niente raggio)
   lastOn: boolean;
 }
 
@@ -134,6 +136,17 @@ export class UfoLayer {
     }
   }
 
+  // Rettangolo (px schermo) della SOLA nave (#ufo), per il reticolo di selezione:
+  // getBoundingClientRect tiene conto di scala/offset/animazioni correnti ed
+  // esclude il raggio traente. null se non visibile, occluso o in rapimento.
+  ufoBodyRect(id: number): ScreenRect | null {
+    const inst = this.ufos.get(id);
+    if (!inst || !inst.object.visible || inst.lastOn || !inst.ship) return null;
+    const r = inst.ship.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1) return null;
+    return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, w: r.width, h: r.height };
+  }
+
   reset(): void {
     for (const id of [...this.ufos.keys()]) this.removeUfo(id);
   }
@@ -161,9 +174,19 @@ export class UfoLayer {
     const svgEl = shadow.querySelector('svg') as SVGSVGElement;
     svgEl.setAttribute('width', String(BASE_WIDTH_PX));
     svgEl.setAttribute('height', (BASE_WIDTH_PX * ASPECT).toFixed(1));
+    // Solo la NAVE (#ufo) cattura i click (per il tracciamento): il riquadro
+    // trasparente e il raggio NON devono intercettare i click destinati alla
+    // città sottostante. Senza questo, durante un rapimento l'overlay copre il
+    // nome della città e impedisce di selezionarla come destinazione di un
+    // trasferimento (quindi di mandare lo squadrone a ingaggiare l'UFO).
+    const ship = shadow.querySelector('#ufo') as SVGGraphicsElement | null;
+    if (ship) {
+      ship.style.pointerEvents = 'auto';
+      ship.style.cursor = 'pointer';
+    }
     const object = new CSS2DObject(anchor);
     this.group.add(object);
-    return { object, anchor, host, svgEl, lastOn: false };
+    return { object, anchor, host, svgEl, ship, lastOn: false };
   }
 
   private removeUfo(id: number): void {

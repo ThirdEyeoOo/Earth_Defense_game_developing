@@ -125,6 +125,18 @@ describe('activeBattles', () => {
     expect(battles[0].attackers).toEqual(s.ufos);
   });
 
+  it('un UFO che sta rapendo (abducting) è ingaggiabile: scatta la battaglia e subisce danni', () => {
+    // scenario di gioco: si manda uno squadrone nella città sotto rapimento per
+    // ingaggiare l'UFO. Qui il difensore è già arrivato (transfer === null).
+    const s = createNewGame(1);
+    addSquadron(s, 'rome');
+    spawnDescendingUfo(s, 'rome');
+    s.ufos[0].phase = 'abducting';
+    expect(activeBattles(s)).toHaveLength(1);
+    resolveCombat(s);
+    expect(s.ufos[0].hp).toBeLessThan(CONFIG.ufoAbductor.hp);
+  });
+
   it('una città morta non è in battaglia', () => {
     const s = createNewGame(1);
     addSquadron(s, 'rome');
