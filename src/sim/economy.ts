@@ -1,5 +1,6 @@
 import { CONFIG } from './config';
 import { greatCircleKm } from './geo';
+import { sizeMultiplier } from './population';
 import type { Cost, ResourceType } from './resources';
 import { RESOURCE_TYPES, emptyStockpile } from './resources';
 import type { CityState, GameState } from './state';
@@ -26,7 +27,7 @@ function popFactor(city: CityState): number {
 export function cityIncomePerDay(city: CityState): number {
   const e = CONFIG.economy;
   const gdp = city.resources.reduce((sum, r) => sum + e.resourceWeights[r.type] * r.amount, 0);
-  return gdp * popFactor(city) * e.taxRatePerDay;
+  return gdp * popFactor(city) * sizeMultiplier(city.population) * e.taxRatePerDay;
 }
 
 export function dailyIncome(state: GameState): number {
@@ -41,8 +42,9 @@ export function dailyIncome(state: GameState): number {
 // produzione giornaliera della città per tipo, in unità di magazzino
 export function cityProductionPerDay(city: CityState): Partial<Record<ResourceType, number>> {
   const out: Partial<Record<ResourceType, number>> = {};
+  const sm = sizeMultiplier(city.population);
   for (const r of city.resources) {
-    out[r.type] = r.amount * CONFIG.economy.conversionRate * popFactor(city);
+    out[r.type] = r.amount * CONFIG.economy.conversionRate * popFactor(city) * sm;
   }
   return out;
 }
@@ -51,8 +53,9 @@ export function dailyProductionByType(state: GameState): Record<ResourceType, nu
   const total = emptyStockpile();
   for (const c of state.cities) {
     if (!isConnected(state, c) || underAbduction(state, c.id)) continue;
+    const sm = sizeMultiplier(c.population);
     for (const r of c.resources) {
-      total[r.type] += r.amount * CONFIG.economy.conversionRate * popFactor(c);
+      total[r.type] += r.amount * CONFIG.economy.conversionRate * popFactor(c) * sm;
     }
   }
   return total;

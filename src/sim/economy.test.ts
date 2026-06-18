@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CONFIG } from './config';
+import { sizeMultiplier } from './population';
 import {
   applyDailyEconomy,
   cityIncomePerDay,
@@ -22,18 +23,20 @@ describe('economia HumT', () => {
     expect(Object.values(dailyProductionByType(s)).every(v => v === 0)).toBe(true);
   });
 
-  it('gettito città = Σ(peso×amount) × popFactor × aliquota', () => {
+  it('gettito città = Σ(peso×amount) × popFactor × sizeMultiplier × aliquota', () => {
     const s = newGameWithHq(1, 'rome');
     const rome = s.cities.find(c => c.id === 'rome')!;
     const gdp = rome.resources.reduce(
       (sum, r) => sum + CONFIG.economy.resourceWeights[r.type] * r.amount,
       0,
     );
-    expect(cityIncomePerDay(rome)).toBeCloseTo(gdp * CONFIG.economy.taxRatePerDay);
+    const sm = sizeMultiplier(rome.population);
+    expect(cityIncomePerDay(rome)).toBeCloseTo(gdp * sm * CONFIG.economy.taxRatePerDay);
     expect(dailyIncome(s)).toBe(Math.round(cityIncomePerDay(rome)));
-    // la popolazione dimezzata dimezza il gettito
+    // dimezzare la popolazione dimezza il popFactor E può abbassare la fascia
     rome.population = rome.initialPopulation / 2;
-    expect(cityIncomePerDay(rome)).toBeCloseTo((gdp * CONFIG.economy.taxRatePerDay) / 2);
+    const sm2 = sizeMultiplier(rome.population);
+    expect(cityIncomePerDay(rome)).toBeCloseTo(gdp * 0.5 * sm2 * CONFIG.economy.taxRatePerDay);
   });
 
   it('producono solo le città collegate (QG + ambasciate), non le neutrali o distrutte', () => {
@@ -46,12 +49,13 @@ describe('economia HumT', () => {
     expect(dailyIncome(s)).toBe(before);
   });
 
-  it('produzione giornaliera = amount × tasso × popFactor, per tipo', () => {
+  it('produzione giornaliera = amount × tasso × popFactor × sizeMultiplier, per tipo', () => {
     const s = newGameWithHq(1, 'rome');
     const rome = s.cities.find(c => c.id === 'rome')!;
+    const sm = sizeMultiplier(rome.population);
     const prod = dailyProductionByType(s);
     for (const r of rome.resources) {
-      expect(prod[r.type]).toBeCloseTo(r.amount * CONFIG.economy.conversionRate);
+      expect(prod[r.type]).toBeCloseTo(r.amount * CONFIG.economy.conversionRate * sm);
     }
   });
 
@@ -75,9 +79,10 @@ describe('economia HumT', () => {
     applyDailyEconomy(s);
     expect(s.humt).toBe(humt + dailyIncome(s));
     const rome = s.cities.find(c => c.id === 'rome')!;
+    const sm = sizeMultiplier(rome.population);
     for (const r of rome.resources) {
       expect(s.resources[r.type] - before[r.type]).toBeCloseTo(
-        r.amount * CONFIG.economy.conversionRate,
+        r.amount * CONFIG.economy.conversionRate * sm,
       );
     }
   });
