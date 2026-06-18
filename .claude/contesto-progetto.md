@@ -1,6 +1,6 @@
 # Earth Defense — Contesto operativo
 
-Aggiornato: 2026-06-18 (chiusura sessione 10, commit #92, main pushed, v0.114.0 rilasciata)
+Aggiornato: 2026-06-18 (chiusura sessione 11, commit #98, main pushed, v0.115.0 rilasciata)
 Repo pubblico: github.com/ThirdEyeoOo/Earth_Defense_game_developing (README bilingue, MIT, FUNDING).
 
 ## Cos'è
@@ -60,10 +60,39 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
   che scalano gettito e produzione (`sizeMultiplier` in `economy.ts`); badge fascia nel
   pannello Città, chiavi i18n `tier.*`. Nessuna compensazione ⇒ economia al ~40% (da tarare).
   Nessuna migrazione salvataggi. Spec/piano in `docs/superpowers/`.
+- **v0.115.0** — **ecosistema Claude Design** (vedi sezione dedicata): ponte animazioni SVG
+  (regole `docs/EARTH-DEFENSE-ASSET-RULES.md`, manuale PDF, progetto design-system su
+  claude.ai/design, pull-on-demand via tool DesignSync) + **catalogo design-system** del gioco
+  (generatore `scripts/design-system/`, 19 card token/asset/componenti resi dal codice vero via
+  Vite+Chrome/CDP, brand font, auto-sync col pattern graphify). **F-22 ridisegnato** (round-trip
+  Design→gioco, `BOOST_ATTACH_Y` 264→275) e squadrone sul globo reso come **un velivolo singolo**
+  più grande (non più formazione a 3). **Fix**: durante un rapimento l'overlay UFO non ruba più i
+  click destinati alla città (solo `#ufo` cliccabile) ⇒ si può trasferire e ingaggiare. **Widget di
+  selezione** (`src/render/selection.ts`, sostituisce `trackingLabel.ts`): reticolo a parentesi
+  d'angolo adattato al CORPO dell'oggetto + telemetria sopra + barra HP sotto (helper `render/hpBar.ts`).
 - Release: a ogni merge chiedere il nome semver all'utente (proponendone uno) e aggiornare
   `lista aggiornamenti/releases.txt` (nuova voce IN ALTO; il file è locale, la cartella è
   gitignorata) con recap + delta byte (somma dimensioni `git ls-files`); tag ANNOTATO.
   `commits.txt` si aggiorna da solo (hook git).
+
+## Ecosistema Claude Design (v0.115.0) — animazioni + catalogo
+- **Tool DesignSync** (lato Claude, non una CLI): legge/scrive i progetti *design-system* di
+  **claude.ai/design** col login claude.ai. Progetto **"Earth Defense — Animazioni"**
+  `29a166d6-d6eb-4207-baac-77fea18d5d62` (memoria `claude-design-bridge`).
+- **Ponte animazioni** (pull-on-demand): l'utente disegna un SVG là → dice «porta dentro X» → Claude
+  `get_file` + valida (rotta `dom` overlay / `mesh` Three.js) + integra in `Assets/`. Regole in
+  `docs/EARTH-DEFENSE-ASSET-RULES.md` (intestazione `<!-- ed-asset … -->`, manifest
+  `<nome>.integration.json`), caricate anche sul progetto. Manuale `docs/Manuale-Claude-Design.pdf`.
+  Il sanitizer SVG di Design **rifiuta i commenti con `--`** (rimuoverli all'upload).
+- **Catalogo design-system** del gioco (`scripts/design-system/`, gitignored output `design-system/out/`):
+  `node generate.mjs` produce card `@dsCard` di **token** (`tokens.json`), **asset** (SVG di `Assets/`)
+  e **componenti** (HUD, Bilancio, Città, radar, ecc.) resi dal **codice vero** con stato finto
+  (`testUtils`) via **dev server Vite (hmr:false) + Chrome headless pilotato in CDP** (DevTools
+  Protocol; `--dump-dom` non basta su pagine-modulo; Chrome con `--user-data-dir` dedicato). Card
+  autosufficienti (font woff2 base64 + style.css inline). 19 card + brand font (`fonts/` + `fonts.css`)
+  pushate. **Auto-sync** col pattern graphify: hook `post-commit` locale segnala in
+  `design-system/.push_pending` (rigenerazione deterministica); il **push lo lancia Claude** quando
+  vede il flag, poi lo cancella.
 
 ## Economia HumT (v0.110.0) — il cuore del gameplay
 - Lore: il mondo è già collassato (sparizione di quasi tutte le città); il dollaro è
@@ -279,12 +308,15 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
   velocità per differenza centrale di `positionAt`, **ETA** = tick residui fino al rapimento
   (somma durate fasi via `orbitPhaseTicks`/`freefallTicks`, `null` in abducting/escaping); helper
   squadrone (15 km, 2250 km/h, ETA dal transfer). `kmToMiles`/`kmToFeet` per le unità americane.
-- **Etichetta flottante** `src/render/trackingLabel.ts` (CSS2D, una sola label sull'oggetto
-  selezionato, occlusa dietro il globo, ricostruita ogni frame; formatta con solo i18n, niente
-  import da `ui/`). Mostra titolo + Quota + Velocità + **ETA → città**. **ETA continuo**: sottrae
-  `tickFraction` → scorre in tempo reale (non a scatti di tick). **Unità per lingua**: EN ⇒
-  americane (altitudine in **piedi**, velocità in **mph**); IT ⇒ km/km/h; l'ETA è tempo (g/h IT,
-  d/h EN). Chiavi `track.*` in it/en.
+- **Widget di selezione** `src/render/selection.ts` (da v0.115.0, sostituisce `trackingLabel.ts`):
+  overlay in **coordinate-schermo** (NON CSS2D) sull'oggetto selezionato. **Reticolo a parentesi
+  d'angolo adattato al CORPO**: UFO = bbox della sola nave `#ufo` via `getBoundingClientRect`
+  (esclude il raggio, `ufoBodyRect` in `ufoLayer.ts`); velivolo = dimensione proiettata (`squadronRect`
+  in `units.ts`). **Telemetria SOPRA** (titolo + Quota + Velocità + **ETA → città**) e **barra HP
+  SOTTO** (asset SVG via helper condiviso `render/hpBar.ts`; `HpBarLayer` salta l'unità selezionata).
+  Occluso dietro il globo; **nascosto durante il rapimento UFO**. **ETA continuo** (sottrae
+  `tickFraction`). **Unità per lingua**: EN ⇒ americane (piedi/mph), IT ⇒ km/km/h; ETA in tempo
+  (g/h IT, d/h EN). Chiavi `track.*` in it/en. Formatta con solo i18n (niente import da `ui/`).
 - **Picking**: UFO (DOM) via handler `click` sull'anchor in `ufoLayer.ts` (guardia anti-drag,
   `.ufo-anchor/.ufo-host` `pointer-events:auto`); squadroni (mesh) via **THREE.Raycaster** sul
   canvas in `main.ts` (risale a `userData.squadronId`; click nel vuoto deseleziona). Stato
