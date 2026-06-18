@@ -168,6 +168,35 @@ describe('continuità di velocità avvicinamento→orbita (niente scatto)', () =
   });
 });
 
+describe('continuità di velocità orbita→discesa e discesa→hover', () => {
+  it('a inizio discesa la velocità ≈ quella di fine orbita (niente scatto)', () => {
+    const p = { ...params, captureSweep: computeCaptureSweep(params, 56) };
+    const Porb = orbitPhaseTicks(p);
+    const Tf = freefallTicks(p.orbitRadius, p.surfaceRadius, p.mu);
+    const h = 0.001;
+    const oEnd = positionAt('orbiting', 1, p);
+    const oPrev = positionAt('orbiting', 1 - h / Porb, p);
+    const dStart = positionAt('descending', 0, p);
+    const dNext = positionAt('descending', h / Tf, p);
+    // velocità per-tick (passo h/ticks, diviso h) su entrambi i lati del bordo
+    const vo = { x: (oEnd.x - oPrev.x) / h, y: (oEnd.y - oPrev.y) / h, z: (oEnd.z - oPrev.z) / h };
+    const vd = { x: (dNext.x - dStart.x) / h, y: (dNext.y - dStart.y) / h, z: (dNext.z - dStart.z) / h };
+    expect(vd.x).toBeCloseTo(vo.x, 1);
+    expect(vd.y).toBeCloseTo(vo.y, 1);
+    expect(vd.z).toBeCloseTo(vo.z, 1);
+    expect(Math.hypot(vo.x, vo.y, vo.z)).toBeGreaterThan(0.1); // non si ferma all'ingresso
+  });
+
+  it('a fine discesa la velocità ≈ 0 (atterraggio dolce sull’hover)', () => {
+    const Tf = freefallTicks(params.orbitRadius, params.surfaceRadius, params.mu);
+    const h = 0.001;
+    const end = positionAt('descending', 1, params);
+    const prev = positionAt('descending', 1 - h / Tf, params);
+    const v = Math.hypot((end.x - prev.x) / h, (end.y - prev.y) / h, (end.z - prev.z) / h);
+    expect(v).toBeLessThan(0.2);
+  });
+});
+
 describe('determinismo', () => {
   it('stessi parametri ⇒ stessa posizione', () => {
     expectVecClose(positionAt('orbiting', 0.37, params), positionAt('orbiting', 0.37, params), 12);

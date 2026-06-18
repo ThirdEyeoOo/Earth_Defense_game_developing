@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { CONFIG } from './config';
 import { createNewGame } from './state';
 import { advanceUfoToPhase, advanceUfosUntilGone } from './testUtils';
 import { progressUfos, removeUfo, spawnUfo } from './ufos';
@@ -37,15 +38,15 @@ describe('ufos', () => {
     expect(s.ufos[0].phase).toBe('descending');
   });
 
-  it('ciclo completo: rapimento (10 in 1 giorno) → fuga → -10 popolazione', () => {
+  it('ciclo completo: rapimento a capienza piena → fuga → -100 popolazione', () => {
     const s = createNewGame(1);
-    spawnUfo(s, 'rome');
+    spawnUfo(s, 'rome'); // Roma ha milioni di abitanti: si riempie alla capienza (100)
     const rome = s.cities.find(c => c.id === 'rome')!;
     const popBefore = rome.population;
     advanceUfosUntilGone(s);
     expect(s.ufos).toHaveLength(0);
-    expect(rome.population).toBe(popBefore - 10);
-    expect(s.stats.populationLost).toBe(10);
+    expect(rome.population).toBe(popBefore - CONFIG.ufoAbductor.captureCapacity);
+    expect(s.stats.populationLost).toBe(CONFIG.ufoAbductor.captureCapacity);
     expect(s.stats.ufosShotDown).toBe(0);
   });
 
@@ -67,11 +68,20 @@ describe('ufos', () => {
     const rome = s.cities.find(c => c.id === 'rome')!;
     const popBefore = rome.population;
     advanceUfoToPhase(s, 'abducting');
-    for (let i = 0; i < 7; i++) progressUfos(s); // 7 tick × 0,5 = 3,5 rapiti
+    for (let i = 0; i < 4; i++) progressUfos(s); // 4 tick × 15 = 60 rapiti (< capienza 100)
     expect(s.ufos[0].phase).toBe('abducting');
     removeUfo(s, s.ufos[0].id, 'shotDown');
-    expect(rome.population).toBe(popBefore - 3);
-    expect(s.stats.populationLost).toBe(3);
+    expect(rome.population).toBe(popBefore - 60);
+    expect(s.stats.populationLost).toBe(60);
+  });
+
+  it('rapisce fino alla capienza massima, poi parte in fuga', () => {
+    const s = createNewGame(1);
+    spawnUfo(s, 'rome'); // Roma ha milioni di abitanti: il limite è la capienza
+    advanceUfoToPhase(s, 'abducting');
+    advanceUfoToPhase(s, 'escaping'); // ticca finché non si stacca
+    expect(s.ufos[0].abducted).toBeGreaterThanOrEqual(CONFIG.ufoAbductor.captureCapacity);
+    expect(s.ufos[0].abducted).toBeLessThan(CONFIG.ufoAbductor.captureCapacity + 15); // non sfora di più di un tick
   });
 
   it("se la città bersaglio è distrutta, l'UFO passa in fuga", () => {

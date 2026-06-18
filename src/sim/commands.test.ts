@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   cmdBuildEmbassy,
   cmdBuildSquadron,
+  cmdDamageSquadron,
   cmdFoundHq,
   cmdRelocateSquadron,
   cmdSetSpeed,
@@ -180,5 +181,21 @@ describe('cmdSetSpeed', () => {
     expect(s.speed).toBe(0);
     cmdSetSpeed(s, 10);
     expect(s.speed).toBe(10);
+  });
+});
+
+describe('cmdDamageSquadron', () => {
+  it('sottrae gli HP e rimuove lo squadrone a 0 (no-op se id assente)', () => {
+    const s = newGameWithHq(1, 'rome');
+    grantRiches(s);
+    cmdBuildSquadron(s, 'rome');
+    const sq = s.squadrons[0];
+    const hp0 = sq.hp;
+    cmdDamageSquadron(s, sq.id, 15);
+    expect(sq.hp).toBe(hp0 - 15);
+    cmdDamageSquadron(s, 999, 15); // id inesistente: no-op
+    expect(s.squadrons).toHaveLength(1);
+    cmdDamageSquadron(s, sq.id, hp0); // porta a ≤0 → distrutto
+    expect(s.squadrons).toHaveLength(0);
   });
 });

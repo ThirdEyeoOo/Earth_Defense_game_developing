@@ -38,7 +38,7 @@ export class HpBarLayer {
     selected: TrackedUnit,
   ): void {
     const now = performance.now();
-    // città in combattimento: condizione condivisa con la sim (resolveCombat)
+    // città in combattimento: condizione condivisa (activeBattles)
     const engagedCities = new Set(activeBattles(state).map(b => b.cityId));
     const selKey = selected
       ? selected.kind === 'ufo'

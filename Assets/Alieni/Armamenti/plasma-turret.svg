@@ -1,0 +1,106 @@
+<svg viewBox="0 0 240 400" xmlns="http://www.w3.org/2000/svg" width="240" height="400" role="img" aria-label="Torretta al plasma modulare per hardpoint UFO">
+  <!-- ed-asset route="dom" name="plasma-turret" animatable="#recoil,#charge-core,#coils,#muzzle-glow,#muzzle-flash,#plasma-bolt,#status-light" state-class="on" i18n-text="none" -->
+
+  <defs>
+    <linearGradient id="t-steel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1b2023"></stop><stop offset="22%" stop-color="#4a5258"></stop>
+      <stop offset="50%" stop-color="#2b3236"></stop><stop offset="78%" stop-color="#10161a"></stop>
+      <stop offset="100%" stop-color="#05080a"></stop>
+    </linearGradient>
+    <linearGradient id="t-steel-v" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#454d53"></stop><stop offset="45%" stop-color="#222a2e"></stop>
+      <stop offset="100%" stop-color="#0a0e10"></stop>
+    </linearGradient>
+    <linearGradient id="t-barrel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0a0e10"></stop><stop offset="20%" stop-color="#3a4145"></stop>
+      <stop offset="44%" stop-color="#6a747a"></stop><stop offset="60%" stop-color="#2b3236"></stop>
+      <stop offset="100%" stop-color="#05080a"></stop>
+    </linearGradient>
+    <linearGradient id="t-yoke" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a4145"></stop><stop offset="100%" stop-color="#0c1113"></stop>
+    </linearGradient>
+    <radialGradient id="t-core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#eafff4"></stop><stop offset="28%" stop-color="#6dffae"></stop>
+      <stop offset="62%" stop-color="#1fcf7e"></stop><stop offset="100%" stop-color="#0a4d2c" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="t-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#eafff4" stop-opacity="1"></stop><stop offset="35%" stop-color="#6dffae" stop-opacity="0.9"></stop>
+      <stop offset="75%" stop-color="#2fe88a" stop-opacity="0.4"></stop><stop offset="100%" stop-color="#14b86a" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="t-bolt" cx="50%" cy="42%" r="58%">
+      <stop offset="0%" stop-color="#ffffff"></stop><stop offset="30%" stop-color="#d6ffe8"></stop>
+      <stop offset="62%" stop-color="#57f0a0"></stop><stop offset="100%" stop-color="#2fe88a" stop-opacity="0"></stop>
+    </radialGradient>
+    <linearGradient id="t-coil" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0a3a22"></stop><stop offset="100%" stop-color="#04190e"></stop>
+    </linearGradient>
+    <filter id="t-soft" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3"></feGaussianBlur></filter>
+    <filter id="t-strong" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="10"></feGaussianBlur></filter>
+    <filter id="t-tiny" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="1.4"></feGaussianBlur></filter>
+    <filter id="t-scratch" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02 0.4" numOctaves="2" seed="9" result="n"></feTurbulence>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.45  0 0 0 0 0.50  0 0 0 0 0.48  0 0 0 0.35 0" result="g"></feColorMatrix>
+      <feComposite in="g" in2="SourceAlpha" operator="in"></feComposite>
+    </filter>
+    <clipPath id="t-barrelClip"><rect x="98" y="196" width="44" height="132" rx="14"></rect></clipPath>
+  </defs>
+
+  <ellipse id="muzzle-haze" cx="120" cy="334" rx="46" ry="22" fill="#2fe88a" opacity="0.14" filter="url(#t-strong)"></ellipse>
+
+  <g id="recoil">
+    <g id="housing">
+      <rect x="104" y="84" width="32" height="22" rx="4" fill="url(#t-steel)" stroke="#05080a" stroke-width="1"></rect>
+      <path d="M120 96 L168 116 L176 168 L148 200 L92 200 L64 168 L72 116 Z" fill="url(#t-steel)" stroke="#05080a" stroke-width="1.6" stroke-linejoin="round"></path>
+      <path d="M120 96 L72 116 L64 168 L92 200 L108 200 L84 168 L92 124 Z" fill="#4a5258" opacity="0.35"></path>
+      <path d="M120 96 L168 116 L176 168 L148 200 L92 200 L64 168 L72 116 Z" fill="#888" filter="url(#t-scratch)" opacity="0.1"></path>
+      <g stroke="#05080a" stroke-width="1.1" fill="none" opacity="0.7">
+        <path d="M84 122 L120 134 L156 122"></path><path d="M82 158 L120 172 L158 158"></path>
+        <line x1="120" y1="134" x2="120" y2="172"></line>
+      </g>
+      <path d="M92 200 L148 200" stroke="#2fe88a" stroke-width="1.4" opacity="0.45"></path>
+      <g id="charge-core" opacity="0.6">
+        <circle cx="120" cy="150" r="26" fill="url(#t-glow)" filter="url(#t-soft)"></circle>
+        <circle cx="120" cy="150" r="13" fill="url(#t-core)"></circle>
+        <circle cx="120" cy="150" r="5" fill="#ffffff"></circle>
+      </g>
+      <circle cx="120" cy="150" r="22" fill="none" stroke="#11181b" stroke-width="3" opacity="0.8"></circle>
+      <circle cx="120" cy="150" r="22" fill="none" stroke="#5dffa0" stroke-width="1" opacity="0.45"></circle>
+      <circle id="status-light" cx="158" cy="110" r="3.6" fill="#6dffae" opacity="0.85"></circle>
+      <circle cx="158" cy="110" r="6" fill="#6dffae" opacity="0.3" filter="url(#t-tiny)"></circle>
+    </g>
+
+    <g id="barrel">
+      <rect x="98" y="196" width="44" height="132" rx="14" fill="url(#t-barrel)" stroke="#05080a" stroke-width="1.4"></rect>
+      <rect x="110" y="200" width="6" height="124" rx="3" fill="#8a979d" opacity="0.4"></rect>
+      <g clip-path="url(#t-barrelClip)">
+        <rect x="112" y="196" width="16" height="132" fill="#02160d"></rect>
+        <rect x="116" y="196" width="8" height="132" fill="#1fcf7e" opacity="0.35"></rect>
+      </g>
+      <g id="coils">
+        <g><rect x="92" y="214" width="56" height="11" rx="5" fill="url(#t-coil)" stroke="#05080a" stroke-width="1"></rect><circle class="coil-orb" cx="120" cy="219.5" r="3.4" fill="#6dffae" opacity="0.2"></circle></g>
+        <g><rect x="92" y="244" width="56" height="11" rx="5" fill="url(#t-coil)" stroke="#05080a" stroke-width="1"></rect><circle class="coil-orb" cx="120" cy="249.5" r="3.4" fill="#6dffae" opacity="0.2"></circle></g>
+        <g><rect x="92" y="274" width="56" height="11" rx="5" fill="url(#t-coil)" stroke="#05080a" stroke-width="1"></rect><circle class="coil-orb" cx="120" cy="279.5" r="3.4" fill="#6dffae" opacity="0.2"></circle></g>
+        <g><rect x="92" y="304" width="56" height="11" rx="5" fill="url(#t-coil)" stroke="#05080a" stroke-width="1"></rect><circle class="coil-orb" cx="120" cy="309.5" r="3.4" fill="#6dffae" opacity="0.2"></circle></g>
+      </g>
+      <rect x="94" y="320" width="52" height="16" rx="6" fill="url(#t-steel-v)" stroke="#05080a" stroke-width="1.4"></rect>
+      <g fill="#0a0d0e"><rect x="100" y="320" width="5" height="16"></rect><rect x="135" y="320" width="5" height="16"></rect></g>
+      <ellipse id="muzzle" cx="120" cy="330" rx="13" ry="6" fill="#02160d" stroke="#11181b" stroke-width="2"></ellipse>
+    </g>
+  </g>
+
+  <circle id="muzzle-glow" cx="120" cy="332" r="28" fill="url(#t-glow)" filter="url(#t-soft)" opacity="0.1"></circle>
+
+  <g id="muzzle-flash" opacity="0">
+    <circle cx="120" cy="332" r="16" fill="url(#t-glow)"></circle>
+    <path d="M120 332 L108 348 L120 342 L132 348 Z" fill="#d6ffe8"></path>
+    <path d="M120 332 L104 332 L120 326 L136 332 Z" fill="#d6ffe8" opacity="0.7"></path>
+    <circle cx="120" cy="332" r="7" fill="#ffffff"></circle>
+  </g>
+
+  <g id="plasma-bolt" opacity="0">
+    <ellipse cx="120" cy="352" rx="9" ry="20" fill="url(#t-bolt)"></ellipse>
+    <ellipse cx="120" cy="348" rx="4" ry="11" fill="#ffffff"></ellipse>
+    <path d="M120 332 Q113 350 120 362 Q127 350 120 332 Z" fill="#d6ffe8" opacity="0.6"></path>
+  </g>
+
+</svg>

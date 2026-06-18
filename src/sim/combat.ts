@@ -1,7 +1,6 @@
 import { CONFIG } from './config';
 import { altitudeAt } from './orbit';
 import type { GameState, SquadronState, UfoPhase, UfoState } from './state';
-import { removeUfo } from './ufos';
 
 // progresso (in tick interi) della fase corrente: usato per la quota d'ingaggio.
 // Senza tickFraction (decisione di gioco deterministica, non visiva).
@@ -16,14 +15,6 @@ export function isEngageable(ufo: UfoState): boolean {
     altitudeAt(ufo.phase, phaseFraction(ufo), ufo.orbit) <= CONFIG.physics.engageAltitude
   );
 }
-
-const PHASE_RANK: Record<UfoPhase, number> = {
-  abducting: 0,
-  descending: 1,
-  escaping: 2,
-  orbiting: 3, // mai ingaggiato: fuori portata
-  approaching: 4, // mai ingaggiato: fuori portata
-};
 
 // gli squadroni raggiungono solo gli UFO entrati in atmosfera
 export const ENGAGEABLE_PHASES: ReadonlySet<UfoPhase> = new Set([
@@ -55,29 +46,5 @@ export function activeBattles(state: GameState): Battle[] {
   return battles;
 }
 
-export function effectiveDamage(attack: number, shots: number, armor: number): number {
-  return shots * Math.max(1, attack - armor);
-}
-
-export function resolveCombat(state: GameState): void {
-  const sq = CONFIG.squadron;
-  const uf = CONFIG.ufoAbductor;
-  // le battaglie sono disgiunte per città: rimuovere una vittima/UFO da uno
-  // scontro non altera gli array (per oggetto) degli altri
-  for (const { defenders, attackers } of activeBattles(state)) {
-    const target = [...attackers].sort(
-      (a, b) =>
-        PHASE_RANK[a.phase] - PHASE_RANK[b.phase] ||
-        a.ticksRemaining - b.ticksRemaining ||
-        a.id - b.id,
-    )[0];
-    const victim = [...defenders].sort((a, b) => a.id - b.id)[0];
-    // danni simultanei: si calcolano entrambi, poi si applicano
-    const damageToUfo = defenders.length * effectiveDamage(sq.attack, sq.shotsPerTick, uf.armor);
-    const damageToSquadron = attackers.length * effectiveDamage(uf.attack, uf.shotsPerTick, sq.armor);
-    target.hp -= damageToUfo;
-    victim.hp -= damageToSquadron;
-    if (victim.hp <= 0) state.squadrons = state.squadrons.filter(s => s.id !== victim.id);
-    if (target.hp <= 0) removeUfo(state, target.id, 'shotDown');
-  }
-}
+// Il combattimento NON è più risolto a tick: è in tempo reale nel loop di rendering
+// (src/render/combatEngine.ts) che applica i colpi via comando (cmdDamageSquadron).

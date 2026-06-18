@@ -1,11 +1,14 @@
 import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import ufoArtRaw from '../../Assets/Alieni/UFO/alien_abductor.svg?raw';
+import { activeBattles } from '../sim/combat';
+import { CONFIG } from '../sim/config';
 import type { GameState, UfoState } from '../sim/state';
 import { cityPosition } from './cities';
 import { isOccludedByGlobe } from './horizon';
 import type { ScreenRect } from './selection';
 import type { UnitLayer } from './units';
+import { TURRET_TO_UFO_WIDTH, WEAPON_MODULES } from './weaponModules';
 
 // L'UFO è un SVG DOM ricco (gradienti/filtri/animazioni CSS) → non può essere una
 // mesh Three.js: lo renderizziamo come overlay CSS2D, una istanza per UFO in uno
@@ -22,6 +25,25 @@ const VIEW_H = 860; // altezza del viewBox dell'asset
 const BEAM_BASE_VIEW_Y = 800; // y del contatto a terra del raggio (#scorch/#pool) nel viewBox
 const LANDED_SCALE = 2 / 3; // l'UFO "atterrato" (in rapimento) è 2/3 della scala prospettica
 const LABEL_CLEARANCE_PX = 14; // distanza a cui la base del raggio resta sopra il centro del nome città
+
+// Modulo arma montato sull'UFO (data-driven: src/sim/weapons.ts → render/weaponModules.ts).
+// Le torrette sono ANNIDATE nell'SVG dell'UFO ai gruppi #hardpoint-left/right (dentro #ufo),
+// così scalano/occludono/si muovono con la nave. Taglia in unità viewBox UFO (600×860) dal
+// rapporto unico; lo snodo #mount cade sull'hardpoint.
+const UFO_VIEW_W = 600;
+const TURRET_MODULE = WEAPON_MODULES[CONFIG.ufoAbductor.weaponModule];
+const TURRET_VB_W = TURRET_TO_UFO_WIDTH * UFO_VIEW_W; // ≈132 unità viewBox
+const TURRET_VB_H = (TURRET_VB_W * TURRET_MODULE.viewH) / TURRET_MODULE.viewW; // ≈220
+const TURRET_VB_OFFSET_Y = -TURRET_VB_H * 0.375; // centro dell'ettagono (viewBox y=150/400) sull'hardpoint
+const turretParser = new DOMParser();
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+// Orientamento delle torrette (rotazione SVG attorno allo snodo dell'hardpoint). L'asset
+// ha la canna verso il basso = 180° in bussola (0°=su/N, orario). Posa a RIPOSO: punta a
+// SW (basso-sinistra) → 235° bussola = rotazione 235−180 = 55°. In fuoco la rotazione è
+// calcolata per puntare al bersaglio (segue il caccia).
+const TURRET_IDLE_BEARING_DEG = 235;
+const TURRET_IDLE_ROT_DEG = TURRET_IDLE_BEARING_DEG - 180;
 
 // proietta un punto 3D nelle sue coordinate di schermo in px (stessa mappatura del
 // calcolo prospettico qui sotto, basata su window.innerWidth/Height)
@@ -48,6 +70,9 @@ interface Ufo {
   svgEl: SVGSVGElement;
   ship: SVGGraphicsElement | null; // gruppo #ufo (solo la nave, niente raggio)
   lastOn: boolean;
+  // moduli arma sugli hardpoint: `svg` porta `.on` (fuoco), `g` è ruotato per orientare la
+  // torretta, `bracket` (attacco hull) dà il pivot in coordinate-schermo per la mira.
+  turrets: { side: 'left' | 'right'; svg: SVGSVGElement; g: SVGGElement; bracket: Element | null }[];
 }
 
 const DRAG_TOLERANCE_PX = 5; // oltre questa distanza è una rotazione del globo, non un click
@@ -75,6 +100,9 @@ export class UfoLayer {
     tickFraction: number,
   ): void {
     const halfFovTan = Math.tan((camera.fov * Math.PI) / 360);
+    // UFO ingaggiati in una battaglia → le loro torrette sparano (ciclo loop).
+    // Futuro: gating per range/stat dell'arma (src/sim/weapons.ts).
+    const engaged = new Set(activeBattles(state).flatMap(b => b.attackers.map(u => u.id)));
     const seen = new Set<number>();
     for (const ufo of state.ufos) {
       seen.add(ufo.id);
@@ -99,6 +127,29 @@ export class UfoLayer {
       if (on !== inst.lastOn) {
         inst.svgEl.classList.toggle('on', on);
         inst.lastOn = on;
+      }
+      // fuoco delle torrette: acceso finché l'UFO è ingaggiato (toggle idempotente,
+      // non ri-avvia l'animazione se la classe è già presente)
+      const firing = engaged.has(ufo.id);
+      // bersaglio = primo difensore vivo sulla città attaccata (lo stesso del motore)
+      let aimTarget: { cx: number; cy: number } | null = null;
+      if (firing) {
+        const def = state.squadrons.find(
+          s => s.cityId === ufo.targetCityId && s.transfer === null,
+        );
+        if (def) aimTarget = units.squadronRect(def.id, camera);
+      }
+      for (const turret of inst.turrets) {
+        turret.svg.classList.toggle('on', firing);
+        // in fuoco: orienta verso il bersaglio (segue il caccia); a riposo: posa SW
+        let rot = TURRET_IDLE_ROT_DEG;
+        if (firing && aimTarget && turret.bracket) {
+          const p = turret.bracket.getBoundingClientRect();
+          const px = p.left + p.width / 2;
+          const py = p.top + p.height / 2;
+          rot = (Math.atan2(-(aimTarget.cx - px), aimTarget.cy - py) * 180) / Math.PI;
+        }
+        turret.g.setAttribute('transform', `rotate(${rot.toFixed(1)})`);
       }
 
       // Scala: l'UFO atterrato (rapimento) è 2/3 della scala prospettica; in DISCESA
@@ -147,6 +198,20 @@ export class UfoLayer {
     return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, w: r.width, h: r.height };
   }
 
+  // Centro-schermo (px) della volata (#muzzle) di una torretta montata: origine dei
+  // proiettili sul globo (render/combatFx.ts). null se l'UFO non è visibile o la torretta
+  // di quel lato non esiste.
+  turretMuzzleRect(id: number, side: 'left' | 'right'): { x: number; y: number } | null {
+    const inst = this.ufos.get(id);
+    if (!inst || !inst.object.visible) return null;
+    const turret = inst.turrets.find(t => t.side === side);
+    const muzzle = turret?.svg.querySelector('#muzzle');
+    if (!muzzle) return null;
+    const r = muzzle.getBoundingClientRect();
+    if (r.width < 0.5 && r.height < 0.5) return null;
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  }
+
   reset(): void {
     for (const id of [...this.ufos.keys()]) this.removeUfo(id);
   }
@@ -184,9 +249,34 @@ export class UfoLayer {
       ship.style.pointerEvents = 'auto';
       ship.style.cursor = 'pointer';
     }
+    // moduli arma annidati sugli hardpoint: keyframe di fuoco nello shadow root +
+    // un SVG torretta per ogni hardpoint (scala con la nave, si accende se ingaggiato)
+    const style = document.createElement('style');
+    style.textContent = TURRET_MODULE.fireStyleLoop;
+    shadow.appendChild(style);
+    const turrets: Ufo['turrets'] = [];
+    for (const side of ['left', 'right'] as const) {
+      const hardpoint = svgEl.querySelector(`#hardpoint-${side}`);
+      if (!hardpoint) continue;
+      const bracket = hardpoint.querySelector('path'); // attacco hull: pivot di mira (≈ origine)
+      const parsed = turretParser.parseFromString(TURRET_MODULE.raw, 'image/svg+xml');
+      const turret = document.importNode(parsed.documentElement, true) as unknown as SVGSVGElement;
+      turret.classList.add('weapon-module'); // scope dei selettori `.weapon-module.on`
+      turret.style.pointerEvents = 'none'; // i click restano alla nave (#ufo)
+      turret.setAttribute('x', (-TURRET_VB_W / 2).toFixed(1));
+      turret.setAttribute('y', TURRET_VB_OFFSET_Y.toFixed(1));
+      turret.setAttribute('width', TURRET_VB_W.toFixed(1));
+      turret.setAttribute('height', TURRET_VB_H.toFixed(1));
+      // wrapper ruotabile: il transform attributo va su un <g> (un <svg> annidato non lo
+      // onora ovunque); ruota attorno a (0,0) = origine dell'hardpoint = snodo torretta
+      const g = document.createElementNS(SVG_NS, 'g');
+      g.appendChild(turret);
+      hardpoint.appendChild(g);
+      turrets.push({ side, svg: turret, g, bracket });
+    }
     const object = new CSS2DObject(anchor);
     this.group.add(object);
-    return { object, anchor, host, svgEl, ship, lastOn: false };
+    return { object, anchor, host, svgEl, ship, lastOn: false, turrets };
   }
 
   private removeUfo(id: number): void {

@@ -1,4 +1,5 @@
 import type { ResourceType } from './resources';
+import type { WeaponModuleId } from './weapons';
 
 export const CONFIG = {
   ticksPerDay: 20,
@@ -44,8 +45,8 @@ export const CONFIG = {
   squadron: {
     attack: 6,
     shotsPerTick: 1,
-    hp: 100,
-    armor: 2,
+    hp: 150,
+    armor: 0,
     speedKmPerDay: 54000, // crociera 2250 km/h (= 54000/24): velocità effettiva di trasferimento
     cruiseAltitudeKm: 15, // quota realistica riportata dal tracciamento (il rendering resta esagerato per visibilità)
     baseCost: 300, // in HumT; si aggiunge resourceCost
@@ -70,14 +71,15 @@ export const CONFIG = {
   ufoAbductor: {
     attack: 4,
     shotsPerTick: 1,
-    hp: 60,
-    armor: 1,
-    abductionPerDay: 10,
-    abductionDays: 1,
+    hp: 500,
+    armor: 0,
+    captureCapacity: 100, // persone max a bordo: l'UFO rapisce finché non è pieno
+    abductionPerDay: 300, // 100 persone in 8 ore-gioco (= 1 ogni 4,8 min-gioco, 15/tick)
     mass: 1, // massa (cancella nella gravità: conta solo con la spinta)
     thrust: 30, // spinta → a_spinta = thrust/mass (≥ g_superficie per poter fare hover/atterrare)
     startDistanceAu: 1, // distanza di comparsa in UA (timing crociera; 2 UA ≈ 1,41× il tempo)
     orbits: 3, // giri completi prima della discesa
+    weaponModule: 'plasma-turret' satisfies WeaponModuleId, // arma montata sugli hardpoint
   },
   waves: {
     firstWaveDayMin: 10,

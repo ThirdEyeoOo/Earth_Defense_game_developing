@@ -91,7 +91,8 @@ const MIGRATIONS: Record<number, Migration> = {
     const phys = CONFIG.physics;
     const u = CONFIG.ufoAbductor;
     const physicalStart = u.startDistanceAu * phys.auInRadii;
-    const abductionTicks = u.abductionDays * CONFIG.ticksPerDay;
+    // stima della durata di rapimento (capienza / ritmo): la fase finisce a capienza piena
+    const abductionTicks = Math.max(1, Math.ceil(u.captureCapacity / (u.abductionPerDay / CONFIG.ticksPerDay)));
     for (const ufo of ufos) {
       if (ufo.orbit) continue;
       const sd = ufo.spawnDir as { x: number; y: number; z: number } | undefined;

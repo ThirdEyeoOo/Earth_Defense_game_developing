@@ -25,6 +25,8 @@ import { createNewGame, type GameState } from './sim/state';
 import { tick } from './sim/tick';
 import { BattleBadgeLayer } from './render/battleBadges';
 import { CityLayer } from './render/cities';
+import { CombatEngine } from './render/combatEngine';
+import { CombatFxLayer } from './render/combatFx';
 import { EffectsLayer } from './render/effects';
 import { FloatingTextLayer } from './render/floatingText';
 import { createGlobe } from './render/globe';
@@ -104,6 +106,10 @@ const effects = new EffectsLayer(ctx.scene);
 const hpBars = new HpBarLayer(ctx.scene);
 const floatingText = new FloatingTextLayer(ctx.scene);
 const selection = new SelectionWidget();
+// combattimento in tempo reale: il motore possiede gli "shot" e applica il danno;
+// il layer FX disegna i proiettili sul globo (la finestra di scontro li disegna da sé)
+const combatEngine = new CombatEngine();
+const combatFx = new CombatFxLayer();
 
 // picking degli squadroni (mesh Three.js): raycaster sul canvas, con guardia
 // anti-drag come per le targhette città. Gli UFO sono DOM → gestiti in UfoLayer.
@@ -237,6 +243,9 @@ function bootGame(gameState: GameState): void {
   selectedUnit = null;
   selection.reset();
   acc = 0;
+  gameMinutes = 0;
+  combatEngine.reset();
+  combatFx.reset();
   lastSavedDay = dayOfTick(state.tick);
   if (cityLayer) {
     ctx.scene.remove(cityLayer.group);
@@ -307,11 +316,15 @@ let last = performance.now();
 // accumulatore in UNITÀ DI TICK (non ms): così la frazione corrente non
 // dipende dalla velocità e cambiarla non fa "teletrasportare" le unità
 let acc = 0;
+// orologio in MINUTI-GIOCO: sorgente unica per il combattimento in tempo reale e per
+// il pattugliamento (avanza con la velocità, si congela in pausa). 1x: 1 s reale = 1 min.
+let gameMinutes = 0;
 function frame(now: number): void {
   const dt = Math.min(now - last, 1000); // clamp per tab in background
   last = now;
   if (state && state.outcome === 'playing' && state.speed > 0 && state.hqCityId !== null) {
     acc += dt / (72000 / state.speed); // 1x: 1 s reale = 1 min-gioco (1 giorno = 24 min reali = 20 tick)
+    gameMinutes += (dt / 1000) * state.speed; // stessa base-tempo, in minuti-gioco
     while (acc >= 1) {
       acc -= 1;
       tick(state);
@@ -332,11 +345,14 @@ function frame(now: number): void {
     try {
       cityLayer.update(state, selectedCityId, ctx.camera);
       battleBadges.update(state, ctx.camera);
-      unitLayer.update(state, tickFraction);
+      unitLayer.update(state, tickFraction, gameMinutes);
       ufoLayer.update(state, unitLayer, ctx.camera, tickFraction);
+      // combattimento in tempo reale: applica il danno (via comando) prima che HP/FX leggano
+      combatEngine.update(state, gameMinutes, state.speed);
       effects.update(state, unitLayer);
       hpBars.update(state, unitLayer, ctx.camera, selectedUnit);
       floatingText.update(state, unitLayer, ctx.camera);
+      combatFx.update(combatEngine.shots, gameMinutes, state, unitLayer, ufoLayer, ctx.camera);
       // tracciamento: se l'oggetto selezionato è uscito di scena, azzera
       if (selectedUnit) {
         const alive =
@@ -346,7 +362,7 @@ function frame(now: number): void {
         if (!alive) selectedUnit = null;
       }
       selection.update(state, selectedUnit, unitLayer, ufoLayer, ctx.camera, tickFraction);
-      combatWindow.update(state);
+      combatWindow.update(state, combatEngine.shots, gameMinutes);
       hud.update(state, state.tick + tickFraction);
       radar.update(state);
       balancePanel.update(state);

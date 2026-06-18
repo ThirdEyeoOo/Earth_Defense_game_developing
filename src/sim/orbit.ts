@@ -3,15 +3,17 @@
 // verità della traiettoria dei nemici — la sim deriva durate/soglie (in tick
 // interi, deterministici), il render disegna la posizione continua.
 //
-// Modello ibrido (l'UFO ha i motori):
-//  - avvicinamento: crociera flip-and-burn (spinta costante, accelera fino a
-//    metà tragitto poi decelera) lungo spawnDir, dallo spazio profondo alla quota
-//    d'orbita;
-//  - orbita: rotazione attorno all'asse del piano (spawnDir×cityDir) per N giri
-//    più l'arco residuo, terminando esattamente sopra la città;
-//  - discesa: caduta radiale sotto gravità 1/r² (accelera) fino alla superficie;
+// Modello (l'UFO ha i motori), a VELOCITÀ CONTINUA (C1) a ogni bordo di fase:
+//  - avvicinamento: arriva GIÀ in moto (profilo radiale ease-out, niente partenza
+//    da fermo), frena radialmente e vira nell'ultimo tratto per inserirsi TANGENTE
+//    all'orbita con la stessa velocità angolare (nessuno scatto);
+//  - orbita: rotazione attorno all'asse del piano (spawnDir×cityDir); spazza T−Δ
+//    (Δ = arco che completerà la discesa), così l'orbita "lascia" l'ultimo tratto
+//    alla spirale di discesa;
+//  - discesa: SPIRALE che decelera (deorbit) — parte a velocità orbitale, perde
+//    quota e velocità tangenziale e atterra ESATTAMENTE sopra la città a velocità ~0;
 //  - rapimento: hover propulso fermo in superficie;
-//  - fuga: salita radiale propulsa, decelerata (specchio della discesa).
+//  - fuga: specchio della discesa (spirale che risale accelerando).
 import type { UfoPhase } from './state';
 
 export interface Vec3 {
@@ -29,7 +31,7 @@ export interface OrbitalParams {
   orbits: number; // numero di giri completi prima della discesa
   mu: number; // parametro gravitazionale G·M (raggi³/tick²)
   aThrust: number; // accelerazione di spinta F/m (raggi/tick²)
-  captureSweep: number; // angolo (rad) della virata di cattura: l'avvicinamento arriva TANGENTE all'orbita, con velocità che combacia (continuità C1). Precalcolato (vedi computeCaptureSweep).
+  captureSweep: number; // angolo (rad) della virata di cattura: l'avvicinamento arriva TANGENTE all'orbita, con velocità angolare che combacia (continuità C1). Precalcolato (vedi computeCaptureSweep).
 }
 
 // --- algebra vettoriale minima ---
@@ -58,6 +60,11 @@ function normalize(v: Vec3): Vec3 {
 }
 function clamp(v: number, lo: number, hi: number): number {
   return v < lo ? lo : v > hi ? hi : v;
+}
+// smoothstep 0→1 con derivata nulla agli estremi (per quota/spirale C1)
+function smoothstep01(t: number): number {
+  const x = clamp(t, 0, 1);
+  return x * x * (3 - 2 * x);
 }
 
 // rotazione di v attorno ad axis (unitario) di angle (Rodrigues)
@@ -94,8 +101,7 @@ function angleAround(from: Vec3, to: Vec3, axis: Vec3): number {
 
 // --- tempi fisici (in tick, raw float) ---
 
-// crociera flip-and-burn: accelera a `aThrust` fino a metà, poi decelera.
-// distanza = aThrust·(T/2)²  ⇒  T = 2·√(distanza / aThrust)
+// durata della crociera d'avvicinamento (heuristica): T = 2·√(distanza / aThrust)
 export function cruiseTime(distance: number, aThrust: number): number {
   return 2 * Math.sqrt(distance / aThrust);
 }
@@ -127,34 +133,61 @@ export function freefallTicks(from: number, to: number, mu: number): number {
   return Math.max(1, Math.ceil(freefallTime(from, to, mu)));
 }
 
-// angolo totale spazzato dall'orbita: N giri interi + arco residuo verso la città
-function orbitTotalAngle(spawnDir: Vec3, cityDir: Vec3, orbits: number): number {
+// Angolo geometrico totale dell'orbita: N giri interi + arco residuo che porta da
+// spawnDir a cityDir. È l'angolo che, ruotando spawnDir, "atterra" su cityDir.
+function geometricOrbitAngle(spawnDir: Vec3, cityDir: Vec3, orbits: number): number {
   const axis = orbitalAxis(spawnDir, cityDir);
   return orbits * 2 * Math.PI + angleAround(spawnDir, cityDir, axis);
 }
 
 // durata dell'intera fase orbitale: periodo × (giri interi + arco residuo verso la città)
 export function orbitPhaseTicks(p: OrbitalParams): number {
-  const total = orbitTotalAngle(normalize(p.spawnDir), normalize(p.cityDir), p.orbits);
+  const total = geometricOrbitAngle(normalize(p.spawnDir), normalize(p.cityDir), p.orbits);
   return Math.max(1, Math.ceil(orbitalPeriodTime(p.orbitRadius, p.mu) * (total / (2 * Math.PI))));
 }
 
+// Arco Δ spazzato dalla SPIRALE di discesa. Scelto perché la spirale parta esattamente
+// alla velocità angolare reale dell'orbita (continuità C1 orbita→discesa) e l'orbita
+// finisca Δ prima della città, così la discesa completa l'ultimo arco e atterra su cityDir.
+// Dalla condizione 2Δ/Tf = (T−Δ)/Porb ⇒ Δ = T·Tf / (2·Porb + Tf).
+function descentSweep(p: OrbitalParams): number {
+  const T = geometricOrbitAngle(normalize(p.spawnDir), normalize(p.cityDir), p.orbits);
+  const Porb = orbitPhaseTicks(p);
+  const Tf = freefallTicks(p.orbitRadius, p.surfaceRadius, p.mu);
+  return (T * Tf) / (2 * Porb + Tf);
+}
+
+// arco effettivamente spazzato dall'orbita = T − Δ (l'ultimo Δ lo fa la discesa)
+function orbitSweptAngle(p: OrbitalParams): number {
+  return geometricOrbitAngle(normalize(p.spawnDir), normalize(p.cityDir), p.orbits) - descentSweep(p);
+}
+
+// velocità angolare REALE dell'orbita (rad/tick): (T−Δ)/Porb
+function orbitAngularSpeed(p: OrbitalParams): number {
+  return orbitSweptAngle(p) / orbitPhaseTicks(p);
+}
+
 // Angolo della virata di cattura: scelto perché la velocità angolare a FINE
-// avvicinamento eguagli quella orbitale → l'UFO entra in orbita TANGENTE e senza
-// scatti (continuità di velocità). Dipende dalla durata di crociera (in tick).
+// avvicinamento eguagli quella ORBITALE REALE (ω = (T−Δ)/Porb) → l'UFO entra in
+// orbita tangente e senza scatti. Dipende dalla durata di crociera (in tick).
 const CAPTURE_FRACTION = 0.08; // ultima frazione dell'avvicinamento dedicata alla virata
 export function computeCaptureSweep(p: OrbitalParams, cruiseTicks: number): number {
-  const total = orbitTotalAngle(normalize(p.spawnDir), normalize(p.cityDir), p.orbits);
-  const omega = total / orbitPhaseTicks(p); // velocità angolare orbitale (rad/tick)
-  return (omega * cruiseTicks * CAPTURE_FRACTION) / 2;
+  return (orbitAngularSpeed(p) * cruiseTicks * CAPTURE_FRACTION) / 2;
 }
 
 // --- profili di quota per fase (progress ∈ [0,1]) ---
 
-// flip-and-burn: frazione di distanza percorsa nel tempo (accel/decel simmetrico)
-function flipBurnFraction(progress: number): number {
+// avvicinamento: frazione di distanza percorsa nel tempo. Ease-out (s'(0)=2 → parte
+// in MOTO, non da fermo; s'(1)=0 → velocità radiale nulla all'orbita = tangente).
+function approachRadialFraction(progress: number): number {
   const p = clamp(progress, 0, 1);
-  return p < 0.5 ? 2 * p * p : 1 - 2 * (1 - p) * (1 - p);
+  return p * (2 - p);
+}
+
+// inverso di approachRadialFraction: progresso a cui si è percorsa la frazione f
+function approachRadialProgress(fraction: number): number {
+  const f = clamp(fraction, 0, 1);
+  return 1 - Math.sqrt(1 - f);
 }
 
 // angolo durante l'avvicinamento: dritto in arrivo (−sweep) fino all'ultima
@@ -167,12 +200,6 @@ function approachAngle(progress: number, sweep: number): number {
   return -sweep * (1 - tau * tau);
 }
 
-// inverso di flipBurnFraction: progresso temporale a cui si è percorsa la frazione f
-function flipBurnProgress(fraction: number): number {
-  const f = clamp(fraction, 0, 1);
-  return f < 0.5 ? Math.sqrt(f / 2) : 1 - Math.sqrt((1 - f) / 2);
-}
-
 // Tick (entro la crociera) in cui la distanza residua dalla Terra scende sotto
 // `lunarDistance` (entrambe FISICHE, in raggi). Serve al tasto ">>>": a 1000x si
 // torna a 1x quando il primo UFO incrocia la distanza lunare. Intero deterministico.
@@ -183,44 +210,24 @@ export function lunarCrossTick(
 ): number {
   if (lunarDistance >= physicalDistance) return 0;
   const traveled = (physicalDistance - lunarDistance) / physicalDistance;
-  const p = flipBurnProgress(traveled);
+  const p = approachRadialProgress(traveled);
   return Math.min(cruiseTotalTicks, Math.round(p * cruiseTotalTicks));
-}
-
-// inverte freefallTime: raggio raggiunto dopo un tempo `t` di caduta da `from`
-function radiusAtFallTime(from: number, to: number, mu: number, t: number): number {
-  let lo = to; // raggio minore (più tempo trascorso)
-  let hi = from; // raggio maggiore (t=0)
-  for (let i = 0; i < 48; i++) {
-    const mid = (lo + hi) / 2;
-    if (freefallTime(from, mid, mu) < t) hi = mid;
-    else lo = mid;
-  }
-  return (lo + hi) / 2;
 }
 
 export function altitudeAt(phase: UfoPhase, progress: number, p: OrbitalParams): number {
   switch (phase) {
     case 'approaching':
-      return p.startDistance + (p.orbitRadius - p.startDistance) * flipBurnFraction(progress);
+      return p.startDistance + (p.orbitRadius - p.startDistance) * approachRadialFraction(progress);
     case 'orbiting':
       return p.orbitRadius;
-    case 'descending': {
-      const total = freefallTime(p.orbitRadius, p.surfaceRadius, p.mu);
-      return radiusAtFallTime(p.orbitRadius, p.surfaceRadius, p.mu, clamp(progress, 0, 1) * total);
-    }
+    case 'descending':
+      // spirale di discesa: quota smoothstep orbita→superficie (radiale nullo agli estremi)
+      return p.orbitRadius + (p.surfaceRadius - p.orbitRadius) * smoothstep01(progress);
     case 'abducting':
       return p.surfaceRadius;
-    case 'escaping': {
-      // specchio della discesa: salita decelerata
-      const total = freefallTime(p.orbitRadius, p.surfaceRadius, p.mu);
-      return radiusAtFallTime(
-        p.orbitRadius,
-        p.surfaceRadius,
-        p.mu,
-        (1 - clamp(progress, 0, 1)) * total,
-      );
-    }
+    case 'escaping':
+      // specchio della discesa: risalita superficie→orbita
+      return p.orbitRadius + (p.surfaceRadius - p.orbitRadius) * smoothstep01(1 - progress);
   }
 }
 
@@ -229,7 +236,7 @@ export function positionAt(phase: UfoPhase, progress: number, p: OrbitalParams):
   const cityDir = normalize(p.cityDir);
 
   if (phase === 'approaching') {
-    // spirale di cattura: scende di quota (flip-burn) e vira per arrivare tangente
+    // spirale di cattura: scende di quota (ease-out) e vira per arrivare tangente
     const axis = orbitalAxis(spawnDir, cityDir);
     const ang = approachAngle(clamp(progress, 0, 1), p.captureSweep);
     return scale(rotateAroundAxis(spawnDir, axis, ang), altitudeAt('approaching', progress, p));
@@ -237,10 +244,21 @@ export function positionAt(phase: UfoPhase, progress: number, p: OrbitalParams):
 
   if (phase === 'orbiting') {
     const axis = orbitalAxis(spawnDir, cityDir);
-    const totalAngle = orbitTotalAngle(spawnDir, cityDir, p.orbits);
-    return scale(rotateAroundAxis(spawnDir, axis, totalAngle * clamp(progress, 0, 1)), p.orbitRadius);
+    const swept = orbitSweptAngle(p); // T − Δ (l'ultimo Δ lo completa la discesa)
+    return scale(rotateAroundAxis(spawnDir, axis, swept * clamp(progress, 0, 1)), p.orbitRadius);
   }
 
-  // descending / abducting / escaping: radiale lungo la verticale della città
+  if (phase === 'descending' || phase === 'escaping') {
+    // spirale nel piano orbitale: angolo da (T−Δ) verso T, quota smoothstep.
+    // g(τ)=2τ−τ²: g'(0)=2 → rate iniziale = ω (C1 con orbita), g'(1)=0 → rate finale 0.
+    const axis = orbitalAxis(spawnDir, cityDir);
+    const swept = orbitSweptAngle(p);
+    const delta = descentSweep(p);
+    const tau = phase === 'descending' ? clamp(progress, 0, 1) : 1 - clamp(progress, 0, 1);
+    const ang = swept + delta * (2 * tau - tau * tau);
+    return scale(rotateAroundAxis(spawnDir, axis, ang), altitudeAt(phase, progress, p));
+  }
+
+  // abducting: hover radiale ESATTO sulla verticale della città
   return scale(cityDir, altitudeAt(phase, progress, p));
 }

@@ -19,7 +19,9 @@ const SVG_HEIGHT = 300;
 const BOOST_ATTACH_Y = 275; // y (in coordinate SVG) dell'attacco fiamme agli ugelli (vedi asset F-22)
 const PATROL_ALTITUDE = 1.008; // rasoterra, con margine anti-compenetrazione col globo
 const PATROL_RADIUS = 0.05; // raggio del pattugliamento attorno al nome della città
-const PATROL_SPEED = 0.0005; // rad/ms
+// velocità di pattuglia ANCORATA al tempo-gioco (non al tempo reale): così si ferma in
+// pausa e accelera col time-scale. 0,0005 rad/ms × 1000 ms/min-gioco = 0,5 rad/min-gioco.
+const PATROL_SPEED_PER_GAMEMIN = 0.5;
 
 // rampa di decollo/atterraggio: 0 a terra, 1 in crociera (smoothstep agli estremi della rotta)
 function liftProfile(frac: number): number {
@@ -178,7 +180,7 @@ export class UnitLayer {
     return { cx, cy, w: worldW * pxPerWorld, h: worldH * pxPerWorld };
   }
 
-  update(state: GameState, tickFraction: number): void {
+  update(state: GameState, tickFraction: number, gameMinutes: number): void {
     const now = performance.now();
     this.sync(
       this.squadronMeshes,
@@ -225,7 +227,8 @@ export class UnitLayer {
         const radial = center.clone().normalize();
         const { e1, e2 } = tangentBasis(radial);
         const radius = PATROL_RADIUS * (1 + (sq.id % 3) * 0.3);
-        const theta = now * PATROL_SPEED + sq.id * 2.4;
+        // tempo-gioco: in pausa i caccia si fermano, accelerando il tempo accelerano
+        const theta = gameMinutes * PATROL_SPEED_PER_GAMEMIN + sq.id * 2.4;
         const cos = Math.cos(theta);
         const sin = Math.sin(theta);
         group.position

@@ -525,6 +525,7 @@ svg.intro-eye-closed .intro-dash { opacity: 1 !important; }
 }
 .combat-close:hover { background: #2c4a73; }
 .combat-arena {
+  position: relative;
   display: flex;
   align-items: stretch;
   gap: 12px;
@@ -542,6 +543,7 @@ svg.intro-eye-closed .intro-dash { opacity: 1 !important; }
 .combat-units { display: flex; flex-direction: column; gap: 14px; align-items: center; }
 .combat-unit { width: 160px; }
 .combat-unit-art {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -579,7 +581,14 @@ svg.intro-eye-closed .intro-dash { opacity: 1 !important; }
   60% { transform: translateX(4px); }
   100% { transform: translateX(0); }
 }
-/* corsia centrale: scambio di colpi continuo (puramente decorativo) */
+/* scossa estetica del caccia quando il bolide di plasma lo colpisce (non legata agli HP) */
+.combat-unit--struck { animation: combat-struck 0.32s ease; }
+@keyframes combat-struck {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-5px, 3px) rotate(-1.5deg); }
+  60% { transform: translate(4px, -2px) rotate(1deg); }
+}
+/* corsia centrale: fuoco difensori (segnaposto finché non si implementa) */
 .combat-mid { position: relative; width: 80px; flex: 0 0 80px; }
 .combat-beam {
   position: absolute;
@@ -593,13 +602,71 @@ svg.intro-eye-closed .intro-dash { opacity: 1 !important; }
   background: linear-gradient(90deg, transparent, #ffe066, transparent);
   animation: combat-beam-out 0.7s linear infinite;
 }
-.combat-beam--in {
-  top: 60%;
-  background: linear-gradient(90deg, transparent, #ff5566, transparent);
-  animation: combat-beam-in 0.7s linear 0.35s infinite;
-}
 @keyframes combat-beam-out { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
-@keyframes combat-beam-in { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+
+/* torrette al plasma agganciate agli hardpoint dell'UFO + bolidi che attraversano
+   l'arena verso il caccia (ui/combatWindow.ts). Lo snodo #mount è al 15% dall'alto. */
+/* taglia (width/height) impostata inline da combatWindow.ts (= taglia SVG, così il
+   transform-origin resta coerente). Pivot = centro dell'ettagono (viewBox 120,150). */
+.combat-turret {
+  position: absolute;
+  transform-origin: 50% 37.5%;
+  z-index: 5;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+/* layer effetti (bolidi + impatti): sopra le torrette */
+.combat-fx { position: absolute; inset: 0; pointer-events: none; z-index: 8; }
+/* stesso layer effetti ma sul GLOBO (render/combatFx.ts): overlay schermo sopra il canvas */
+#combat-fx-globe { position: fixed; inset: 0; pointer-events: none; z-index: 6; }
+.combat-proj {
+  position: absolute;
+  width: 26px;
+  height: 9px;
+  border-radius: 50%;
+  will-change: transform, left, top;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 30% 50%, #fff 0%, #d6ffe8 26%, #57f0a0 58%, rgba(47, 232, 138, 0) 100%);
+  box-shadow: 0 0 10px 3px rgba(109, 255, 174, 0.8);
+}
+.combat-proj::after {
+  content: '';
+  position: absolute;
+  right: 55%;
+  top: 50%;
+  width: 42px;
+  height: 4px;
+  transform: translateY(-50%);
+  border-radius: 4px;
+  background: linear-gradient(90deg, rgba(109, 255, 174, 0), rgba(109, 255, 174, 0.7));
+  box-shadow: 0 0 8px rgba(109, 255, 174, 0.5);
+}
+.combat-impact {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, #fff, #b6ffd8 40%, rgba(87, 240, 160, 0) 72%);
+  box-shadow: 0 0 16px 6px rgba(109, 255, 174, 0.8);
+  animation: combat-impact 0.4s ease-out forwards;
+}
+@keyframes combat-impact {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(0.3); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(4); }
+}
+.combat-hitflash {
+  position: absolute;
+  inset: -12% -12%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 90, 60, 0.55), rgba(255, 90, 60, 0) 65%);
+  animation: combat-hitflash 0.35s ease-out forwards;
+}
+@keyframes combat-hitflash {
+  0% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
 .combat-status {
   display: flex;
   justify-content: space-between;

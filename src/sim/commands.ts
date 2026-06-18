@@ -116,3 +116,13 @@ export function cmdSetSpeed(state: GameState, speed: GameSpeed): CommandResult {
   state.speed = speed;
   return { ok: true };
 }
+
+// Applica un colpo a uno squadrone: canale di mutazione del motore di combattimento
+// in tempo reale (src/render/combatEngine.ts). Sottrae gli HP e rimuove lo squadrone se
+// scende a 0 (come faceva resolveCombat). No-op se l'id non esiste più.
+export function cmdDamageSquadron(state: GameState, squadronId: number, amount: number): void {
+  const sq = state.squadrons.find(s => s.id === squadronId);
+  if (!sq) return;
+  sq.hp -= amount;
+  if (sq.hp <= 0) state.squadrons = state.squadrons.filter(s => s.id !== squadronId);
+}

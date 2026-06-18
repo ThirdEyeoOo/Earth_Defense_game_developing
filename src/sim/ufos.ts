@@ -92,8 +92,11 @@ function enterPhase(ufo: UfoState, phase: UfoPhase, duration: number): void {
 
 export function progressUfos(state: GameState): void {
   const u = CONFIG.ufoAbductor;
-  const abductionTicks = u.abductionDays * CONFIG.ticksPerDay;
+  const capacity = u.captureCapacity;
   const perTick = u.abductionPerDay / CONFIG.ticksPerDay;
+  // durata STIMATA della fase di rapimento (solo per la barra di progresso/animazioni):
+  // la fase finisce davvero a capienza piena o città esaurita, non a tempo.
+  const estTicks = Math.max(1, Math.ceil(capacity / perTick));
   for (const ufo of [...state.ufos]) {
     const city = state.cities.find(c => c.id === ufo.targetCityId)!;
     if (!city.alive && ufo.phase !== 'escaping') {
@@ -102,8 +105,15 @@ export function progressUfos(state: GameState): void {
     }
     ufo.ticksRemaining--;
     if (ufo.phase === 'abducting') {
-      ufo.abducted += perTick;
-      state.stats.abductedTotal += perTick;
+      // rapisce fino alla capienza, senza superare le persone ancora prelevabili
+      const take = Math.min(perTick, capacity - ufo.abducted, Math.max(0, city.population - ufo.abducted));
+      ufo.abducted += take;
+      state.stats.abductedTotal += take;
+      // pieno (o ha già "preso tutti"): parte in fuga subito
+      if (ufo.abducted >= capacity || ufo.abducted >= city.population) {
+        enterPhase(ufo, 'escaping', descentDuration(ufo.orbit));
+        continue;
+      }
     }
     if (ufo.ticksRemaining > 0) continue;
     if (ufo.phase === 'approaching') {
@@ -113,10 +123,10 @@ export function progressUfos(state: GameState): void {
       enterPhase(ufo, 'descending', descentDuration(ufo.orbit));
       emitEvent(state, { type: 'ufoDescending', unitKind: 'ufo', unitId: ufo.id, cityId: city.id });
     } else if (ufo.phase === 'descending') {
-      enterPhase(ufo, 'abducting', abductionTicks);
+      enterPhase(ufo, 'abducting', estTicks);
       emitEvent(state, { type: 'ufoAbducting', unitKind: 'ufo', unitId: ufo.id, cityId: city.id });
     } else if (ufo.phase === 'abducting') {
-      enterPhase(ufo, 'escaping', descentDuration(ufo.orbit));
+      enterPhase(ufo, 'escaping', descentDuration(ufo.orbit)); // fallback: stima scaduta
     } else {
       removeUfo(state, ufo.id, 'escaped');
     }

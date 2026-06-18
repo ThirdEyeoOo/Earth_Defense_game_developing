@@ -1,0 +1,31 @@
+{
+  "name": "plasma-turret",
+  "route": "dom",
+  "viewBox": "0 0 240 400",
+  "headerComment": "<!-- ed-asset route=\"dom\" name=\"plasma-turret\" animatable=\"#recoil,#charge-core,#muzzle-glow,#muzzle-flash,#plasma-bolt,#coils,#status-light\" state-class=\"on\" i18n-text=\"none\" -->",
+  "note_canvas": "Il canvas di Claude Design rimuove in scrittura sia i commenti XML sia gli elementi <style>/<animate>. Per questo l'header 'ed-asset' e le keyframe NON vivono nel file SVG: l'header e' qui sopra in 'headerComment', e lo stato a riposo e' codificato con ATTRIBUTI (opacity) che il sanitizer conserva. Il gioco inietta la CSS dello stato attivo (vedi onStateCss).",
+  "restState": "Dormiente: #muzzle-flash e #plasma-bolt opacity 0, #muzzle-glow 0.1, .coil-orb 0.2, #charge-core 0.6. La torretta appare spenta finche' il gioco non aggiunge la classe 'on'.",
+  "animatable": [
+    { "id": "#recoil",       "does": "gruppo canna+bobine: rincula ad ogni colpo (translateY)", "drivenBy": "game", "via": "class:on" },
+    { "id": "#charge-core",  "does": "nucleo di carica: respira idle, carica+scarica in fuoco", "drivenBy": "game", "via": "class:on" },
+    { "id": "#coils",        "does": "bobine: orb (.coil-orb) che si accendono lungo la canna", "drivenBy": "game", "via": "class:on" },
+    { "id": "#muzzle-glow",  "does": "bagliore di volata, acceso al colpo", "drivenBy": "game", "via": "class:on" },
+    { "id": "#muzzle-flash", "does": "lampo di sparo", "drivenBy": "game", "via": "class:on" },
+    { "id": "#plasma-bolt",  "does": "proiettile al plasma sparato verso il basso", "drivenBy": "game", "via": "class:on" },
+    { "id": "#status-light", "does": "spia di stato: pulsa lento idle, veloce in fuoco", "drivenBy": "game", "via": "class:on" }
+  ],
+  "states": [
+    { "class": "on", "when": "hardpoint armato / torretta che spara", "affects": ["#recoil", "#charge-core", "#coils", "#muzzle-glow", "#muzzle-flash", "#plasma-bolt", "#status-light"] }
+  ],
+  "gameInputs": [
+    { "kind": "toggle", "how": "class:on per accendere/spegnere il fuoco" },
+    { "kind": "scale",  "how": "shrink prospettico per distanza camera dal globo" },
+    { "kind": "rotate", "how": "ruotare l'intero SVG attorno al centro dell'ettagono #housing (viewBox 120,150) per puntare il bersaglio" },
+    { "kind": "color",  "how": "tinta plasma sostituibile via CSS var o override fill dei gradient t-core/t-glow/t-bolt" }
+  ],
+  "anchors": ["#housing"],
+  "i18nText": [],
+  "suggestedPlacement": "modulo CSS2D agganciato a #hardpoint-left / #hardpoint-right dell'UFO (alien_abductor)",
+  "onStateCss": "/* il gioco inietta questa CSS quando integra l'asset; ciclo di fuoco 1.5s, tutto sincronizzato */\n.on #charge-core{transform-origin:120px 150px;animation:pt-charge 1.5s ease-in-out infinite}\n.on #status-light{animation:pt-status 0.5s steps(2) infinite}\n.on #muzzle-glow{transform-origin:120px 330px;animation:pt-mglow 1.5s ease-in-out infinite}\n.on #muzzle-flash{transform-origin:120px 332px;animation:pt-flash 1.5s ease-out infinite}\n.on #plasma-bolt{transform-origin:120px 332px;animation:pt-fire 1.5s cubic-bezier(.4,0,.2,1) infinite}\n.on #recoil{animation:pt-recoil 1.5s cubic-bezier(.3,0,.2,1) infinite}\n.on .coil-orb{animation:pt-coil 1.5s linear infinite}\n.on .coil-orb:nth-of-type(2){animation-delay:.16s}\n.on .coil-orb:nth-of-type(3){animation-delay:.32s}\n.on .coil-orb:nth-of-type(4){animation-delay:.48s}\n@keyframes pt-charge{0%{transform:scale(.7);opacity:.5}55%{transform:scale(1.25);opacity:1}62%{transform:scale(.55);opacity:.95}100%{transform:scale(.7);opacity:.5}}\n@keyframes pt-status{0%{opacity:1}100%{opacity:.3}}\n@keyframes pt-mglow{0%,45%{opacity:.2}58%{opacity:1}80%{opacity:.25}100%{opacity:.2}}\n@keyframes pt-flash{0%,52%{opacity:0;transform:scale(.4)}60%{opacity:1;transform:scale(1.15)}74%{opacity:0;transform:scale(1.4)}100%{opacity:0;transform:scale(.4)}}\n@keyframes pt-fire{0%,55%{opacity:0;transform:translateY(0) scaleY(.6)}60%{opacity:1;transform:translateY(6px) scaleY(1)}92%{opacity:.9;transform:translateY(64px) scaleY(1.25)}100%{opacity:0;transform:translateY(72px) scaleY(1.3)}}\n@keyframes pt-recoil{0%,54%{transform:translateY(0)}62%{transform:translateY(7px)}100%{transform:translateY(0)}}\n@keyframes pt-coil{0%{opacity:.2}50%{opacity:1}100%{opacity:.2}}",
+  "notes": "Disegno: muso verso il basso (la torretta pende dall'hardpoint). Tutte le parti mobili sono su id/classi stabili e lo stato a riposo e' baked via attributi opacity. Per cablare l'animazione, il gioco aggiunge la classe 'on' al nodo <svg> e inietta 'onStateCss'. Per cadenza di tiro diversa, cambiare i 1.5s mantenendoli uguali tra le 7 animazioni."
+}
