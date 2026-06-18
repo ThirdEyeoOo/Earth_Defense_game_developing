@@ -154,6 +154,15 @@ export const it = {
   'res.tecnologia': 'Tecnologia',
   'res.tessuti': 'Tessuti',
 
+  // fasce di popolazione (chiave = PopulationTierKey in sim/population.ts)
+  'panel.tier': 'Fascia:',
+  'tier.cittadina': 'Cittadina',
+  'tier.citta': 'Città',
+  'tier.metropoli': 'Metropoli',
+  'tier.megacitta': 'Megacittà',
+  'tier.metacitta': 'Metacittà',
+  'tier.megalopoli': 'Megalopoli',
+
   // scritte fluttuanti (render/floatingText.ts)
   'float.squadronTransferStarted': 'squadrone in viaggio',
   'float.ufoOrbiting': 'in orbita',

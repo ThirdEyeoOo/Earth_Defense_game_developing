@@ -155,6 +155,15 @@ export const en: Record<MessageKey, string> = {
   'res.tecnologia': 'Technology',
   'res.tessuti': 'Textiles',
 
+  // population size classes (key = PopulationTierKey in sim/population.ts)
+  'panel.tier': 'Size class:',
+  'tier.cittadina': 'Town',
+  'tier.citta': 'City',
+  'tier.metropoli': 'Metropolis',
+  'tier.megacitta': 'Megacity',
+  'tier.metacitta': 'Meta-city',
+  'tier.megalopoli': 'Megalopolis',
+
   // floating texts
   'float.squadronTransferStarted': 'squadron en route',
   'float.ufoOrbiting': 'in orbit',
