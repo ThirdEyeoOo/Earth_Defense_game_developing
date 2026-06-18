@@ -1,0 +1,12 @@
+{
+  "components": [
+    { "id": "hud", "name": "HUD (barra superiore)", "width": 980, "height": 120 },
+    { "id": "bottom-bar", "name": "Barra inferiore", "width": 720, "height": 110 },
+    { "id": "radar", "name": "Radar (prossima ondata)", "width": 320, "height": 260 },
+    { "id": "balance", "name": "Pannello Bilancio", "width": 360, "height": 460 },
+    { "id": "city", "name": "Pannello Città", "width": 320, "height": 520 },
+    { "id": "settings", "name": "Impostazioni", "width": 520, "height": 360 },
+    { "id": "encyclopedia", "name": "Enciclopedia", "width": 800, "height": 520 },
+    { "id": "endscreen", "name": "Schermata di fine partita", "width": 520, "height": 420 }
+  ]
+}

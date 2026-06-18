@@ -7,6 +7,10 @@ AssetsReplacedbydev/
 
 .superpowers/
 
+# catalogo design-system: gli script sono versionati, le card generate no
+design-system/out/
+design-system/.push_pending
+
 # log e cache
 *.log
 .vite/

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <title>Design System Harness</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #05080f;
+      }
+    </style>
+  </head>
+  <body>
+    <!--
+      Pagina-harness servita SOLO dal dev server Vite durante la generazione del
+      catalogo (scripts/design-system/generate.mjs). NON fa parte del gioco.
+      Monta un singolo componente UI reale con stato finto; il generatore ne
+      estrae l'HTML reso via Chrome headless. Componente scelto da ?component=...
+    -->
+    <script type="module" src="./harness.ts"></script>
+  </body>
+</html>
