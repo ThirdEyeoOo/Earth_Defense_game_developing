@@ -4,7 +4,8 @@ import { cityProductionPerDay, embassyCost, isConnected } from '../sim/economy';
 import type { Cost, ResourceType } from '../sim/resources';
 import { squadronCost } from '../sim/squadrons';
 import type { CityState, GameState } from '../sim/state';
-import { fmtInt } from './format';
+import { populationTier, sizeMultiplier } from '../sim/population';
+import { fmtInt, fmtMultiplier } from './format';
 import { resourceIcon } from './resourceIcons';
 
 export interface CityPanelCallbacks {
@@ -57,9 +58,11 @@ export function createCityPanel(
         return;
       }
       root.classList.remove('hidden');
+      const tierKey = populationTier(city.population);
       const header = `
         <h2>${cityName(city.id, city.name)} <small>(${countryName(city.country)})</small></h2>
         <p>${t('panel.population')} <strong>${fmtInt(city.population)}</strong></p>
+        <p>${t('panel.tier')} <strong>${t(`tier.${tierKey}`)}</strong> <small>(×${fmtMultiplier(sizeMultiplier(city.population))})</small></p>
       `;
 
       // fase di fondazione: solo informazioni e bottone "fonda qui"

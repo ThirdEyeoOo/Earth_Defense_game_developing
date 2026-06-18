@@ -5,6 +5,10 @@ export function fmtInt(n: number): string {
   return Math.round(n).toLocaleString(getLocale());
 }
 
+export function fmtMultiplier(n: number): string {
+  return n.toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 export function fmtDate(tick: number): string {
   return dateOfTick(tick).toLocaleDateString(getLocale(), {
     day: 'numeric',
