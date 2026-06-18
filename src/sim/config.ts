@@ -27,6 +27,19 @@ export const CONFIG = {
       humt: 450,
       resources: { industria: 30, combustibili_fossili: 20, agroalimentare: 25 },
     },
+    // Moltiplicatore economico per fascia di popolazione (vedi
+    // docs/superpowers/specs/2026-06-18-bilancio-popolazione-design.md).
+    // Dinamico: la fascia è calcolata dalla popolazione ATTUALE.
+    // Schema B (àncora Megalopoli = 1×). minPopulation in ordine crescente;
+    // la fascia è l'ultima con minPopulation <= popolazione.
+    populationTiers: [
+      { key: 'cittadina', minPopulation: 0, multiplier: 0.2 },
+      { key: 'citta', minPopulation: 1_000_000, multiplier: 0.3 },
+      { key: 'metropoli', minPopulation: 4_000_000, multiplier: 0.4 },
+      { key: 'megacitta', minPopulation: 10_000_000, multiplier: 0.56 },
+      { key: 'metacitta', minPopulation: 18_000_000, multiplier: 0.76 },
+      { key: 'megalopoli', minPopulation: 26_000_001, multiplier: 1 },
+    ],
   },
   squadron: {
     attack: 6,
