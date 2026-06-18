@@ -8,23 +8,47 @@
     "lon": 139.69,
     "population": 37000000,
     "gdp_billion_usd": 2000,
-    "gdp_post_apoc_humt": 1721,
+    "gdp_post_apoc_humt": 3115,
     "resources": [
       {
-        "type": "tecnologia",
-        "amount": 99
+        "type": "agroalimentare",
+        "amount": 25
+      },
+      {
+        "type": "chimica",
+        "amount": 60
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 10
+      },
+      {
+        "type": "energia",
+        "amount": 90
+      },
+      {
+        "type": "finanza",
+        "amount": 85
+      },
+      {
+        "type": "industria",
+        "amount": 72
       },
       {
         "type": "materiali_da_costruzione",
         "amount": 60
       },
       {
-        "type": "finanza",
-        "amount": 95
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 20
       },
       {
-        "type": "energia",
-        "amount": 90
+        "type": "tecnologia",
+        "amount": 92
+      },
+      {
+        "type": "tessuti",
+        "amount": 30
       }
     ]
   },
@@ -37,27 +61,47 @@
     "lon": 77.21,
     "population": 34700000,
     "gdp_billion_usd": 330,
-    "gdp_post_apoc_humt": 1699,
+    "gdp_post_apoc_humt": 3270,
     "resources": [
       {
-        "type": "tessuti",
-        "amount": 70
-      },
-      {
         "type": "agroalimentare",
-        "amount": 60
+        "amount": 65
       },
       {
-        "type": "tecnologia",
-        "amount": 55
+        "type": "chimica",
+        "amount": 45
       },
       {
-        "type": "finanza",
-        "amount": 39
+        "type": "combustibili_fossili",
+        "amount": 25
       },
       {
         "type": "energia",
-        "amount": 70
+        "amount": 72
+      },
+      {
+        "type": "finanza",
+        "amount": 55
+      },
+      {
+        "type": "industria",
+        "amount": 52
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 65
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 25
+      },
+      {
+        "type": "tecnologia",
+        "amount": 60
+      },
+      {
+        "type": "tessuti",
+        "amount": 75
       }
     ]
   },
@@ -70,27 +114,47 @@
     "lon": 121.47,
     "population": 30500000,
     "gdp_billion_usd": 680,
-    "gdp_post_apoc_humt": 2256,
+    "gdp_post_apoc_humt": 3941,
     "resources": [
+      {
+        "type": "agroalimentare",
+        "amount": 30
+      },
+      {
+        "type": "chimica",
+        "amount": 70
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 35
+      },
+      {
+        "type": "energia",
+        "amount": 90
+      },
+      {
+        "type": "finanza",
+        "amount": 88
+      },
+      {
+        "type": "industria",
+        "amount": 88
+      },
       {
         "type": "materiali_da_costruzione",
         "amount": 90
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 45
       },
       {
         "type": "tecnologia",
         "amount": 85
       },
       {
-        "type": "industria",
-        "amount": 70
-      },
-      {
-        "type": "finanza",
-        "amount": 56
-      },
-      {
-        "type": "energia",
-        "amount": 90
+        "type": "tessuti",
+        "amount": 60
       }
     ]
   },
@@ -103,23 +167,47 @@
     "lon": 90.41,
     "population": 24700000,
     "gdp_billion_usd": 150,
-    "gdp_post_apoc_humt": 1021,
+    "gdp_post_apoc_humt": 1947,
     "resources": [
       {
-        "type": "tessuti",
-        "amount": 95
-      },
-      {
         "type": "agroalimentare",
-        "amount": 35
+        "amount": 40
       },
       {
-        "type": "finanza",
-        "amount": 26
+        "type": "chimica",
+        "amount": 15
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 20
       },
       {
         "type": "energia",
         "amount": 40
+      },
+      {
+        "type": "finanza",
+        "amount": 28
+      },
+      {
+        "type": "industria",
+        "amount": 35
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 35
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 10
+      },
+      {
+        "type": "tecnologia",
+        "amount": 20
+      },
+      {
+        "type": "tessuti",
+        "amount": 98
       }
     ]
   },
@@ -132,23 +220,47 @@
     "lon": 72.88,
     "population": 22100000,
     "gdp_billion_usd": 300,
-    "gdp_post_apoc_humt": 1353,
+    "gdp_post_apoc_humt": 3130,
     "resources": [
       {
-        "type": "tecnologia",
-        "amount": 65
+        "type": "agroalimentare",
+        "amount": 25
       },
       {
         "type": "chimica",
-        "amount": 55
+        "amount": 72
       },
       {
-        "type": "finanza",
-        "amount": 68
+        "type": "combustibili_fossili",
+        "amount": 45
       },
       {
         "type": "energia",
-        "amount": 65
+        "amount": 68
+      },
+      {
+        "type": "finanza",
+        "amount": 70
+      },
+      {
+        "type": "industria",
+        "amount": 55
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 55
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 25
+      },
+      {
+        "type": "tecnologia",
+        "amount": 62
+      },
+      {
+        "type": "tessuti",
+        "amount": 58
       }
     ]
   },
@@ -161,23 +273,47 @@
     "lon": 116.4,
     "population": 22600000,
     "gdp_billion_usd": 660,
-    "gdp_post_apoc_humt": 1620,
+    "gdp_post_apoc_humt": 3682,
     "resources": [
       {
-        "type": "tecnologia",
-        "amount": 95
+        "type": "agroalimentare",
+        "amount": 35
       },
       {
-        "type": "industria",
-        "amount": 70
-      },
-      {
-        "type": "finanza",
+        "type": "chimica",
         "amount": 55
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 45
       },
       {
         "type": "energia",
         "amount": 85
+      },
+      {
+        "type": "finanza",
+        "amount": 75
+      },
+      {
+        "type": "industria",
+        "amount": 72
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 80
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 45
+      },
+      {
+        "type": "tecnologia",
+        "amount": 85
+      },
+      {
+        "type": "tessuti",
+        "amount": 45
       }
     ]
   },
@@ -190,27 +326,47 @@
     "lon": 135.5,
     "population": 18900000,
     "gdp_billion_usd": 650,
-    "gdp_post_apoc_humt": 1839,
+    "gdp_post_apoc_humt": 2964,
     "resources": [
       {
-        "type": "industria",
-        "amount": 75
-      },
-      {
-        "type": "tecnologia",
-        "amount": 65
+        "type": "agroalimentare",
+        "amount": 25
       },
       {
         "type": "chimica",
-        "amount": 50
+        "amount": 58
       },
       {
-        "type": "finanza",
-        "amount": 54
+        "type": "combustibili_fossili",
+        "amount": 15
       },
       {
         "type": "energia",
         "amount": 75
+      },
+      {
+        "type": "finanza",
+        "amount": 60
+      },
+      {
+        "type": "industria",
+        "amount": 78
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 62
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 20
+      },
+      {
+        "type": "tecnologia",
+        "amount": 72
+      },
+      {
+        "type": "tessuti",
+        "amount": 35
       }
     ]
   },
@@ -223,27 +379,47 @@
     "lon": 67.01,
     "population": 18000000,
     "gdp_billion_usd": 140,
-    "gdp_post_apoc_humt": 1100,
+    "gdp_post_apoc_humt": 2260,
     "resources": [
       {
-        "type": "tessuti",
-        "amount": 60
-      },
-      {
-        "type": "materiali_da_costruzione",
-        "amount": 40
-      },
-      {
         "type": "agroalimentare",
+        "amount": 35
+      },
+      {
+        "type": "chimica",
         "amount": 30
       },
       {
-        "type": "finanza",
-        "amount": 25
+        "type": "combustibili_fossili",
+        "amount": 35
       },
       {
         "type": "energia",
+        "amount": 40
+      },
+      {
+        "type": "finanza",
         "amount": 35
+      },
+      {
+        "type": "industria",
+        "amount": 45
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 45
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 20
+      },
+      {
+        "type": "tecnologia",
+        "amount": 25
+      },
+      {
+        "type": "tessuti",
+        "amount": 70
       }
     ]
   },
@@ -256,23 +432,47 @@
     "lon": 120.98,
     "population": 15200000,
     "gdp_billion_usd": 190,
-    "gdp_post_apoc_humt": 1151,
+    "gdp_post_apoc_humt": 2367,
     "resources": [
-      {
-        "type": "tecnologia",
-        "amount": 78
-      },
       {
         "type": "agroalimentare",
         "amount": 45
       },
       {
-        "type": "finanza",
-        "amount": 29
+        "type": "chimica",
+        "amount": 25
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 20
       },
       {
         "type": "energia",
-        "amount": 40
+        "amount": 45
+      },
+      {
+        "type": "finanza",
+        "amount": 50
+      },
+      {
+        "type": "industria",
+        "amount": 45
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 35
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 50
+      },
+      {
+        "type": "tecnologia",
+        "amount": 58
+      },
+      {
+        "type": "tessuti",
+        "amount": 35
       }
     ]
   },
@@ -285,23 +485,47 @@
     "lon": 126.98,
     "population": 26000000,
     "gdp_billion_usd": 900,
-    "gdp_post_apoc_humt": 1671,
+    "gdp_post_apoc_humt": 3110,
     "resources": [
       {
-        "type": "tecnologia",
-        "amount": 98
+        "type": "agroalimentare",
+        "amount": 20
       },
       {
-        "type": "industria",
-        "amount": 75
+        "type": "chimica",
+        "amount": 55
       },
       {
-        "type": "finanza",
-        "amount": 64
+        "type": "combustibili_fossili",
+        "amount": 15
       },
       {
         "type": "energia",
-        "amount": 85
+        "amount": 82
+      },
+      {
+        "type": "finanza",
+        "amount": 80
+      },
+      {
+        "type": "industria",
+        "amount": 82
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 65
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 20
+      },
+      {
+        "type": "tecnologia",
+        "amount": 95
+      },
+      {
+        "type": "tessuti",
+        "amount": 35
       }
     ]
   },
@@ -314,26 +538,46 @@
     "lon": 106.85,
     "population": 33000000,
     "gdp_billion_usd": 330,
-    "gdp_post_apoc_humt": 1579,
+    "gdp_post_apoc_humt": 3319,
     "resources": [
       {
         "type": "agroalimentare",
         "amount": 70
       },
       {
-        "type": "tessuti",
+        "type": "chimica",
+        "amount": 40
+      },
+      {
+        "type": "combustibili_fossili",
         "amount": 55
       },
       {
-        "type": "tecnologia",
-        "amount": 45
+        "type": "energia",
+        "amount": 58
       },
       {
         "type": "finanza",
-        "amount": 39
+        "amount": 52
       },
       {
-        "type": "energia",
+        "type": "industria",
+        "amount": 50
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 50
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 62
+      },
+      {
+        "type": "tecnologia",
+        "amount": 40
+      },
+      {
+        "type": "tessuti",
         "amount": 55
       }
     ]
@@ -347,23 +591,47 @@
     "lon": 100.5,
     "population": 17000000,
     "gdp_billion_usd": 220,
-    "gdp_post_apoc_humt": 1437,
+    "gdp_post_apoc_humt": 3044,
     "resources": [
       {
-        "type": "industria",
-        "amount": 60
-      },
-      {
         "type": "agroalimentare",
-        "amount": 55
+        "amount": 70
       },
       {
-        "type": "finanza",
-        "amount": 32
+        "type": "chimica",
+        "amount": 35
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 30
       },
       {
         "type": "energia",
+        "amount": 58
+      },
+      {
+        "type": "finanza",
         "amount": 55
+      },
+      {
+        "type": "industria",
+        "amount": 68
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 50
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 25
+      },
+      {
+        "type": "tecnologia",
+        "amount": 55
+      },
+      {
+        "type": "tessuti",
+        "amount": 48
       }
     ]
   },
@@ -376,23 +644,47 @@
     "lon": 103.82,
     "population": 6000000,
     "gdp_billion_usd": 520,
-    "gdp_post_apoc_humt": 1452,
+    "gdp_post_apoc_humt": 2721,
     "resources": [
       {
-        "type": "finanza",
-        "amount": 92
+        "type": "agroalimentare",
+        "amount": 5
+      },
+      {
+        "type": "chimica",
+        "amount": 68
       },
       {
         "type": "combustibili_fossili",
-        "amount": 70
-      },
-      {
-        "type": "tecnologia",
         "amount": 65
       },
       {
         "type": "energia",
         "amount": 60
+      },
+      {
+        "type": "finanza",
+        "amount": 95
+      },
+      {
+        "type": "industria",
+        "amount": 55
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 30
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 15
+      },
+      {
+        "type": "tecnologia",
+        "amount": 78
+      },
+      {
+        "type": "tessuti",
+        "amount": 15
       }
     ]
   },
@@ -405,27 +697,47 @@
     "lon": 106.63,
     "population": 13500000,
     "gdp_billion_usd": 80,
-    "gdp_post_apoc_humt": 1274,
+    "gdp_post_apoc_humt": 2686,
     "resources": [
       {
-        "type": "tessuti",
+        "type": "agroalimentare",
         "amount": 60
+      },
+      {
+        "type": "chimica",
+        "amount": 25
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 30
+      },
+      {
+        "type": "energia",
+        "amount": 50
+      },
+      {
+        "type": "finanza",
+        "amount": 38
+      },
+      {
+        "type": "industria",
+        "amount": 52
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 40
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 20
       },
       {
         "type": "tecnologia",
         "amount": 55
       },
       {
-        "type": "agroalimentare",
-        "amount": 45
-      },
-      {
-        "type": "finanza",
-        "amount": 19
-      },
-      {
-        "type": "energia",
-        "amount": 45
+        "type": "tessuti",
+        "amount": 82
       }
     ]
   },
@@ -438,23 +750,47 @@
     "lon": 28.98,
     "population": 16000000,
     "gdp_billion_usd": 270,
-    "gdp_post_apoc_humt": 1145,
+    "gdp_post_apoc_humt": 2872,
     "resources": [
       {
-        "type": "tessuti",
-        "amount": 65
+        "type": "agroalimentare",
+        "amount": 40
       },
       {
-        "type": "industria",
-        "amount": 55
+        "type": "chimica",
+        "amount": 40
       },
       {
-        "type": "finanza",
-        "amount": 35
+        "type": "combustibili_fossili",
+        "amount": 25
       },
       {
         "type": "energia",
+        "amount": 62
+      },
+      {
+        "type": "finanza",
+        "amount": 52
+      },
+      {
+        "type": "industria",
         "amount": 65
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 58
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 30
+      },
+      {
+        "type": "tecnologia",
+        "amount": 45
+      },
+      {
+        "type": "tessuti",
+        "amount": 72
       }
     ]
   },
@@ -467,27 +803,47 @@
     "lon": 51.39,
     "population": 15800000,
     "gdp_billion_usd": 140,
-    "gdp_post_apoc_humt": 1670,
+    "gdp_post_apoc_humt": 3282,
     "resources": [
       {
-        "type": "combustibili_fossili",
-        "amount": 70
+        "type": "agroalimentare",
+        "amount": 45
       },
       {
         "type": "chimica",
-        "amount": 55
+        "amount": 62
       },
       {
-        "type": "tessuti",
-        "amount": 35
-      },
-      {
-        "type": "finanza",
-        "amount": 25
+        "type": "combustibili_fossili",
+        "amount": 82
       },
       {
         "type": "energia",
         "amount": 60
+      },
+      {
+        "type": "finanza",
+        "amount": 28
+      },
+      {
+        "type": "industria",
+        "amount": 52
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 50
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 35
+      },
+      {
+        "type": "tecnologia",
+        "amount": 35
+      },
+      {
+        "type": "tessuti",
+        "amount": 45
       }
     ]
   },
@@ -500,27 +856,47 @@
     "lon": 44.36,
     "population": 9500000,
     "gdp_billion_usd": 70,
-    "gdp_post_apoc_humt": 1408,
+    "gdp_post_apoc_humt": 2074,
     "resources": [
-      {
-        "type": "combustibili_fossili",
-        "amount": 75
-      },
       {
         "type": "agroalimentare",
         "amount": 30
       },
       {
-        "type": "materiali_da_costruzione",
+        "type": "chimica",
         "amount": 25
       },
       {
-        "type": "finanza",
-        "amount": 18
+        "type": "combustibili_fossili",
+        "amount": 82
       },
       {
         "type": "energia",
-        "amount": 35
+        "amount": 40
+      },
+      {
+        "type": "finanza",
+        "amount": 15
+      },
+      {
+        "type": "industria",
+        "amount": 25
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 30
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 15
+      },
+      {
+        "type": "tecnologia",
+        "amount": 12
+      },
+      {
+        "type": "tessuti",
+        "amount": 20
       }
     ]
   },
@@ -533,23 +909,47 @@
     "lon": 46.68,
     "population": 7700000,
     "gdp_billion_usd": 190,
-    "gdp_post_apoc_humt": 1976,
+    "gdp_post_apoc_humt": 3321,
     "resources": [
+      {
+        "type": "agroalimentare",
+        "amount": 20
+      },
+      {
+        "type": "chimica",
+        "amount": 80
+      },
       {
         "type": "combustibili_fossili",
         "amount": 95
       },
       {
-        "type": "chimica",
-        "amount": 60
+        "type": "energia",
+        "amount": 72
       },
       {
         "type": "finanza",
-        "amount": 61
+        "amount": 58
       },
       {
-        "type": "energia",
-        "amount": 75
+        "type": "industria",
+        "amount": 45
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 55
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 35
+      },
+      {
+        "type": "tecnologia",
+        "amount": 35
+      },
+      {
+        "type": "tessuti",
+        "amount": 15
       }
     ]
   },
@@ -562,23 +962,47 @@
     "lon": 37.62,
     "population": 17000000,
     "gdp_billion_usd": 450,
-    "gdp_post_apoc_humt": 1755,
+    "gdp_post_apoc_humt": 3759,
     "resources": [
+      {
+        "type": "agroalimentare",
+        "amount": 50
+      },
+      {
+        "type": "chimica",
+        "amount": 50
+      },
       {
         "type": "combustibili_fossili",
         "amount": 90
       },
       {
-        "type": "industria",
-        "amount": 45
+        "type": "energia",
+        "amount": 82
       },
       {
         "type": "finanza",
-        "amount": 45
+        "amount": 50
       },
       {
-        "type": "energia",
-        "amount": 80
+        "type": "industria",
+        "amount": 55
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 58
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 65
+      },
+      {
+        "type": "tecnologia",
+        "amount": 50
+      },
+      {
+        "type": "tessuti",
+        "amount": 30
       }
     ]
   },
@@ -591,19 +1015,47 @@
     "lon": -0.13,
     "population": 14900000,
     "gdp_billion_usd": 1000,
-    "gdp_post_apoc_humt": 969,
+    "gdp_post_apoc_humt": 2633,
     "resources": [
       {
-        "type": "finanza",
-        "amount": 99
+        "type": "agroalimentare",
+        "amount": 25
       },
       {
-        "type": "tecnologia",
-        "amount": 60
+        "type": "chimica",
+        "amount": 45
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 30
       },
       {
         "type": "energia",
         "amount": 70
+      },
+      {
+        "type": "finanza",
+        "amount": 98
+      },
+      {
+        "type": "industria",
+        "amount": 45
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 40
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 25
+      },
+      {
+        "type": "tecnologia",
+        "amount": 65
+      },
+      {
+        "type": "tessuti",
+        "amount": 40
       }
     ]
   },
@@ -616,23 +1068,47 @@
     "lon": 2.35,
     "population": 12300000,
     "gdp_billion_usd": 850,
-    "gdp_post_apoc_humt": 1382,
+    "gdp_post_apoc_humt": 3121,
     "resources": [
       {
-        "type": "tessuti",
-        "amount": 80
+        "type": "agroalimentare",
+        "amount": 55
       },
       {
-        "type": "industria",
-        "amount": 60
+        "type": "chimica",
+        "amount": 52
       },
       {
-        "type": "finanza",
-        "amount": 62
+        "type": "combustibili_fossili",
+        "amount": 15
       },
       {
         "type": "energia",
         "amount": 80
+      },
+      {
+        "type": "finanza",
+        "amount": 75
+      },
+      {
+        "type": "industria",
+        "amount": 62
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 50
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 20
+      },
+      {
+        "type": "tecnologia",
+        "amount": 58
+      },
+      {
+        "type": "tessuti",
+        "amount": 62
       }
     ]
   },
@@ -645,23 +1121,47 @@
     "lon": 13.41,
     "population": 6200000,
     "gdp_billion_usd": 230,
-    "gdp_post_apoc_humt": 1089,
+    "gdp_post_apoc_humt": 2858,
     "resources": [
       {
-        "type": "tecnologia",
-        "amount": 55
+        "type": "agroalimentare",
+        "amount": 35
       },
       {
         "type": "chimica",
-        "amount": 45
+        "amount": 58
       },
       {
-        "type": "finanza",
-        "amount": 59
+        "type": "combustibili_fossili",
+        "amount": 20
       },
       {
         "type": "energia",
-        "amount": 50
+        "amount": 60
+      },
+      {
+        "type": "finanza",
+        "amount": 58
+      },
+      {
+        "type": "industria",
+        "amount": 68
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 55
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 25
+      },
+      {
+        "type": "tecnologia",
+        "amount": 62
+      },
+      {
+        "type": "tessuti",
+        "amount": 40
       }
     ]
   },
@@ -674,19 +1174,47 @@
     "lon": -3.7,
     "population": 6900000,
     "gdp_billion_usd": 280,
-    "gdp_post_apoc_humt": 806,
+    "gdp_post_apoc_humt": 2629,
     "resources": [
       {
-        "type": "finanza",
-        "amount": 71
+        "type": "agroalimentare",
+        "amount": 45
       },
       {
-        "type": "industria",
-        "amount": 40
+        "type": "chimica",
+        "amount": 42
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 15
       },
       {
         "type": "energia",
-        "amount": 55
+        "amount": 58
+      },
+      {
+        "type": "finanza",
+        "amount": 62
+      },
+      {
+        "type": "industria",
+        "amount": 52
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 50
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 30
+      },
+      {
+        "type": "tecnologia",
+        "amount": 48
+      },
+      {
+        "type": "tessuti",
+        "amount": 45
       }
     ]
   },
@@ -699,19 +1227,47 @@
     "lon": 12.48,
     "population": 4300000,
     "gdp_billion_usd": 180,
-    "gdp_post_apoc_humt": 912,
+    "gdp_post_apoc_humt": 2443,
     "resources": [
       {
         "type": "agroalimentare",
-        "amount": 45
+        "amount": 48
       },
       {
-        "type": "finanza",
-        "amount": 57
+        "type": "chimica",
+        "amount": 40
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 15
       },
       {
         "type": "energia",
+        "amount": 50
+      },
+      {
+        "type": "finanza",
+        "amount": 52
+      },
+      {
+        "type": "industria",
+        "amount": 48
+      },
+      {
+        "type": "materiali_da_costruzione",
         "amount": 45
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 20
+      },
+      {
+        "type": "tecnologia",
+        "amount": 42
+      },
+      {
+        "type": "tessuti",
+        "amount": 50
       }
     ]
   },
@@ -724,23 +1280,47 @@
     "lon": -21.94,
     "population": 250000,
     "gdp_billion_usd": 20,
-    "gdp_post_apoc_humt": 1530,
+    "gdp_post_apoc_humt": 2219,
     "resources": [
       {
         "type": "agroalimentare",
-        "amount": 60
+        "amount": 55
+      },
+      {
+        "type": "chimica",
+        "amount": 20
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 10
       },
       {
         "type": "energia",
-        "amount": 80
-      },
-      {
-        "type": "metalli_preziosi_e_minerali",
-        "amount": 40
+        "amount": 68
       },
       {
         "type": "finanza",
-        "amount": 10
+        "amount": 22
+      },
+      {
+        "type": "industria",
+        "amount": 30
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 25
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 55
+      },
+      {
+        "type": "tecnologia",
+        "amount": 30
+      },
+      {
+        "type": "tessuti",
+        "amount": 15
       }
     ]
   },
@@ -753,23 +1333,47 @@
     "lon": 31.24,
     "population": 22600000,
     "gdp_billion_usd": 130,
-    "gdp_post_apoc_humt": 1164,
+    "gdp_post_apoc_humt": 2842,
     "resources": [
       {
-        "type": "tessuti",
+        "type": "agroalimentare",
         "amount": 50
       },
       {
-        "type": "agroalimentare",
+        "type": "chimica",
+        "amount": 40
+      },
+      {
+        "type": "combustibili_fossili",
         "amount": 45
       },
       {
-        "type": "finanza",
-        "amount": 24
+        "type": "energia",
+        "amount": 58
       },
       {
-        "type": "energia",
-        "amount": 60
+        "type": "finanza",
+        "amount": 42
+      },
+      {
+        "type": "industria",
+        "amount": 45
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 52
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 30
+      },
+      {
+        "type": "tecnologia",
+        "amount": 35
+      },
+      {
+        "type": "tessuti",
+        "amount": 58
       }
     ]
   },
@@ -782,18 +1386,46 @@
     "lon": 3.38,
     "population": 16500000,
     "gdp_billion_usd": 90,
-    "gdp_post_apoc_humt": 854,
+    "gdp_post_apoc_humt": 2337,
     "resources": [
       {
-        "type": "combustibili_fossili",
-        "amount": 70
+        "type": "agroalimentare",
+        "amount": 35
       },
       {
-        "type": "finanza",
-        "amount": 69
+        "type": "chimica",
+        "amount": 35
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 72
       },
       {
         "type": "energia",
+        "amount": 32
+      },
+      {
+        "type": "finanza",
+        "amount": 48
+      },
+      {
+        "type": "industria",
+        "amount": 35
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 35
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 25
+      },
+      {
+        "type": "tecnologia",
+        "amount": 35
+      },
+      {
+        "type": "tessuti",
         "amount": 25
       }
     ]
@@ -807,27 +1439,47 @@
     "lon": 15.27,
     "population": 17000000,
     "gdp_billion_usd": 18,
-    "gdp_post_apoc_humt": 829,
+    "gdp_post_apoc_humt": 1649,
     "resources": [
       {
-        "type": "metalli_preziosi_e_minerali",
-        "amount": 45
-      },
-      {
-        "type": "materiali_da_costruzione",
-        "amount": 30
-      },
-      {
         "type": "agroalimentare",
+        "amount": 35
+      },
+      {
+        "type": "chimica",
+        "amount": 15
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 20
+      },
+      {
+        "type": "energia",
         "amount": 25
       },
       {
         "type": "finanza",
-        "amount": 9
+        "amount": 12
       },
       {
-        "type": "energia",
-        "amount": 15
+        "type": "industria",
+        "amount": 20
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 28
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 78
+      },
+      {
+        "type": "tecnologia",
+        "amount": 10
+      },
+      {
+        "type": "tessuti",
+        "amount": 12
       }
     ]
   },
@@ -840,18 +1492,46 @@
     "lon": 36.82,
     "population": 5500000,
     "gdp_billion_usd": 32,
-    "gdp_post_apoc_humt": 1058,
+    "gdp_post_apoc_humt": 2278,
     "resources": [
       {
         "type": "agroalimentare",
         "amount": 70
       },
       {
-        "type": "finanza",
-        "amount": 43
+        "type": "chimica",
+        "amount": 28
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 12
       },
       {
         "type": "energia",
+        "amount": 38
+      },
+      {
+        "type": "finanza",
+        "amount": 45
+      },
+      {
+        "type": "industria",
+        "amount": 38
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 35
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 25
+      },
+      {
+        "type": "tecnologia",
+        "amount": 42
+      },
+      {
+        "type": "tessuti",
         "amount": 35
       }
     ]
@@ -865,19 +1545,47 @@
     "lon": 28.05,
     "population": 6400000,
     "gdp_billion_usd": 85,
-    "gdp_post_apoc_humt": 950,
+    "gdp_post_apoc_humt": 2961,
     "resources": [
       {
-        "type": "metalli_preziosi_e_minerali",
-        "amount": 88
+        "type": "agroalimentare",
+        "amount": 38
+      },
+      {
+        "type": "chimica",
+        "amount": 42
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 40
+      },
+      {
+        "type": "energia",
+        "amount": 55
       },
       {
         "type": "finanza",
         "amount": 60
       },
       {
-        "type": "energia",
+        "type": "industria",
         "amount": 50
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 50
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 90
+      },
+      {
+        "type": "tecnologia",
+        "amount": 45
+      },
+      {
+        "type": "tessuti",
+        "amount": 30
       }
     ]
   },
@@ -890,27 +1598,47 @@
     "lon": -7.59,
     "population": 4300000,
     "gdp_billion_usd": 40,
-    "gdp_post_apoc_humt": 1073,
+    "gdp_post_apoc_humt": 2611,
     "resources": [
       {
-        "type": "metalli_preziosi_e_minerali",
-        "amount": 55
-      },
-      {
-        "type": "tessuti",
-        "amount": 40
-      },
-      {
         "type": "agroalimentare",
-        "amount": 35
+        "amount": 42
       },
       {
-        "type": "finanza",
-        "amount": 13
+        "type": "chimica",
+        "amount": 58
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 18
       },
       {
         "type": "energia",
-        "amount": 35
+        "amount": 42
+      },
+      {
+        "type": "finanza",
+        "amount": 50
+      },
+      {
+        "type": "industria",
+        "amount": 45
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 45
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 60
+      },
+      {
+        "type": "tecnologia",
+        "amount": 30
+      },
+      {
+        "type": "tessuti",
+        "amount": 50
       }
     ]
   },
@@ -923,23 +1651,47 @@
     "lon": 47.51,
     "population": 2600000,
     "gdp_billion_usd": 5,
-    "gdp_post_apoc_humt": 690,
+    "gdp_post_apoc_humt": 1496,
     "resources": [
       {
         "type": "agroalimentare",
-        "amount": 52
+        "amount": 55
       },
       {
-        "type": "tessuti",
-        "amount": 25
+        "type": "chimica",
+        "amount": 12
       },
       {
-        "type": "finanza",
-        "amount": 5
+        "type": "combustibili_fossili",
+        "amount": 8
       },
       {
         "type": "energia",
+        "amount": 14
+      },
+      {
+        "type": "finanza",
         "amount": 10
+      },
+      {
+        "type": "industria",
+        "amount": 18
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 20
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 48
+      },
+      {
+        "type": "tecnologia",
+        "amount": 12
+      },
+      {
+        "type": "tessuti",
+        "amount": 38
       }
     ]
   },
@@ -952,19 +1704,47 @@
     "lon": -74.01,
     "population": 19500000,
     "gdp_billion_usd": 2200,
-    "gdp_post_apoc_humt": 1045,
+    "gdp_post_apoc_humt": 2731,
     "resources": [
+      {
+        "type": "agroalimentare",
+        "amount": 22
+      },
+      {
+        "type": "chimica",
+        "amount": 45
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 25
+      },
+      {
+        "type": "energia",
+        "amount": 85
+      },
       {
         "type": "finanza",
         "amount": 100
       },
       {
-        "type": "tessuti",
-        "amount": 60
+        "type": "industria",
+        "amount": 45
       },
       {
-        "type": "energia",
-        "amount": 85
+        "type": "materiali_da_costruzione",
+        "amount": 42
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 20
+      },
+      {
+        "type": "tecnologia",
+        "amount": 68
+      },
+      {
+        "type": "tessuti",
+        "amount": 50
       }
     ]
   },
@@ -977,19 +1757,47 @@
     "lon": -118.24,
     "population": 12900000,
     "gdp_billion_usd": 1200,
-    "gdp_post_apoc_humt": 1179,
+    "gdp_post_apoc_humt": 3277,
     "resources": [
       {
+        "type": "agroalimentare",
+        "amount": 50
+      },
+      {
+        "type": "chimica",
+        "amount": 45
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 45
+      },
+      {
+        "type": "energia",
+        "amount": 80
+      },
+      {
         "type": "finanza",
-        "amount": 99
+        "amount": 84
       },
       {
         "type": "industria",
         "amount": 60
       },
       {
-        "type": "energia",
-        "amount": 80
+        "type": "materiali_da_costruzione",
+        "amount": 45
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 25
+      },
+      {
+        "type": "tecnologia",
+        "amount": 72
+      },
+      {
+        "type": "tessuti",
+        "amount": 55
       }
     ]
   },
@@ -1002,27 +1810,47 @@
     "lon": -99.13,
     "population": 22500000,
     "gdp_billion_usd": 300,
-    "gdp_post_apoc_humt": 1587,
+    "gdp_post_apoc_humt": 3300,
     "resources": [
-      {
-        "type": "industria",
-        "amount": 60
-      },
-      {
-        "type": "tecnologia",
-        "amount": 50
-      },
       {
         "type": "agroalimentare",
         "amount": 45
       },
       {
-        "type": "finanza",
-        "amount": 37
+        "type": "chimica",
+        "amount": 45
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 50
       },
       {
         "type": "energia",
-        "amount": 60
+        "amount": 65
+      },
+      {
+        "type": "finanza",
+        "amount": 58
+      },
+      {
+        "type": "industria",
+        "amount": 68
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 58
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 58
+      },
+      {
+        "type": "tecnologia",
+        "amount": 52
+      },
+      {
+        "type": "tessuti",
+        "amount": 45
       }
     ]
   },
@@ -1035,23 +1863,47 @@
     "lon": -87.63,
     "population": 9400000,
     "gdp_billion_usd": 870,
-    "gdp_post_apoc_humt": 1694,
+    "gdp_post_apoc_humt": 3406,
     "resources": [
       {
-        "type": "finanza",
-        "amount": 89
-      },
-      {
         "type": "agroalimentare",
-        "amount": 60
+        "amount": 85
       },
       {
-        "type": "industria",
-        "amount": 55
+        "type": "chimica",
+        "amount": 48
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 30
       },
       {
         "type": "energia",
         "amount": 75
+      },
+      {
+        "type": "finanza",
+        "amount": 85
+      },
+      {
+        "type": "industria",
+        "amount": 60
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 50
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 25
+      },
+      {
+        "type": "tecnologia",
+        "amount": 58
+      },
+      {
+        "type": "tessuti",
+        "amount": 35
       }
     ]
   },
@@ -1064,19 +1916,47 @@
     "lon": -79.38,
     "population": 6800000,
     "gdp_billion_usd": 420,
-    "gdp_post_apoc_humt": 893,
+    "gdp_post_apoc_humt": 2866,
     "resources": [
       {
-        "type": "finanza",
-        "amount": 88
+        "type": "agroalimentare",
+        "amount": 38
       },
       {
-        "type": "tecnologia",
-        "amount": 55
+        "type": "chimica",
+        "amount": 42
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 30
       },
       {
         "type": "energia",
         "amount": 65
+      },
+      {
+        "type": "finanza",
+        "amount": 80
+      },
+      {
+        "type": "industria",
+        "amount": 52
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 48
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 55
+      },
+      {
+        "type": "tecnologia",
+        "amount": 58
+      },
+      {
+        "type": "tessuti",
+        "amount": 30
       }
     ]
   },
@@ -1089,19 +1969,47 @@
     "lon": -123.12,
     "population": 2800000,
     "gdp_billion_usd": 160,
-    "gdp_post_apoc_humt": 960,
+    "gdp_post_apoc_humt": 2726,
     "resources": [
       {
-        "type": "materiali_da_costruzione",
-        "amount": 55
+        "type": "agroalimentare",
+        "amount": 38
       },
       {
-        "type": "finanza",
-        "amount": 80
+        "type": "chimica",
+        "amount": 30
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 35
       },
       {
         "type": "energia",
-        "amount": 55
+        "amount": 60
+      },
+      {
+        "type": "finanza",
+        "amount": 62
+      },
+      {
+        "type": "industria",
+        "amount": 40
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 62
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 58
+      },
+      {
+        "type": "tecnologia",
+        "amount": 50
+      },
+      {
+        "type": "tessuti",
+        "amount": 20
       }
     ]
   },
@@ -1114,23 +2022,47 @@
     "lon": -149.9,
     "population": 400000,
     "gdp_billion_usd": 25,
-    "gdp_post_apoc_humt": 1177,
+    "gdp_post_apoc_humt": 2052,
     "resources": [
       {
         "type": "agroalimentare",
         "amount": 55
       },
       {
-        "type": "combustibili_fossili",
-        "amount": 50
+        "type": "chimica",
+        "amount": 15
       },
       {
-        "type": "finanza",
-        "amount": 47
+        "type": "combustibili_fossili",
+        "amount": 60
       },
       {
         "type": "energia",
-        "amount": 20
+        "amount": 25
+      },
+      {
+        "type": "finanza",
+        "amount": 28
+      },
+      {
+        "type": "industria",
+        "amount": 22
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 28
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 45
+      },
+      {
+        "type": "tecnologia",
+        "amount": 18
+      },
+      {
+        "type": "tessuti",
+        "amount": 8
       }
     ]
   },
@@ -1143,23 +2075,47 @@
     "lon": -46.63,
     "population": 22800000,
     "gdp_billion_usd": 430,
-    "gdp_post_apoc_humt": 1595,
+    "gdp_post_apoc_humt": 3615,
     "resources": [
       {
-        "type": "finanza",
+        "type": "agroalimentare",
         "amount": 80
       },
       {
-        "type": "agroalimentare",
-        "amount": 60
+        "type": "chimica",
+        "amount": 50
       },
       {
-        "type": "industria",
-        "amount": 55
+        "type": "combustibili_fossili",
+        "amount": 40
       },
       {
         "type": "energia",
+        "amount": 68
+      },
+      {
+        "type": "finanza",
         "amount": 65
+      },
+      {
+        "type": "industria",
+        "amount": 68
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 58
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 52
+      },
+      {
+        "type": "tecnologia",
+        "amount": 50
+      },
+      {
+        "type": "tessuti",
+        "amount": 48
       }
     ]
   },
@@ -1172,23 +2128,47 @@
     "lon": -58.38,
     "population": 15500000,
     "gdp_billion_usd": 250,
-    "gdp_post_apoc_humt": 1464,
+    "gdp_post_apoc_humt": 3189,
     "resources": [
       {
         "type": "agroalimentare",
-        "amount": 82
+        "amount": 90
       },
       {
-        "type": "tecnologia",
+        "type": "chimica",
         "amount": 40
       },
       {
-        "type": "finanza",
-        "amount": 34
+        "type": "combustibili_fossili",
+        "amount": 42
       },
       {
         "type": "energia",
+        "amount": 55
+      },
+      {
+        "type": "finanza",
+        "amount": 48
+      },
+      {
+        "type": "industria",
         "amount": 50
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 45
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 35
+      },
+      {
+        "type": "tecnologia",
+        "amount": 45
+      },
+      {
+        "type": "tessuti",
+        "amount": 40
       }
     ]
   },
@@ -1201,27 +2181,47 @@
     "lon": -77.04,
     "population": 11200000,
     "gdp_billion_usd": 115,
-    "gdp_post_apoc_humt": 1263,
+    "gdp_post_apoc_humt": 2591,
     "resources": [
       {
-        "type": "metalli_preziosi_e_minerali",
-        "amount": 55
-      },
-      {
         "type": "agroalimentare",
-        "amount": 50
+        "amount": 58
       },
       {
-        "type": "tessuti",
-        "amount": 35
+        "type": "chimica",
+        "amount": 25
       },
       {
-        "type": "finanza",
-        "amount": 23
+        "type": "combustibili_fossili",
+        "amount": 30
       },
       {
         "type": "energia",
+        "amount": 45
+      },
+      {
+        "type": "finanza",
         "amount": 40
+      },
+      {
+        "type": "industria",
+        "amount": 40
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 40
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 72
+      },
+      {
+        "type": "tecnologia",
+        "amount": 30
+      },
+      {
+        "type": "tessuti",
+        "amount": 42
       }
     ]
   },
@@ -1234,23 +2234,47 @@
     "lon": -74.07,
     "population": 11500000,
     "gdp_billion_usd": 110,
-    "gdp_post_apoc_humt": 1352,
+    "gdp_post_apoc_humt": 2812,
     "resources": [
       {
         "type": "agroalimentare",
-        "amount": 75
+        "amount": 72
       },
       {
-        "type": "metalli_preziosi_e_minerali",
-        "amount": 35
+        "type": "chimica",
+        "amount": 30
       },
       {
-        "type": "finanza",
-        "amount": 22
+        "type": "combustibili_fossili",
+        "amount": 42
       },
       {
         "type": "energia",
+        "amount": 48
+      },
+      {
+        "type": "finanza",
         "amount": 45
+      },
+      {
+        "type": "industria",
+        "amount": 42
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 40
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 50
+      },
+      {
+        "type": "tecnologia",
+        "amount": 38
+      },
+      {
+        "type": "tessuti",
+        "amount": 35
       }
     ]
   },
@@ -1263,23 +2287,47 @@
     "lon": -70.67,
     "population": 7000000,
     "gdp_billion_usd": 125,
-    "gdp_post_apoc_humt": 1494,
+    "gdp_post_apoc_humt": 2768,
     "resources": [
       {
-        "type": "metalli_preziosi_e_minerali",
-        "amount": 70
-      },
-      {
         "type": "agroalimentare",
-        "amount": 67
+        "amount": 62
       },
       {
-        "type": "finanza",
-        "amount": 24
+        "type": "chimica",
+        "amount": 30
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 25
       },
       {
         "type": "energia",
-        "amount": 50
+        "amount": 52
+      },
+      {
+        "type": "finanza",
+        "amount": 48
+      },
+      {
+        "type": "industria",
+        "amount": 42
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 42
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 82
+      },
+      {
+        "type": "tecnologia",
+        "amount": 38
+      },
+      {
+        "type": "tessuti",
+        "amount": 28
       }
     ]
   },
@@ -1292,15 +2340,47 @@
     "lon": 151.21,
     "population": 5500000,
     "gdp_billion_usd": 370,
-    "gdp_post_apoc_humt": 631,
+    "gdp_post_apoc_humt": 2890,
     "resources": [
       {
-        "type": "finanza",
-        "amount": 91
+        "type": "agroalimentare",
+        "amount": 42
+      },
+      {
+        "type": "chimica",
+        "amount": 38
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 45
       },
       {
         "type": "energia",
-        "amount": 60
+        "amount": 62
+      },
+      {
+        "type": "finanza",
+        "amount": 78
+      },
+      {
+        "type": "industria",
+        "amount": 45
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 45
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 58
+      },
+      {
+        "type": "tecnologia",
+        "amount": 55
+      },
+      {
+        "type": "tessuti",
+        "amount": 25
       }
     ]
   },
@@ -1313,23 +2393,47 @@
     "lon": 144.96,
     "population": 5300000,
     "gdp_billion_usd": 310,
-    "gdp_post_apoc_humt": 1327,
+    "gdp_post_apoc_humt": 2968,
     "resources": [
       {
-        "type": "finanza",
-        "amount": 72
+        "type": "agroalimentare",
+        "amount": 48
       },
       {
         "type": "chimica",
-        "amount": 45
+        "amount": 48
       },
       {
-        "type": "agroalimentare",
+        "type": "combustibili_fossili",
         "amount": 40
       },
       {
         "type": "energia",
+        "amount": 60
+      },
+      {
+        "type": "finanza",
+        "amount": 70
+      },
+      {
+        "type": "industria",
+        "amount": 50
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 45
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
         "amount": 55
+      },
+      {
+        "type": "tecnologia",
+        "amount": 50
+      },
+      {
+        "type": "tessuti",
+        "amount": 28
       }
     ]
   },
@@ -1342,23 +2446,47 @@
     "lon": 115.86,
     "population": 2300000,
     "gdp_billion_usd": 150,
-    "gdp_post_apoc_humt": 1356,
+    "gdp_post_apoc_humt": 2822,
     "resources": [
       {
-        "type": "metalli_preziosi_e_minerali",
-        "amount": 89
+        "type": "agroalimentare",
+        "amount": 42
+      },
+      {
+        "type": "chimica",
+        "amount": 30
       },
       {
         "type": "combustibili_fossili",
-        "amount": 60
-      },
-      {
-        "type": "finanza",
-        "amount": 26
+        "amount": 70
       },
       {
         "type": "energia",
-        "amount": 45
+        "amount": 48
+      },
+      {
+        "type": "finanza",
+        "amount": 42
+      },
+      {
+        "type": "industria",
+        "amount": 38
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 42
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 90
+      },
+      {
+        "type": "tecnologia",
+        "amount": 30
+      },
+      {
+        "type": "tessuti",
+        "amount": 12
       }
     ]
   },
@@ -1371,19 +2499,47 @@
     "lon": 174.76,
     "population": 1700000,
     "gdp_billion_usd": 85,
-    "gdp_post_apoc_humt": 1045,
+    "gdp_post_apoc_humt": 2328,
     "resources": [
       {
         "type": "agroalimentare",
-        "amount": 71
+        "amount": 72
       },
       {
-        "type": "finanza",
-        "amount": 20
+        "type": "chimica",
+        "amount": 25
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 15
       },
       {
         "type": "energia",
-        "amount": 35
+        "amount": 42
+      },
+      {
+        "type": "finanza",
+        "amount": 48
+      },
+      {
+        "type": "industria",
+        "amount": 38
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 38
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 25
+      },
+      {
+        "type": "tecnologia",
+        "amount": 42
+      },
+      {
+        "type": "tessuti",
+        "amount": 25
       }
     ]
   },
@@ -1396,19 +2552,47 @@
     "lon": -157.86,
     "population": 1000000,
     "gdp_billion_usd": 48,
-    "gdp_post_apoc_humt": 574,
+    "gdp_post_apoc_humt": 1316,
     "resources": [
       {
-        "type": "finanza",
-        "amount": 49
+        "type": "agroalimentare",
+        "amount": 35
       },
       {
-        "type": "agroalimentare",
-        "amount": 30
+        "type": "chimica",
+        "amount": 12
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 12
       },
       {
         "type": "energia",
-        "amount": 25
+        "amount": 28
+      },
+      {
+        "type": "finanza",
+        "amount": 35
+      },
+      {
+        "type": "industria",
+        "amount": 18
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 22
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 12
+      },
+      {
+        "type": "tecnologia",
+        "amount": 30
+      },
+      {
+        "type": "tessuti",
+        "amount": 15
       }
     ]
   },
@@ -1421,19 +2605,47 @@
     "lon": 178.44,
     "population": 330000,
     "gdp_billion_usd": 4,
-    "gdp_post_apoc_humt": 634,
+    "gdp_post_apoc_humt": 1190,
     "resources": [
       {
         "type": "agroalimentare",
-        "amount": 54
+        "amount": 50
       },
       {
-        "type": "finanza",
-        "amount": 4
+        "type": "chimica",
+        "amount": 10
+      },
+      {
+        "type": "combustibili_fossili",
+        "amount": 10
       },
       {
         "type": "energia",
+        "amount": 12
+      },
+      {
+        "type": "finanza",
+        "amount": 12
+      },
+      {
+        "type": "industria",
+        "amount": 15
+      },
+      {
+        "type": "materiali_da_costruzione",
+        "amount": 18
+      },
+      {
+        "type": "metalli_preziosi_e_minerali",
+        "amount": 20
+      },
+      {
+        "type": "tecnologia",
         "amount": 10
+      },
+      {
+        "type": "tessuti",
+        "amount": 18
       }
     ]
   }

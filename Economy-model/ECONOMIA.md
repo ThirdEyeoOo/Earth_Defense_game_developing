@@ -36,25 +36,31 @@ Tipi: `agroalimentare`, `chimica`, `combustibili_fossili`, `energia`, `finanza`,
 `industria`, `materiali_da_costruzione`, `metalli_preziosi_e_minerali`,
 `tecnologia`, `tessuti`.
 
-Regole strutturali:
-- **`energia` e `finanza` sono universali**: tutte e 50 le città le producono.
-  Le altre 8 risorse sono prodotte solo da sottoinsiemi di città (da 6 a 27).
-- Ogni città ha da 2 a 4 voci in `resources`.
-- Il valore massimo nel dataset è 100 (unico: finanza di New York); il minimo è ~4.
-- Le risorse derivano dalle specializzazioni economiche reali delle città
-  (es. Seul → tecnologia per semiconduttori/elettronica, Riyad → combustibili fossili,
-  Johannesburg → metalli preziosi, Dhaka → tessuti).
+Regole strutturali (modello DENSO, aggiornato giugno 2026):
+- **Ogni città ha tutte e 10 le risorse** (10 voci in `resources`, una per tipo),
+  con un punteggio `amount` 1–100 ciascuna. Non esistono più risorse "mancanti":
+  la specializzazione è data dal *profilo* dei valori, non dalla presenza/assenza.
+- Il valore massimo nel dataset è 100 (unico: finanza di New York); il minimo è ~5.
+- I valori derivano da un **ranking relativo ancorato alla geografia economica reale**:
+  vedi `Economy-model/ranking-risorse-reali.md` (tabella 50×10, criterio e fonti per
+  risorsa, effetto post-apocalisse). Picchi noti: Seul tecnologia 95, Riyad combustibili
+  95, Johannesburg/Perth metalli 90, Dhaka tessuti 98, Shanghai materiali 90.
+- Storia: fino alla v0.113.x il modello era SPARSE (energia+finanza universali + 2-3
+  specializzazioni, 2–5 voci per città). Sostituito dal modello denso senza cambiare
+  la formula del gdp post-apoc (`Σ peso × amount`, ora su 10 termini).
 
-### Scarsità (totali mondiali indicativi)
+### Scarsità (totali mondiali, somma degli `amount` sulle 50 città)
 
-energia ~2.700 (50 città), finanza ~2.450 (50), agroalimentare ~1.400 (27),
-tecnologia ~1.050 (16), industria ~780 (13), tessuti ~730 (13),
-combustibili_fossili ~580 (8), metalli_preziosi_e_minerali ~480 (8),
-chimica ~310 (6), materiali_da_costruzione ~300 (6).
+energia ~2.854 (media 57), finanza ~2.731 (55), industria ~2.440 (49),
+tecnologia ~2.367 (47), materiali_da_costruzione ~2.311 (46), agroalimentare ~2.307 (46),
+chimica ~2.005 (40), tessuti ~1.982 (40), metalli_preziosi_e_minerali ~1.950 (39),
+combustibili_fossili ~1.785 (36).
 
-Chimica e materiali da costruzione sono le risorse più rare e concentrate:
-candidate naturali a valere di più sul mercato e a essere obiettivi strategici
-nel tower defense. I combustibili fossili hanno la media per città più alta (~72):
+Nel modello denso i combustibili fossili sono la risorsa col totale più basso (concentrati
+in pochi grandi produttori: Riyad 95, Mosca 90, Teheran/Baghdad 82); energia e finanza,
+diffuse ovunque, restano i totali più alti. Combustibili/metalli restano i più
+**concentrati** (alta varianza): candidati a valere di più sul mercato e a essere
+obiettivi strategici nel tower defense.
 pochi produttori, ma enormi.
 
 ## Come sono stati costruiti i valori
@@ -115,18 +121,20 @@ Questi pesi sono l'unica "tabella di configurazione" del modello: se cambiano,
 ricalcolare `gdp_post_apoc_humt` per tutte le città. Tenerli in un modulo di config
 del gioco, non hardcoded sparsi.
 
-### Effetti (e lore implicito)
+### Effetti (e lore implicito) — modello denso (giugno 2026)
 
-- Totale mondiale: ~63.700 HumT.
-- Nuove potenze: Shanghai (1ª), Riyad (2ª, era 26ª), Osaka, Mosca, Teheran (+24 posizioni).
-- Crolli: New York 1ª → 36ª, Londra → 39ª, Sydney → 49ª (le era rimasta quasi solo
-  finanza dopo la rimozione del turismo), Toronto -29, Madrid -25, Los Angeles -24.
-- Sorpresa: Reykjavik +33 posizioni (14ª) — pesca, geotermia e alluminio la rendono
-  un'utopia autosufficiente e isolata. Ottimo gancio narrativo.
-- La forbice è compressa: `gdp_post_apoc_humt` va da ~574 a ~2.256 (rapporto ~4x), contro
-  il 550x del GDP pre-apocalisse. È voluto: nessuna città è irrilevante, tutte
-  valgono la pena di essere contese. Se serve più disuguaglianza, moltiplicare
-  per un fattore di scala (popolazione o un'efficienza per città).
+- Totale mondiale: ~137.800 HumT (era ~63.700 nel modello sparse: ogni città ora somma
+  10 termini invece di 2–5).
+- Nuove potenze: Shanghai (1ª, 3941), Mosca (2ª, 3759), Pechino (3ª, 3682), San Paolo
+  (4ª, 3615), Chicago (5ª, 3406) — energia+industria+materiali+agroalimentare pesano molto.
+- In coda: Suva (1190), Honolulu (1316), Antananarivo (1496), Kinshasa (1649), Dhaka (1947).
+- La forbice resta compressa: `gdp_post_apoc_humt` va da ~1.190 a ~3.941 (rapporto ~3,3x),
+  contro il 550x del GDP pre-apocalisse. È voluto: nessuna città è irrilevante. Se serve
+  più disuguaglianza, moltiplicare per un fattore di scala (popolazione o efficienza).
+- Nota: nel modello denso i centri puramente finanziari/hi-tech (New York, Londra, Sydney)
+  perdono peso relativo perché la finanza pesa 1; le potenze di cibo/energia/industria/
+  materiali salgono. Per i razionali per-risorsa e l'effetto apocalisse vedi
+  `ranking-risorse-reali.md`.
 
 ## Relazioni statistiche utili al bilanciamento
 

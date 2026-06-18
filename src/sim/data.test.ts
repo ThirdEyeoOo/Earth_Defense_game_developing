@@ -14,15 +14,14 @@ interface CityRow {
 const rows = citiesData as CityRow[];
 
 describe('dataset cities.json (modello economico)', () => {
-  it('contiene 50 città con 2-5 risorse ciascuna', () => {
+  it('contiene 50 città con tutte e 10 le risorse ciascuna', () => {
     expect(rows).toHaveLength(50);
     for (const c of rows) {
-      expect(c.resources.length).toBeGreaterThanOrEqual(2);
-      expect(c.resources.length).toBeLessThanOrEqual(5);
+      expect(c.resources).toHaveLength(RESOURCE_TYPES.length);
     }
   });
 
-  it('ogni risorsa ha tipo noto e amount in 0-100, senza tipi duplicati per città', () => {
+  it('ogni città ha esattamente i 10 tipi noti, una volta ciascuno, con amount in 1-100', () => {
     for (const c of rows) {
       const seen = new Set<ResourceType>();
       for (const r of c.resources) {
@@ -32,14 +31,8 @@ describe('dataset cities.json (modello economico)', () => {
         expect(seen.has(r.type)).toBe(false);
         seen.add(r.type);
       }
-    }
-  });
-
-  it('energia e finanza sono universali', () => {
-    for (const c of rows) {
-      const types = c.resources.map(r => r.type);
-      expect(types).toContain('energia');
-      expect(types).toContain('finanza');
+      // tutti i 10 tipi presenti
+      for (const type of RESOURCE_TYPES) expect(seen.has(type)).toBe(true);
     }
   });
 

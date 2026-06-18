@@ -60,9 +60,10 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
 ## Economia HumT (v0.110.0) — il cuore del gameplay
 - Lore: il mondo è già collassato (sparizione di quasi tutte le città); il dollaro è
   carta straccia, la valuta è l'**HumT**. Modello e razionali in `Economy-model/ECONOMIA.md`
-  (versionato); dataset in `src/data/cities.json` (50 città × 2-5 risorse tra 10 macrogruppi,
-  `amount` = capacità 0-100; `gdp_post_apoc_humt` = Σ peso×amount, test d'invarianza in
-  `src/sim/data.test.ts`). Pesi/tassi/costi/kit in `CONFIG.economy`; tipi in
+  (versionato); dataset in `src/data/cities.json` (modello DENSO da giugno 2026: 50 città ×
+  **tutte e 10 le risorse**, `amount` = capacità 1-100 ancorata alla geografia economica reale
+  — vedi `Economy-model/ranking-risorse-reali.md`; `gdp_post_apoc_humt` = Σ peso×amount su 10
+  termini, test d'invarianza in `src/sim/data.test.ts`). Pesi/tassi/costi/kit in `CONFIG.economy`; tipi in
   `src/sim/resources.ts` (modulo dedicato: evita l'import circolare config↔state).
 - **Nuova partita = 0 HumT/risorse/squadroni, tempo congelato** (`hqCityId: null`,
   `tick()` no-op): si sceglie una città sul globo e si fonda il QG (`cmdFoundHq`, gratis,
