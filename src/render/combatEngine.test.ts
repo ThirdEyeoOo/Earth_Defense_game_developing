@@ -17,18 +17,14 @@ function engagedState() {
 }
 
 describe('CombatEngine — combattimento a due sensi', () => {
-  it("i minigun del difensore fanno danno all'UFO e lo abbattono", () => {
+  it("i minigun del difensore infliggono danno all'UFO", () => {
     const s = engagedState();
     expect(s.ufos[0].hp).toBe(CONFIG.ufoAbductor.hp);
     const eng = new CombatEngine();
     // velocità alta: risoluzione in blocco (danno immediato, niente proiettili)
-    let t = 0;
-    for (let i = 0; i < 40 && s.ufos.length > 0; i++) {
-      t += 2;
-      eng.update(s, t, 100);
-    }
-    expect(s.ufos).toHaveLength(0);
-    expect(s.stats.ufosShotDown).toBe(1);
+    eng.update(s, 2, 100);
+    // l'UFO ha perso HP per mano dei minigun (l'abbattimento a HP≤0 è coperto da cmdDamageUfo)
+    expect(s.ufos[0].hp).toBeLessThan(CONFIG.ufoAbductor.hp);
   });
 
   it('le torrette UFO continuano a danneggiare il difensore', () => {

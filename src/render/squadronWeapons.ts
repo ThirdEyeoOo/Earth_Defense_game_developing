@@ -16,10 +16,12 @@ import { WEAPON_MODULES } from './weaponModules';
 const SIDES = ['left', 'right'] as const;
 type Side = (typeof SIDES)[number];
 
-// larghezza del minigun in rapporto alla larghezza proiettata del caccia (pod sull'ala)
-const MINIGUN_TO_JET_WIDTH = 0.34;
-const MIN_PX = 10; // dimensione minima leggibile a distanza
-const MAX_PX = 70; // tetto quando il caccia è vicinissimo alla camera
+// larghezza del minigun in rapporto alla larghezza proiettata del caccia (pod sull'ala).
+// Allineata alla proporzione della finestra di scontro (≈11%): là il modulo è 64×0,34375 ≈ 22
+// unità su un jet largo 200 viewBox = 0,11. Con 0,34 risultava ~3× troppo grande sul globo.
+const MINIGUN_TO_JET_WIDTH = 0.11;
+const MIN_PX = 4; // dimensione minima a distanza (basso: deve rimpicciolirsi col caccia)
+const MAX_PX = 40; // tetto quando il caccia è vicinissimo alla camera
 
 interface Minigun {
   host: HTMLDivElement;
@@ -60,7 +62,7 @@ export class SquadronWeaponLayer {
 
     const live = new Set<string>();
     for (const sq of state.squadrons) {
-      if (sq.transfer !== null) continue; // in volo: niente armi montate (pattuglia/scontro a terra)
+      // armi montate sempre (pattuglia E trasferimento): il caccia è armato comunque
       const rect = units.squadronRect(sq.id, camera);
       if (!rect) {
         // caccia occluso/non proiettabile: nascondi le sue armi ma non distruggerle

@@ -205,6 +205,13 @@ export function createCombatWindow(
     return { x: r.left + r.width / 2 - arenaRect.left, y: r.top + r.height / 2 - arenaRect.top };
   }
 
+  // volata del minigun: bordo destro (verso il muso/UFO) del bbox del gruppo arma, in
+  // coordinate arena. Robusto a differenza di #bocca_3 (r=0 → bbox degenere).
+  function muzzleEdge(el: Element, arenaRect: DOMRect): { x: number; y: number } {
+    const r = el.getBoundingClientRect();
+    return { x: r.right - arenaRect.left, y: r.top + r.height / 2 - arenaRect.top };
+  }
+
   // aggancia ogni torretta al suo hardpoint (pivot = centro ettagono = transform-origin
   // 50% 37.5%) e la ruota perché la canna punti al primo caccia difensore. Niente correzione
   // di scala: la finestra di scontro, a differenza del mockup, non è trasformata in scala.
@@ -242,7 +249,7 @@ export function createCombatWindow(
       if (!belongs) continue;
       alive.add(shot.id);
 
-      let originEl: Element | null = null;
+      let from: { x: number; y: number } | null = null;
       let targetUnit: HTMLElement | null = null;
       let targetArt: HTMLElement | null = null;
       if (fromUfo) {
@@ -253,27 +260,29 @@ export function createCombatWindow(
           tr.svg.classList.add('on');
           window.setTimeout(() => tr.svg.classList.remove('on'), ON_DURATION_MS);
         }
-        originEl = tr?.svg.querySelector('#muzzle') ?? tr?.el ?? null;
+        const muzzle = tr?.svg.querySelector('#muzzle') ?? tr?.el ?? null;
+        from = muzzle ? centerIn(muzzle, arenaRect) : null;
         targetUnit = root.querySelector<HTMLElement>(`.combat-unit[data-key="s:${shot.to.id}"]`);
         targetArt = targetUnit?.querySelector<HTMLElement>('.combat-unit-art--jet') ?? null;
       } else {
-        // minigun del caccia → UFO (tracciante): origine = volata centrale del minigun
+        // minigun del caccia → UFO (tracciante): origine = volata del minigun. NON usare
+        // #bocca_3 (r=0 → bbox degenere, finirebbe fuori dall'aereo): la volata è il bordo
+        // del bbox del gruppo arma verso il muso (il jet è ruotato 90° → muso a destra).
         const jetUnit = root.querySelector<HTMLElement>(
           `.combat-unit[data-key="s:${shot.from.id}"]`,
         );
         const mg = jetUnit?.querySelector(
           `.combat-unit-art--jet .weapon-module[data-side="${shot.from.side}"]`,
         );
-        originEl = mg?.querySelector('#bocca_3') ?? mg ?? null;
+        from = mg ? muzzleEdge(mg, arenaRect) : null;
         targetUnit = root.querySelector<HTMLElement>(`.combat-unit[data-key="u:${shot.to.id}"]`);
         targetArt = targetUnit?.querySelector<HTMLElement>('.combat-unit-art--ufo') ?? null;
       }
-      if (!originEl || !targetArt) {
+      if (!from || !targetArt) {
         removeProj(shot.id);
         continue;
       }
       const tracer = shot.weapon === 'minigun';
-      const from = centerIn(originEl, arenaRect);
       const to = centerIn(targetArt, arenaRect);
       const k = Math.min(1, Math.max(0, (gameMinutes - shot.t0) / Math.max(1e-6, shot.t1 - shot.t0)));
       if (k < 1) {

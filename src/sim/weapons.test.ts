@@ -22,7 +22,7 @@ describe('weapons', () => {
     expect(WEAPON_STATS['plasma-turret']).toEqual({ cooldownGameMinutes: 2, damage: 15 });
   });
 
-  it('minigun: 8 danni ogni 0,25 minuti-gioco (raffica veloce/leggera)', () => {
-    expect(WEAPON_STATS['minigun']).toEqual({ cooldownGameMinutes: 0.25, damage: 8 });
+  it('minigun: 1 danno ogni 0,25 minuti-gioco (raffica veloce/leggera)', () => {
+    expect(WEAPON_STATS['minigun']).toEqual({ cooldownGameMinutes: 0.25, damage: 1 });
   });
 });

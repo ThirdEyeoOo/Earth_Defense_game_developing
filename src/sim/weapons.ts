@@ -16,7 +16,7 @@ export interface WeaponModule {
 export const WEAPON_STATS: Record<WeaponModuleId, WeaponModule> = {
   'plasma-turret': { cooldownGameMinutes: 2, damage: 15 },
   // minigun del caccia: raffica veloce e leggera (l'opposto del colpo lento/pesante
-  // della torretta). 2 minigun/caccia × 8 danni/0,25 min ≈ 64 danni/min → UFO 500 HP
-  // abbattibile in ~8 min-gioco di ingaggio. Valori iniziali, da tarare a playtest.
-  minigun: { cooldownGameMinutes: 0.25, damage: 8 },
+  // della torretta). 2 minigun/caccia × 4 colpi/min/modulo. Danno per colpo volutamente
+  // basso, da tarare a playtest.
+  minigun: { cooldownGameMinutes: 0.25, damage: 1 },
 };
