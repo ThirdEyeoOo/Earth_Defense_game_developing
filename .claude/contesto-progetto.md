@@ -1,6 +1,6 @@
 # Earth Defense — Contesto operativo
 
-Aggiornato: 2026-06-18 (chiusura sessione 12, commit #100, main pushed, v0.116.0 rilasciata)
+Aggiornato: 2026-06-19 (chiusura sessione 13, commit #106, main pushed, v0.116.1 rilasciata)
 Repo pubblico: github.com/ThirdEyeoOo/Earth_Defense_game_developing (README bilingue, MIT, FUNDING).
 
 ## Cos'è
@@ -76,11 +76,23 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
   + registro `render/weaponModules.ts`, scala `TURRET_TO_UFO_WIDTH=0,22`). **Combattimento in TEMPO
   REALE a hitbox** (non più a tick): motore `render/combatEngine.ts` (orologio in minuti-gioco, danno
   via `cmdDamageSquadron`) + proiettili globo `render/combatFx.ts`; **rimosso `resolveCombat`**.
-  Stat: torretta 15 danni/2 min-gioco; **F-22 150 HP, UFO 500 HP, armature 0** (solo la torretta UFO
-  fa danno per ora). **Fix pattuglia** (angolo legato all'orologio di gioco → si ferma in pausa, scala
+  Stat: torretta 15 danni/2 min-gioco; **F-22 150 HP, UFO 500 HP, armature 0** (in v0.116.0 sparava
+  solo la torretta UFO; il fuoco caccia arriva in v0.116.1). **Fix pattuglia** (angolo legato all'orologio di gioco → si ferma in pausa, scala
   con la velocità). **Rapimento a capienza** (UFO capacità 100, 100 persone in 8 ore-gioco). **Traiettorie
   orbitali realistiche** a velocità continua C1 (avvicinamento già in moto e tangente, discesa a spirale/
   deorbit). Nessuna migrazione salvataggi. (Vedi sezioni "Fisica orbitale" e "Combattimento" più sotto.)
+- **v0.116.1** — **minigun dell'F-22 come modulo arma** sugli hardpoint delle ali (asset da Claude
+  Design, `Assets/Umani/Armamenti/minigun-rotante.svg`, rotta dom; `#hardpoint_ala_sx/dx` aggiunti
+  all'F-22) + **combattimento a DUE SENSI**: l'UFO ora è **distruttibile**. Motore `combatEngine.ts`
+  generalizzato (`Shot` con `from/to` tipizzati, fuoco bidirezionale; fix cap in blocco ad alta
+  velocità); nuovo `cmdDamageUfo` (abbatte via `removeUfo('shotDown')`); `WeaponModuleId += 'minigun'`,
+  `CONFIG.squadron.weaponModule`. Render globo: **`render/squadronWeapons.ts`** (overlay DOM sugli
+  hardpoint **proiettati** del caccia mesh via `units.projectSquadronPoint`, mira all'UFO, spin/fuoco
+  con `.on`); `combatFx` disegna entrambe le direzioni (traccianti **gialli** minigun / bolide **verde**
+  plasma). Finestra di scontro: minigun annidati nell'SVG del jet, traccianti gialli, UFO con HP calanti.
+  **Fix rendering**: volata dei traccianti dal bbox del gruppo arma (non da `#bocca_3` r=0); dimensione
+  globo `MINIGUN_TO_JET_WIDTH` 0,34→0,11; armi montate anche in trasferimento. **Danno minigun = 1**
+  (da playtest). **Skill di progetto `weapon-modules`** (`.claude/skills/`). Nessuna migrazione salvataggi.
 - Release: a ogni merge chiedere il nome semver all'utente (proponendone uno) e aggiornare
   `lista aggiornamenti/releases.txt` (nuova voce IN ALTO; il file è locale, la cartella è
   gitignorata) con recap + delta byte (somma dimensioni `git ls-files`); tag ANNOTATO.
@@ -318,10 +330,13 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
   `captureCapacity = 100` e rapisce `abductionPerDay = 300` (= 100 persone in 8 ore-gioco, 15/tick);
   la fase `abducting` finisce a **capienza piena o città esaurita** (non più a durata fissa; rimosso
   `abductionDays`). Perdita popolazione = rapiti a bordo, applicata **all'uscita** (`removeUfo`).
-- **Combattimento in TEMPO REALE** (v0.116.0, non più a tick): `resolveCombat` rimosso dal `tick`;
-  il motore `render/combatEngine.ts` (orologio in minuti-gioco di `main.ts`) genera gli `shot` delle
-  torrette e applica il danno a impatto via `cmdDamageSquadron`. Stat arma nei moduli
-  (`sim/weapons.ts` `WEAPON_STATS`). Per ora spara solo la torretta UFO (fuoco caccia: prossimo step).
+- **Combattimento in TEMPO REALE a DUE SENSI** (v0.116.1, non più a tick): `resolveCombat` rimosso dal
+  `tick`; il motore `render/combatEngine.ts` (orologio in minuti-gioco di `main.ts`) genera gli `shot`
+  bidirezionali (`Shot` con `from/to` tipizzati: torrette UFO→caccia **e** minigun caccia→UFO) e applica
+  il danno a impatto via `cmdDamageSquadron` / `cmdDamageUfo` (l'UFO è **distruttibile**: a HP≤0
+  `removeUfo('shotDown')`). Stat arma nei moduli (`sim/weapons.ts` `WEAPON_STATS`): torretta 15/2min,
+  minigun 1/0,25min. Cap in blocco (`BLOCK_CAP`) separato dal cap proiettili (`MAX_QUEUED`) per non
+  strozzare le armi a cadenza alta ad alta velocità.
 - Ingaggio **per quota** (`combat.isEngageable`: fase atmosferica + `altitudeAt ≤ engageAltitude`;
   default `engageAltitude` = quota d'orbita ⇒ comportamento come prima). `UfoState` += `orbit`/
   `phaseTotalTicks`/`lunarCrossTick`/`captureSweep`.
@@ -392,8 +407,9 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
 7. Enciclopedia: nuove voci (squadroni, ambasciate, ondate UFO, combattimento) — struttura
    a dati pronta in encyclopediaEntries.ts.
 8. Finestra di scontro: eventuale audio/animazioni più ricche.
-9. **Combattimento**: arma del caccia (modulo terrestre `Assets/Umani/Armamenti/`) → fuoco a due
-   sensi (oggi solo la torretta UFO fa danno, UFO indistruttibile); stat `range` + gating del fuoco
-   sul globo per distanza, accuratezza/miss veri sulla hitbox; bilanciamento HP/danno/cadenza col
-   playtest. Eventuale `descentDuration` dedicata se si vuole la discesa a spirale più lenta.
-   **Design-system da risincronizzare** (commit #99 ha cambiato UI/asset → `design-system/.push_pending`).
+9. **Combattimento**: il fuoco caccia a due sensi è FATTO (v0.116.1, minigun → vedi sezione e skill
+   `weapon-modules`). Da fare: stat `range` + gating del fuoco sul globo per distanza, accuratezza/miss
+   veri sulla hitbox, bilanciamento HP/danno/cadenza col playtest (danno minigun oggi = 1, da rivedere);
+   **playtest visivo del globo** (minigun in patrol/trasferimento/combat). Eventuale `descentDuration`
+   dedicata se si vuole la discesa a spirale più lenta. Eventuale secondo modulo / armi multiple per unità.
+   **Design-system da risincronizzare** (i commit di sessione 12/13 hanno cambiato UI/asset → `design-system/.push_pending`).
