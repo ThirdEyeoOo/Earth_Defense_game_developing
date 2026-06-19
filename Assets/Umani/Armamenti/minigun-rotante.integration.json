@@ -1,0 +1,35 @@
+{
+  "name": "minigun-rotante",
+  "route": "dom",
+  "viewBox": "0 -44 64 116",
+  "headerComment": "<!-- ed-asset route=\"dom\" name=\"minigun-rotante\" animatable=\"#canne_rotanti,#vampa\" state-class=\"on\" i18n-text=\"none\" -->",
+  "note_route": "L'asset autoriale era marcato route=mesh (fill solidi), ma nel gioco i moduli arma sono asset DOM ricchi (CSS spin/flash) per restare nello STESSO registro interscambiabile del plasma-turret (src/render/weaponModules.ts). L'SVG resta a fill solidi, quindi mesh-capable in futuro.",
+  "restState": "Dormiente: #vampa opacity 0, #canne_rotanti fermo. Si attiva con la classe 'on' (il gioco la aggiunge quando l'arma fa fuoco).",
+  "animatable": [
+    { "id": "#canne_rotanti", "does": "rotore/razze della culatta visto dall'alto: gira in fuoco", "drivenBy": "game", "via": "class:on" },
+    { "id": "#canne", "does": "fascio di 5 canne allineate proteso verso il muso (statico)", "drivenBy": "none", "via": "static" },
+    { "id": "#vampa", "does": "vampa di sparo sulla volata", "drivenBy": "game", "via": "class:on" }
+  ],
+  "states": [
+    { "class": "on", "when": "hardpoint armato / minigun che spara", "affects": ["#canne_rotanti", "#vampa"] }
+  ],
+  "gameInputs": [
+    { "kind": "toggle", "how": "class:on per accendere/spegnere il fuoco" },
+    { "kind": "rotate", "how": "ruotare l'intero SVG per puntare il bersaglio (volata = verso il muso del jet)" },
+    { "kind": "scale", "how": "shrink prospettico per distanza camera dal globo" }
+  ],
+  "muzzles": [
+    { "id": "#bocca_1", "at": { "x": 25, "y": -28 } },
+    { "id": "#bocca_2", "at": { "x": 28.5, "y": -28 } },
+    { "id": "#bocca_3", "at": { "x": 32, "y": -28 } },
+    { "id": "#bocca_4", "at": { "x": 35.5, "y": -28 } },
+    { "id": "#bocca_5", "at": { "x": 39, "y": -28 } }
+  ],
+  "mounts": [
+    { "anchor": "#hardpoint_ala_sx", "host": "f22-raptor-animabile" },
+    { "anchor": "#hardpoint_ala_dx", "host": "f22-raptor-animabile" }
+  ],
+  "i18nText": [],
+  "suggestedPlacement": "modulo arma montato sugli hardpoint del caccia F-22; finestra di scontro come overlay sul jet, globo come overlay DOM in coordinate-schermo sui due hardpoint proiettati (src/render/squadronWeapons.ts)",
+  "notes": "Vista TOP-DOWN coerente col jet: le 5 canne (#canne) puntano in avanti verso il muso (su nello spazio viewBox = verso l'UFO). Lo spin è portato dalla culatta #canne_rotanti (centro 32,37). #vampa è un singolo lampo sulla volata (opacity 0 a riposo). Solo fill solidi, compatibile col loader mesh."
+}

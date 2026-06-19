@@ -14,7 +14,15 @@ describe('weapons', () => {
     expect(WEAPON_STATS[CONFIG.ufoAbductor.weaponModule]).toBeDefined();
   });
 
+  it("l'arma montata dallo squadrone esiste nel registro", () => {
+    expect(WEAPON_STATS[CONFIG.squadron.weaponModule]).toBeDefined();
+  });
+
   it('torretta al plasma: 15 danni ogni 2 minuti-gioco', () => {
     expect(WEAPON_STATS['plasma-turret']).toEqual({ cooldownGameMinutes: 2, damage: 15 });
+  });
+
+  it('minigun: 1 danno ogni 0,25 minuti-gioco (raffica veloce/leggera)', () => {
+    expect(WEAPON_STATS['minigun']).toEqual({ cooldownGameMinutes: 0.25, damage: 1 });
   });
 });

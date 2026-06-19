@@ -28,6 +28,23 @@ const TURRET_W = Math.round(UFO_ART_WIDTH_PX * TURRET_TO_UFO_WIDTH);
 const TURRET_H = Math.round((TURRET_W * TURRET_MODULE.viewH) / TURRET_MODULE.viewW);
 const ON_DURATION_MS = 620; // durata della classe `.on` (un lampo di sparo)
 
+// Minigun del caccia come MODULO ARMA: a differenza della torretta UFO (overlay separato)
+// si annida DENTRO l'SVG del jet (gruppi sugli hardpoint), così segue rotazione/scala del
+// caccia "gratis" — come nel mockup di riferimento. Gli id interni (#canne_rotanti, #vampa,
+// #bocca_*) restano: le keyframe li pilotano per discendenza da `.weapon-module.on`, quindi i
+// duplicati fra istanze non danno fastidio. La CSS di fuoco è iniettata una volta nel box.
+const MINIGUN_MODULE = WEAPON_MODULES[CONFIG.squadron.weaponModule];
+const MG_INNER = MINIGUN_MODULE.raw
+  .replace(/<svg[^>]*>/, '')
+  .replace(/<\/svg>/, '')
+  .replace(/<!--[\s\S]*?-->/g, '');
+function mgGroup(side: 'left' | 'right', x: number): string {
+  // translate all'hardpoint, scala, ricentro sul perno del minigun (≈32,16): come il mockup
+  return `<g class="weapon-module" data-side="${side}" transform="translate(${x} 190) scale(0.34375) translate(-32 -16)">${MG_INNER}</g>`;
+}
+// caccia con i due minigun montati sugli hardpoint delle ali
+const JET_WITH_MG = F22_ART.replace('</svg>', `${mgGroup('left', 53)}${mgGroup('right', 147)}</svg>`);
+
 // fase "rappresentativa" dello scontro: la più avanzata verso il rapimento
 const PHASE_PRIORITY: UfoPhase[] = ['abducting', 'descending', 'escaping'];
 function dominantPhase(attackers: UfoState[]): UfoPhase {
@@ -103,13 +120,14 @@ export function createCombatWindow(
   function rebuild(state: GameState, battle: Battle): void {
     const city = state.cities.find(c => c.id === battle.cityId)!;
     const defenders = battle.defenders
-      .map(s => unitHtml('s', s.id, F22_ART, t('combat.squadron', { id: s.id })))
+      .map(s => unitHtml('s', s.id, JET_WITH_MG, t('combat.squadron', { id: s.id })))
       .join('');
     const attackers = battle.attackers
       .map(u => unitHtml('u', u.id, '', t('combat.ufo', { id: u.id })))
       .join('');
     root.innerHTML = `
       <div class="combat-box">
+        <style>${MINIGUN_MODULE.fireStyleLoop}</style>
         <div class="combat-header">
           <h2>${t('combat.title', { city: cityName(city.id, city.name) })}</h2>
           <button class="combat-close" title="${t('combat.close')}">×</button>
@@ -187,6 +205,13 @@ export function createCombatWindow(
     return { x: r.left + r.width / 2 - arenaRect.left, y: r.top + r.height / 2 - arenaRect.top };
   }
 
+  // volata del minigun: bordo destro (verso il muso/UFO) del bbox del gruppo arma, in
+  // coordinate arena. Robusto a differenza di #bocca_3 (r=0 → bbox degenere).
+  function muzzleEdge(el: Element, arenaRect: DOMRect): { x: number; y: number } {
+    const r = el.getBoundingClientRect();
+    return { x: r.right - arenaRect.left, y: r.top + r.height / 2 - arenaRect.top };
+  }
+
   // aggancia ogni torretta al suo hardpoint (pivot = centro ettagono = transform-origin
   // 50% 37.5%) e la ruota perché la canna punti al primo caccia difensore. Niente correzione
   // di scala: la finestra di scontro, a differenza del mockup, non è trasformata in scala.
@@ -215,31 +240,53 @@ export function createCombatWindow(
     if (!arena || !fx) return;
     const arenaRect = arena.getBoundingClientRect();
     const attackerIds = new Set(battle.attackers.map(u => u.id));
+    const defenderIds = new Set(battle.defenders.map(s => s.id));
     const alive = new Set<number>();
     for (const shot of shots) {
-      if (!attackerIds.has(shot.ufoId)) continue; // shot di un altro scontro
+      const fromUfo = shot.from.kind === 'ufo';
+      // lo shot appartiene a questo scontro se la sorgente è una sua unità
+      const belongs = fromUfo ? attackerIds.has(shot.from.id) : defenderIds.has(shot.from.id);
+      if (!belongs) continue;
       alive.add(shot.id);
-      const tr = turretList.find(x => x.ufoId === shot.ufoId && x.side === shot.side);
-      // lampo della torretta al primo avvistamento dello shot
-      if (tr && !seenShots.has(shot.id)) {
-        seenShots.add(shot.id);
-        tr.svg.classList.add('on');
-        window.setTimeout(() => tr.svg.classList.remove('on'), ON_DURATION_MS);
+
+      let from: { x: number; y: number } | null = null;
+      let targetUnit: HTMLElement | null = null;
+      let targetArt: HTMLElement | null = null;
+      if (fromUfo) {
+        // torretta UFO → caccia (plasma): lampo della torretta al primo avvistamento
+        const tr = turretList.find(x => x.ufoId === shot.from.id && x.side === shot.from.side);
+        if (tr && !seenShots.has(shot.id)) {
+          seenShots.add(shot.id);
+          tr.svg.classList.add('on');
+          window.setTimeout(() => tr.svg.classList.remove('on'), ON_DURATION_MS);
+        }
+        const muzzle = tr?.svg.querySelector('#muzzle') ?? tr?.el ?? null;
+        from = muzzle ? centerIn(muzzle, arenaRect) : null;
+        targetUnit = root.querySelector<HTMLElement>(`.combat-unit[data-key="s:${shot.to.id}"]`);
+        targetArt = targetUnit?.querySelector<HTMLElement>('.combat-unit-art--jet') ?? null;
+      } else {
+        // minigun del caccia → UFO (tracciante): origine = volata del minigun. NON usare
+        // #bocca_3 (r=0 → bbox degenere, finirebbe fuori dall'aereo): la volata è il bordo
+        // del bbox del gruppo arma verso il muso (il jet è ruotato 90° → muso a destra).
+        const jetUnit = root.querySelector<HTMLElement>(
+          `.combat-unit[data-key="s:${shot.from.id}"]`,
+        );
+        const mg = jetUnit?.querySelector(
+          `.combat-unit-art--jet .weapon-module[data-side="${shot.from.side}"]`,
+        );
+        from = mg ? muzzleEdge(mg, arenaRect) : null;
+        targetUnit = root.querySelector<HTMLElement>(`.combat-unit[data-key="u:${shot.to.id}"]`);
+        targetArt = targetUnit?.querySelector<HTMLElement>('.combat-unit-art--ufo') ?? null;
       }
-      const jetUnit = root.querySelector<HTMLElement>(
-        `.combat-unit[data-key="s:${shot.targetSquadronId}"]`,
-      );
-      const jetArt = jetUnit?.querySelector<HTMLElement>('.combat-unit-art--jet');
-      const muzzle = tr?.svg.querySelector('#muzzle') ?? tr?.el;
-      if (!tr || !jetArt || !muzzle) {
+      if (!from || !targetArt) {
         removeProj(shot.id);
         continue;
       }
-      const from = centerIn(muzzle, arenaRect);
-      const to = centerIn(jetArt, arenaRect);
+      const tracer = shot.weapon === 'minigun';
+      const to = centerIn(targetArt, arenaRect);
       const k = Math.min(1, Math.max(0, (gameMinutes - shot.t0) / Math.max(1e-6, shot.t1 - shot.t0)));
       if (k < 1) {
-        const proj = ensureProj(shot.id, fx);
+        const proj = ensureProj(shot.id, fx, tracer);
         const x = from.x + (to.x - from.x) * k;
         const y = from.y + (to.y - from.y) * k;
         const ang = (Math.atan2(to.y - from.y, to.x - from.x) * 180) / Math.PI;
@@ -250,7 +297,7 @@ export function createCombatWindow(
         removeProj(shot.id);
         if (!landedShots.has(shot.id)) {
           landedShots.add(shot.id);
-          impactAt(to, jetUnit!, fx);
+          impactAt(to, targetUnit, fx, tracer);
         }
       }
     }
@@ -260,11 +307,11 @@ export function createCombatWindow(
     for (const id of [...landedShots]) if (!alive.has(id)) landedShots.delete(id);
   }
 
-  function ensureProj(id: number, fx: HTMLElement): HTMLDivElement {
+  function ensureProj(id: number, fx: HTMLElement, tracer: boolean): HTMLDivElement {
     let el = projEls.get(id);
     if (!el) {
       el = document.createElement('div');
-      el.className = 'combat-proj';
+      el.className = tracer ? 'combat-tracer' : 'combat-proj';
       fx.appendChild(el);
       projEls.set(id, el);
     }
@@ -279,6 +326,12 @@ export function createCombatWindow(
     }
   }
 
+  function setMinigunSpin(on: boolean): void {
+    root
+      .querySelectorAll('.combat-unit-art--jet .weapon-module')
+      .forEach(g => g.classList.toggle('on', on));
+  }
+
   function clearProjs(): void {
     projEls.forEach(el => el.remove());
     projEls.clear();
@@ -288,26 +341,27 @@ export function createCombatWindow(
 
   function impactAt(
     pt: { x: number; y: number },
-    jetUnit: HTMLElement | null,
+    unit: HTMLElement | null,
     fx: HTMLElement,
+    tracer: boolean,
   ): void {
     const burst = document.createElement('div');
-    burst.className = 'combat-impact';
+    burst.className = tracer ? 'combat-spark' : 'combat-impact';
     burst.style.left = `${pt.x}px`;
     burst.style.top = `${pt.y}px`;
     fx.appendChild(burst);
     window.setTimeout(() => burst.remove(), 420);
-    const art = jetUnit?.querySelector<HTMLElement>('.combat-unit-art--jet');
+    const art = unit?.querySelector<HTMLElement>('.combat-unit-art');
     if (art) {
       const flash = document.createElement('div');
       flash.className = 'combat-hitflash';
       art.appendChild(flash);
       window.setTimeout(() => flash.remove(), 360);
     }
-    if (jetUnit) {
-      jetUnit.classList.remove('combat-unit--struck');
-      void jetUnit.offsetWidth; // forza il restart dell'animazione
-      jetUnit.classList.add('combat-unit--struck');
+    if (unit) {
+      unit.classList.remove('combat-unit--struck');
+      void unit.offsetWidth; // forza il restart dell'animazione
+      unit.classList.add('combat-unit--struck');
     }
   }
 
@@ -341,6 +395,7 @@ export function createCombatWindow(
     if (!battle) {
       // scontro terminato: resta finché l'utente chiude
       clearProjs();
+      setMinigunSpin(false);
       const ended = root.querySelector<HTMLElement>('.combat-ended');
       if (ended) {
         ended.textContent = t('combat.ended');
@@ -358,6 +413,8 @@ export function createCombatWindow(
     patchUnits(battle.defenders, 's', CONFIG.squadron.hp, 'human');
     patchUnits(battle.attackers, 'u', CONFIG.ufoAbductor.hp, 'alien');
     renderShots(battle, shots, gameMinutes);
+    // minigun dei caccia: rotore in spin + vampa finché lo scontro è attivo
+    setMinigunSpin(true);
     const abducted = Math.floor(battle.attackers.reduce((n, u) => n + u.abducted, 0));
     root.querySelector('.combat-abductions')!.textContent = t('combat.abductions', { n: abducted });
     root.querySelector('.combat-phase')!.textContent = t('combat.phase', {

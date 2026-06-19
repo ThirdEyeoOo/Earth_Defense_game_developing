@@ -27,6 +27,7 @@ import { BattleBadgeLayer } from './render/battleBadges';
 import { CityLayer } from './render/cities';
 import { CombatEngine } from './render/combatEngine';
 import { CombatFxLayer } from './render/combatFx';
+import { SquadronWeaponLayer } from './render/squadronWeapons';
 import { EffectsLayer } from './render/effects';
 import { FloatingTextLayer } from './render/floatingText';
 import { createGlobe } from './render/globe';
@@ -110,6 +111,7 @@ const selection = new SelectionWidget();
 // il layer FX disegna i proiettili sul globo (la finestra di scontro li disegna da sé)
 const combatEngine = new CombatEngine();
 const combatFx = new CombatFxLayer();
+const squadronWeapons = new SquadronWeaponLayer();
 
 // picking degli squadroni (mesh Three.js): raycaster sul canvas, con guardia
 // anti-drag come per le targhette città. Gli UFO sono DOM → gestiti in UfoLayer.
@@ -246,6 +248,7 @@ function bootGame(gameState: GameState): void {
   gameMinutes = 0;
   combatEngine.reset();
   combatFx.reset();
+  squadronWeapons.reset();
   lastSavedDay = dayOfTick(state.tick);
   if (cityLayer) {
     ctx.scene.remove(cityLayer.group);
@@ -352,7 +355,17 @@ function frame(now: number): void {
       effects.update(state, unitLayer);
       hpBars.update(state, unitLayer, ctx.camera, selectedUnit);
       floatingText.update(state, unitLayer, ctx.camera);
-      combatFx.update(combatEngine.shots, gameMinutes, state, unitLayer, ufoLayer, ctx.camera);
+      // minigun montati sui caccia (dopo ufoLayer.update: serve la posa DOM dell'UFO per mirare)
+      squadronWeapons.update(state, unitLayer, ufoLayer, ctx.camera);
+      combatFx.update(
+        combatEngine.shots,
+        gameMinutes,
+        state,
+        unitLayer,
+        ufoLayer,
+        squadronWeapons,
+        ctx.camera,
+      );
       // tracciamento: se l'oggetto selezionato è uscito di scena, azzera
       if (selectedUnit) {
         const alive =

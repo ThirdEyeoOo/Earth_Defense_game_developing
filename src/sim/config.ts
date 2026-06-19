@@ -47,6 +47,7 @@ export const CONFIG = {
     shotsPerTick: 1,
     hp: 150,
     armor: 0,
+    weaponModule: 'minigun' satisfies WeaponModuleId, // arma montata sugli hardpoint delle ali
     speedKmPerDay: 54000, // crociera 2250 km/h (= 54000/24): velocità effettiva di trasferimento
     cruiseAltitudeKm: 15, // quota realistica riportata dal tracciamento (il rendering resta esagerato per visibilità)
     baseCost: 300, // in HumT; si aggiunge resourceCost

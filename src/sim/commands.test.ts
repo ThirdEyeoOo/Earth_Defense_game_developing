@@ -3,6 +3,7 @@ import {
   cmdBuildEmbassy,
   cmdBuildSquadron,
   cmdDamageSquadron,
+  cmdDamageUfo,
   cmdFoundHq,
   cmdRelocateSquadron,
   cmdSetSpeed,
@@ -11,6 +12,7 @@ import { CONFIG } from './config';
 import { embassyCost, isConnected } from './economy';
 import { squadronCost } from './squadrons';
 import { createNewGame } from './state';
+import { spawnUfo } from './ufos';
 import { grantRiches, newGameWithHq } from './testUtils';
 
 describe('cmdFoundHq', () => {
@@ -197,5 +199,28 @@ describe('cmdDamageSquadron', () => {
     expect(s.squadrons).toHaveLength(1);
     cmdDamageSquadron(s, sq.id, hp0); // porta a ≤0 → distrutto
     expect(s.squadrons).toHaveLength(0);
+  });
+});
+
+describe('cmdDamageUfo', () => {
+  it("sottrae gli HP dell'UFO senza abbatterlo sopra zero (no-op se id assente)", () => {
+    const s = newGameWithHq(1, 'rome');
+    spawnUfo(s, 'rome');
+    const ufo = s.ufos[0];
+    const hp0 = ufo.hp;
+    cmdDamageUfo(s, ufo.id, 10);
+    expect(s.ufos[0].hp).toBe(hp0 - 10);
+    expect(s.stats.ufosShotDown).toBe(0);
+    cmdDamageUfo(s, 999, 10); // id inesistente: no-op
+    expect(s.ufos).toHaveLength(1);
+  });
+
+  it('a HP≤0 abbatte (shotDown) e rimuove dalla scena', () => {
+    const s = newGameWithHq(1, 'rome');
+    spawnUfo(s, 'rome');
+    const ufo = s.ufos[0];
+    cmdDamageUfo(s, ufo.id, ufo.hp);
+    expect(s.ufos).toHaveLength(0);
+    expect(s.stats.ufosShotDown).toBe(1);
   });
 });
