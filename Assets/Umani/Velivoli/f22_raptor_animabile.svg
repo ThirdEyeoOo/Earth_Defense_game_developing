@@ -48,4 +48,10 @@
   <circle id="luce_nav_sx" cx="16" cy="205" r="2.8" fill="#ff2a2a"/>
   <circle id="luce_nav_dx" cx="184" cy="205" r="2.8" fill="#2aff5e"/>
   <circle id="luce_strobo_coda" cx="100" cy="259" r="2.4" fill="#ffffff"/>
+
+  <!-- HARDPOINT ARMI (solo logica): centro di ciascuna ala, simmetrici rispetto a x=100.
+       circle r=0 fill=none → scartati dal loader mesh (zero geometria). Trasportano le
+       coordinate d'aggancio dei moduli arma (es. minigun); coordinate pre-flip. -->
+  <circle id="hardpoint_ala_sx" cx="53" cy="190" r="0" fill="none"/>
+  <circle id="hardpoint_ala_dx" cx="147" cy="190" r="0" fill="none"/>
 </svg>

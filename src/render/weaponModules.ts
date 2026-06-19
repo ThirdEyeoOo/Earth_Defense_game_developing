@@ -1,4 +1,5 @@
 import turretRaw from '../../Assets/Alieni/Armamenti/plasma-turret.svg?raw';
+import minigunRaw from '../../Assets/Umani/Armamenti/minigun-rotante.svg?raw';
 import type { WeaponModuleId } from '../sim/weapons';
 
 // Registro RENDER dei moduli arma: mappa l'id (dati, src/sim/weapons.ts) all'asset SVG
@@ -52,6 +53,24 @@ const PT_FIRE_LOOP = `
 .weapon-module.on .coil-orb:nth-of-type(4){animation-delay:.39s}
 ${PT_KEYFRAMES}`;
 
+// --- minigun rotante del caccia (Assets/Umani/Armamenti) ---
+// La culatta #canne_rotanti gira velocissima e #vampa lampeggia sulla volata. Stato a
+// riposo baked nell'asset (vampa opacity 0, rotore fermo); `.on` accende il fuoco.
+const MG_KEYFRAMES = `
+@keyframes mg-spin{to{transform:rotate(360deg)}}
+@keyframes mg-flash{0%{opacity:1}55%{opacity:.2}100%{opacity:1}}
+`;
+
+const MG_FIRE_LOOP = `
+.weapon-module.on #canne_rotanti{transform-origin:32px 37px;animation:mg-spin .1s linear infinite}
+.weapon-module.on #vampa{animation:mg-flash .08s linear infinite}
+${MG_KEYFRAMES}`;
+
+const MG_FIRE_ONESHOT = `
+.weapon-module.on #canne_rotanti{transform-origin:32px 37px;animation:mg-spin .1s linear 6}
+.weapon-module.on #vampa{animation:mg-flash .08s linear 7}
+${MG_KEYFRAMES}`;
+
 export const WEAPON_MODULES: Record<WeaponModuleId, WeaponModuleArt> = {
   'plasma-turret': {
     raw: turretRaw,
@@ -59,5 +78,12 @@ export const WEAPON_MODULES: Record<WeaponModuleId, WeaponModuleArt> = {
     viewH: 400,
     fireStyleLoop: PT_FIRE_LOOP,
     fireStyleOneShot: PT_FIRE_ONESHOT,
+  },
+  minigun: {
+    raw: minigunRaw,
+    viewW: 64,
+    viewH: 116,
+    fireStyleLoop: MG_FIRE_LOOP,
+    fireStyleOneShot: MG_FIRE_ONESHOT,
   },
 };

@@ -123,6 +123,16 @@ const FIGHTER_BOOST_PIVOTS = {
 // più grande del vecchio velivolo in formazione (che era FIGHTER_LENGTH)
 const SQUADRON_FIGHTER_LENGTH = FIGHTER_LENGTH * 1.6;
 
+// hardpoint d'ala in coordinate SVG (centro di ciascuna ala, vedi #hardpoint_ala_* nell'asset);
+// simmetrici rispetto a x=100. Usati per montare i moduli arma (render/squadronWeapons.ts).
+// HARDPOINT_FORWARD_DY = quanto spostarsi verso il muso (Y minore) per ricavare la direzione
+// "in avanti" con cui orientare l'arma a riposo.
+export const HARDPOINTS = {
+  left: { x: 53, y: 190 },
+  right: { x: 147, y: 190 },
+} as const;
+export const HARDPOINT_FORWARD_DY = 40;
+
 // Lo squadrone è reso come UN solo F-22 (un po' più grande), non più come
 // formazione a ^ di tre velivoli.
 function buildSquadron(): THREE.Group {
@@ -178,6 +188,34 @@ export class UnitLayer {
     const halfFovTan = Math.tan((camera.fov * Math.PI) / 360);
     const pxPerWorld = window.innerHeight / (2 * Math.max(0.001, d) * halfFovTan);
     return { cx, cy, w: worldW * pxPerWorld, h: worldH * pxPerWorld };
+  }
+
+  // Posizione-schermo (px) di un punto del caccia espresso in coordinate SVG dell'asset:
+  // lo mappa nello spazio locale del modello (stesso flip/scala di buildSvgModel) e lo
+  // proietta via la matrice-mondo reale della mesh (posizione, orientamento di volo, scala).
+  // Usato per montare i moduli arma sugli hardpoint (render/squadronWeapons.ts) e per
+  // orientarli lungo il muso. null se il caccia non c'è o è occluso dal globo.
+  projectSquadronPoint(
+    id: number,
+    svgX: number,
+    svgY: number,
+    camera: THREE.PerspectiveCamera,
+  ): { x: number; y: number } | null {
+    const obj = this.squadronMeshes.get(id);
+    if (!obj) return null;
+    const sModel = SQUADRON_FIGHTER_LENGTH / SVG_HEIGHT;
+    // (X-100, Y-150) centrato; flip Y come model.scale (s,-s,s)
+    const local = new THREE.Vector3(
+      (svgX - SVG_WIDTH / 2) * sModel,
+      -(svgY - SVG_HEIGHT / 2) * sModel,
+      0,
+    );
+    obj.updateWorldMatrix(true, false);
+    const world = obj.localToWorld(local);
+    if (isOccludedByGlobe(world, camera)) return null;
+    const ndc = world.project(camera);
+    if (ndc.z > 1) return null;
+    return { x: (ndc.x * 0.5 + 0.5) * window.innerWidth, y: (1 - ndc.y) * 0.5 * window.innerHeight };
   }
 
   update(state: GameState, tickFraction: number, gameMinutes: number): void {

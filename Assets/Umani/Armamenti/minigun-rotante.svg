@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -44 64 116" width="64" height="116">
+  <!-- ed-asset route="dom" name="minigun-rotante" animatable="#canne_rotanti,#vampa" state-class="on" i18n-text="none" -->
+  <!-- Modulo arma UMANO montato sugli hardpoint dell'F-22 (vista top-down, muso/volata
+       verso l'ALTO = verso il bersaglio). Reso come modulo DOM nel registro armi del gioco
+       (src/render/weaponModules.ts), come il plasma-turret: lo stato a riposo è baked negli
+       attributi (#vampa opacity 0), il gioco accende `.on` per far girare #canne_rotanti e
+       lampeggiare #vampa. SVG a fill solidi (resta mesh-capable). #bocca_1..5 = volate (r=0). -->
+
+  <path id="base_attacco" d="M 25 52 L 39 52 L 36 66 C 36 68 28 68 28 66 Z" fill="#23262b" stroke="#15171a" stroke-width="1.2" stroke-linejoin="round"></path>
+  <circle id="bullone_sx" cx="30" cy="62" r="1.4" fill="#3c4047"></circle>
+  <circle id="bullone_dx" cx="34" cy="62" r="1.4" fill="#3c4047"></circle>
+
+  <path id="corpo" d="M 22 39 Q 22 33 28 33 L 36 33 Q 42 33 42 39 L 42 50 Q 42 56 36 56 L 28 56 Q 22 56 22 50 Z" fill="#3a3e45" stroke="#1f2226" stroke-width="1.4" stroke-linejoin="round"></path>
+
+  <g id="canne">
+    <path d="M 23.5 -28 L 26.5 -28 L 26.5 36 L 23.5 36 Z" fill="#4f545c" stroke="#1f2226" stroke-width="0.7"></path>
+    <path d="M 27 -28 L 30 -28 L 30 36 L 27 36 Z" fill="#5c626b" stroke="#1f2226" stroke-width="0.7"></path>
+    <path d="M 30.5 -28 L 33.5 -28 L 33.5 36 L 30.5 36 Z" fill="#6a7079" stroke="#1f2226" stroke-width="0.7"></path>
+    <path d="M 34 -28 L 37 -28 L 37 36 L 34 36 Z" fill="#5c626b" stroke="#1f2226" stroke-width="0.7"></path>
+    <path d="M 37.5 -28 L 40.5 -28 L 40.5 36 L 37.5 36 Z" fill="#4f545c" stroke="#1f2226" stroke-width="0.7"></path>
+    <ellipse cx="25" cy="-27" rx="1.3" ry="0.9" fill="#111316"></ellipse>
+    <ellipse cx="28.5" cy="-27" rx="1.3" ry="0.9" fill="#111316"></ellipse>
+    <ellipse cx="32" cy="-27" rx="1.3" ry="0.9" fill="#111316"></ellipse>
+    <ellipse cx="35.5" cy="-27" rx="1.3" ry="0.9" fill="#111316"></ellipse>
+    <ellipse cx="39" cy="-27" rx="1.3" ry="0.9" fill="#111316"></ellipse>
+  </g>
+
+  <circle id="bocca_1" cx="25" cy="-28" r="0" fill="none" pointer-events="none"></circle>
+  <circle id="bocca_2" cx="28.5" cy="-28" r="0" fill="none" pointer-events="none"></circle>
+  <circle id="bocca_3" cx="32" cy="-28" r="0" fill="none" pointer-events="none"></circle>
+  <circle id="bocca_4" cx="35.5" cy="-28" r="0" fill="none" pointer-events="none"></circle>
+  <circle id="bocca_5" cx="39" cy="-28" r="0" fill="none" pointer-events="none"></circle>
+
+  <ellipse id="culatta" cx="32" cy="37" rx="11" ry="6" fill="#4a4f57" stroke="#1f2226" stroke-width="1"></ellipse>
+  <ellipse id="culatta_interno" cx="32" cy="37" rx="8" ry="4.2" fill="#383c42"></ellipse>
+
+  <g id="canne_rotanti">
+    <path d="M 27 36.1 L 37 36.1 L 37 37.9 L 27 37.9 Z" fill="#6a7079"></path>
+    <path d="M 33.72 41.78 L 35.28 40.88 L 30.28 32.22 L 28.72 33.12 Z" fill="#6a7079"></path>
+    <path d="M 28.72 40.88 L 30.28 41.78 L 35.28 33.12 L 33.72 32.22 Z" fill="#6a7079"></path>
+    <circle cx="37" cy="37" r="1.3" fill="#2d3036"></circle>
+    <circle cx="34.5" cy="41.33" r="1.3" fill="#2d3036"></circle>
+    <circle cx="29.5" cy="41.33" r="1.3" fill="#2d3036"></circle>
+    <circle cx="27" cy="37" r="1.3" fill="#2d3036"></circle>
+    <circle cx="29.5" cy="32.67" r="1.3" fill="#2d3036"></circle>
+    <circle cx="34.5" cy="32.67" r="1.3" fill="#2d3036"></circle>
+    <circle id="mozzo" cx="32" cy="37" r="3" fill="#7b818b" stroke="#1f2226" stroke-width="0.8"></circle>
+    <circle cx="32" cy="37" r="1.1" fill="#1f2226"></circle>
+  </g>
+
+  <path id="vampa" d="M 32 -38 L 33.6 -31 L 38 -30 L 33.6 -29 L 33 -23 L 31 -23 L 30.4 -29 L 26 -30 L 30.4 -31 Z" fill="#ffd24a" opacity="0"></path>
+</svg>

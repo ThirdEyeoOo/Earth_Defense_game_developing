@@ -5,6 +5,7 @@ import { greatCircleKm } from './geo';
 import type { Cost, ResourceType } from './resources';
 import { squadronCost, transferTicks } from './squadrons';
 import type { GameSpeed, GameState } from './state';
+import { removeUfo } from './ufos';
 
 // La sim non conosce i testi: gli errori sono codici (+ parametri)
 // che la UI traduce con t(`cmd.${code}`) — vedi src/i18n/.
@@ -125,4 +126,14 @@ export function cmdDamageSquadron(state: GameState, squadronId: number, amount: 
   if (!sq) return;
   sq.hp -= amount;
   if (sq.hp <= 0) state.squadrons = state.squadrons.filter(s => s.id !== squadronId);
+}
+
+// Danno inflitto a un UFO dal fuoco dei caccia (combattimento a due sensi). A HP esauriti
+// lo abbatte: riusa removeUfo('shotDown'), che incrementa ufosShotDown e applica la perdita
+// dei rapiti a bordo (precipitano col relitto, come la fuga).
+export function cmdDamageUfo(state: GameState, ufoId: number, amount: number): void {
+  const ufo = state.ufos.find(u => u.id === ufoId);
+  if (!ufo) return;
+  ufo.hp -= amount;
+  if (ufo.hp <= 0) removeUfo(state, ufoId, 'shotDown');
 }
