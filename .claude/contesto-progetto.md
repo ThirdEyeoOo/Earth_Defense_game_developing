@@ -1,6 +1,6 @@
 # Earth Defense — Contesto operativo
 
-Aggiornato: 2026-06-19 (chiusura sessione 13, commit #106, main pushed, v0.116.1 rilasciata)
+Aggiornato: 2026-06-20 (chiusura sessione 14, commit #109, main pushed, v0.120.0 rilasciata)
 Repo pubblico: github.com/ThirdEyeoOo/Earth_Defense_game_developing (README bilingue, MIT, FUNDING).
 
 ## Cos'è
@@ -93,6 +93,25 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
   **Fix rendering**: volata dei traccianti dal bbox del gruppo arma (non da `#bocca_3` r=0); dimensione
   globo `MINIGUN_TO_JET_WIDTH` 0,34→0,11; armi montate anche in trasferimento. **Danno minigun = 1**
   (da playtest). **Skill di progetto `weapon-modules`** (`.claude/skills/`). Nessuna migrazione salvataggi.
+- **v0.120.0** — **economia "Potenziale 1000 / 30 giorni"**: potenziale città = Σ amount (max 1000) =
+  produzione su 30 giorni, accreditata 1/30 al giorno (`CONFIG.economy.cycleDays`, rimosso `conversionRate`);
+  **gettito sulla somma NON pesata** (`cityPotential`) × popFactor × sizeMultiplier × 0,09 / cycleDays
+  (fasce mantenute, 1000 = tetto megalopoli); `dailyIncome` ora **float** (HumT a frazioni). Pannello
+  **Città**: ogni risorsa in **quota % sul totale** (`amount/Σamount`) + **Potenziale x/1000**; delta
+  produzione mostrato **al giorno** in Città e Bilancio. **Rapimento in TEMPO REALE 1-a-1**
+  (`render/abductionEngine.ts` + `cmdAbduct`, non più 15/tick; a capienza → fuga). **Fisica orbitale**:
+  avvicinamento che **accelera entrando** (spawn ≥10.000 km/h, `visualStartDistance` 160) con capture-burn
+  tangente; **fuga ease-in** (parte da ferma, accelera salendo); fix "teletrasporto" di fuga/trasferimento
+  via `phaseStartFraction` (UfoState) / `startFraction` (TransferState) — lo squadrone parte dalla targhetta.
+  **Combattimento**: torretta plasma **8** danni; **gittate armi** (`WeaponModule.rangeKm` = 50 km, plasma e
+  minigun) con gating fuoco+animazione (`measure.ufoSquadronDistanceKm`); UFO scende vicino alla città in
+  rapimento (`surfaceRadius` 1.02→1.004 ≈ 25 km); fix fuoco caccia→UFO sul globo in rapimento
+  (`ufoCombatRect`, perché `ufoBodyRect` è null in `abducting`). **Audio**: musica di sottofondo
+  `Signal From Vega` (`ui/music.ts`, loop dallo start screen, autoplay al gesto di fine intro) + cursore
+  volume 0–100% in Impostazioni (pref `musicVolume`); font **Quantico** bundlato. **Start screen**: sfondo
+  artwork `Assets/Intro/Earth Defense Title.jpg`, titolo Quantico verde con glow, finestra semitrasparente,
+  **versione letta da `package.json`**, pulsanti Impostazioni/Esci (rimosso l'ingranaggio). **HUD**: valuta
+  `🪙 HumT`, velocità 1x/5x/25x/100x/≫. Nessuna migrazione salvataggi.
 - Release: a ogni merge chiedere il nome semver all'utente (proponendone uno), **bumpare
   `package.json` `"version"` allo stesso semver** (la UI lo legge e lo mostra nello start
   screen — `src/main.ts` importa `version` da package.json), e aggiornare
@@ -133,9 +152,12 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
   basta per il primo squadrone). Da lì partono economia, orologio e ondate (l'arrivalTick
   della prima ondata decorre di fatto dalla fondazione).
 - **Rete**: producono e pagano tasse solo le città collegate (QG + ambasciate).
-  Gettito/giorno per città = Σ(peso×amount_corrente) × (pop/popIniziale) × aliquota (0,09);
-  produzione/giorno per risorsa = amount × 0,1 × popFactor → magazzino GLOBALE
-  `state.resources` (float, la UI mostra floor). Rapimento attivo = città sospesa.
+  Modello "Potenziale 1000 / 30 giorni" (v0.120.0): potenziale città = Σ amount (max 1000) = produzione
+  su `cycleDays` (30) giorni, accreditata 1/cycleDays al giorno. Gettito/giorno = cityPotential ×
+  (pop/popIniziale) × sizeMultiplier × aliquota (0,09) / cycleDays (somma NON pesata: i `resourceWeights`
+  non incidono più sul gettito, solo ordinamento Bilancio + lore `gdp_post_apoc_humt`); produzione/giorno
+  per risorsa = amount × popFactor × sizeMultiplier / cycleDays → magazzino GLOBALE
+  `state.resources` (float, la UI mostra floor; anche l'HumT ora è float). Rapimento attivo = città sospesa.
   Gli `amount` sono mutabili nello stato (deep-copy dal JSON!): predisposti per nemici
   futuri che danneggiano le risorse oltre alla popolazione.
 - **Ambasciata** (`cmdBuildEmbassy`): costo (Ħ150 + 20 agroalimentare) × (1 + km/5000)
