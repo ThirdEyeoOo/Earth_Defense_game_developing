@@ -1,6 +1,6 @@
 # Earth Defense — Contesto operativo
 
-Aggiornato: 2026-06-20 (chiusura sessione 14, commit #109, main pushed, v0.120.0 rilasciata)
+Aggiornato: 2026-06-20 (chiusura sessione 15, commit #110; Ricerca interattiva + meccanica su `main` NON pushato; ultima release v0.120.0)
 Repo pubblico: github.com/ThirdEyeoOo/Earth_Defense_game_developing (README bilingue, MIT, FUNDING).
 
 ## Cos'è
@@ -365,8 +365,8 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
   default `engageAltitude` = quota d'orbita ⇒ comportamento come prima). `UfoState` += `orbit`/
   `phaseTotalTicks`/`lunarCrossTick`/`captureSweep`.
 - Registro eventi sim (`state.events`): id monotoni, trim a 40 tick; UI legge col cursore.
-- Salvataggi versionati (**v5**, migrazione v4→v5: ricostruisce `orbit` da spawnDir + città); la
-  velocità viene salvata (pausa ⇒ riparte in pausa).
+- Salvataggi versionati (**v6**; v4→v5 ricostruisce `orbit` da spawnDir + città; **v5→v6** aggiunge
+  `research.unlocked` sbloccando i nodi implementati); la velocità è salvata (pausa ⇒ riparte in pausa).
 
 ## Tracciamento dimensionale (v0.113.1) — `src/sim/measure.ts` (modulo PURO)
 - Conversioni unità-gioco→reali: `altitudeKm`/`speedKmH` (1 raggio render = `EARTH_RADIUS_KM`
@@ -392,14 +392,30 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
   i 15 km / 2250 km/h vivono **solo nel readout**. `CONFIG.squadron.speedKmPerDay` 24000→54000
   (crociera 2250 km/h, velocità di trasferimento effettiva) + `cruiseAltitudeKm: 15`.
 
-## Albero della Ricerca (v0.113.1) — anteprima struttura, funzionalità da fare
-- Nodi come **dati** puri in `src/sim/researchTree.ts` (`ResearchNode`: ramo, tier, prereq,
-  coordinate, costo/punti/effetto **non ancora consumati**); 3 rami / 8 nodi nella v1. Modello
-  completo e razionali in **`docs/research-model.md`** (progressione a tempo, velocità da
-  produzione _tecnologia_ + lab futuri, **DAG** con coordinate manuali, effetti dichiarativi →
-  modificatori derivati, stato `research` + migrazione salvataggi v5→v6 da implementare).
-- `src/ui/researchPanel.ts`: modale dal pulsante Ricerca che disegna il **DAG in SVG** (sola
-  lettura, `tech.*` i18n). Le **finestre verranno ridisegnate** prima di agganciare la meccanica.
+## Albero della Ricerca (sessione 15, NON ancora rilasciato) — pannello + meccanica completa
+- Ricreato dal prototipo Claude Design (`Albero della Ricerca.html` + `RICERCA-PANEL-INSTRUCTIONS.md`).
+  **`src/ui/researchPanel.ts`** è ora un overlay **DOM/CSS** (non più DAG statico in SVG): stage
+  913×610 con `fit()`, campo **zoomabile/trascinabile** (wheel verso il puntatore, `− ↻ +`, pan su
+  spazio vuoto soglia 3px, limiti 0,5–3×), **bordi animati** (`@property --ang` + `borderRun`, tutte
+  le animazioni in `prefers-reduced-motion`), **tooltip** su hover, **popover requisiti** ✓/✗ (flip
+  sopra il nodo per le righe basse). Icone dei 7 nodi in **`src/ui/researchIcons.ts`**. CSS del
+  prototipo in `style.css` **scoped sotto `.research-stage`** (evita collisioni coi nomi generici).
+- **Dati** (`src/sim/researchTree.ts`): **9 nodi** (combat/economy/orbital), interfaccia ricca con
+  `effect` **dichiarativo** (`unlock`/`mult`), `pos` = angolo alto-sx nel campo 913×610, `cost`,
+  `icon`, `isResult`, `placeholder`; helper puri **`isUnlocked`/`isResearched`/`researchMult`**.
+  `RESEARCH_CANVAS` = 913×610. Modello "a punti nel tempo" di `docs/research-model.md` **superato**:
+  sblocco **istantaneo a pagamento**.
+- **Meccanica**: stato **`GameState.research.unlocked`** (id dei nodi); comando puro
+  **`cmdUnlockResearch`** (prereq + `payCost` + sblocco). **Gating** delle funzioni esistenti (canale
+  comandi/render): `quartier_gen` (**gratis**, ricerca iniziale → scioglie il circolo d'avvio) →
+  `cmdFoundHq`; `caccia` → `cmdBuildSquadron`; `collegamento` → `cmdBuildEmbassy`; `minigun` →
+  montaggio/fuoco minigun (`render/combatEngine.ts`+`squadronWeapons.ts`); `blindatura` →
+  `CONFIG.squadron.armor` (2) riduce il danno in `cmdDamageSquadron`; `telescopio` → pulsante Radar +
+  preavviso ondate nell'HUD. `lab`/`diplomazia`/`intercettore` senza consumer (feature future/placeholder).
+- **Salvataggi v6** (migrazione **v5→v6**: sblocca tutti i nodi implementati per le partite in corso).
+  `newGameWithHq` (testUtils) sblocca i nodi implementati. Banner/tutorial guidano lo sblocco gratuito
+  del QG a inizio partita (uno step dedicato del tutorial resta da fare). Da tarare a playtest (costi,
+  `armor`, squadroni dietro 3 ricerche). Design-system da risincronizzare (`.push_pending`).
 
 ## Knowledge graph (graphify)
 - Grafo del codebase in `graphify-out/` (gitignored), ~570 nodi. Hook git aggiornano la parte
@@ -423,10 +439,11 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
    style.css) e bilanciamento della fisica orbitale col playtest (CONFIG.physics, quota d'orbita).
    Stat per-nemico già parziali (massa/spinta/UA su `ufoAbductor`); orientamento UFO sul globo oggi
    billboard verticale (raggio verso il basso-schermo), polish futuro.
-5. Meta-progressione / **albero tecnologico**: struttura+anteprima FATTE (v0.113.1, vedi sezione
-   "Albero della Ricerca" e `docs/research-model.md`). Da fare: ridisegno finestre poi meccanica
-   vera — stato `research`, comandi `cmdStartResearch`, avanzamento nei tick, effetti→modificatori,
-   migrazione salvataggi v5→v6 (tutto già speccato nel doc).
+5. Meta-progressione / **albero tecnologico**: pannello interattivo + meccanica di sblocco a
+   pagamento + gating FATTI (sessione 15, vedi sezione "Albero della Ricerca"). Da fare: tarare
+   costi/bilanciamento a playtest, step dedicato del tutorial per lo sblocco del QG, eventuali
+   nodi-potenziamento `mult` (l'helper `researchMult` c'è ma nessun nodo v1 lo usa), e contenuto
+   per i placeholder `diplomazia`/`intercettore` + la feature `lab`.
 6. Eventuale: HUD responsive sotto i ~1460px (oggi sfora, l'ingranaggio esce dal viewport).
 7. Enciclopedia: nuove voci (squadroni, ambasciate, ondate UFO, combattimento) — struttura
    a dati pronta in encyclopediaEntries.ts.
