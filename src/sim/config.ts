@@ -48,7 +48,7 @@ export const CONFIG = {
     attack: 6,
     shotsPerTick: 1,
     hp: 150,
-    armor: 0,
+    armor: 2, // riduzione danno per colpo, ATTIVA solo col nodo Ricerca `blindatura` sbloccato
     weaponModule: 'minigun' satisfies WeaponModuleId, // arma montata sugli hardpoint delle ali
     speedKmPerDay: 54000, // crociera 2250 km/h (= 54000/24): velocità effettiva di trasferimento
     cruiseAltitudeKm: 15, // quota realistica riportata dal tracciamento (il rendering resta esagerato per visibilità)
@@ -97,5 +97,5 @@ export const CONFIG = {
     ufosPerWave: 1,
     victoryWaves: 10,
   },
-  saveVersion: 5,
+  saveVersion: 6,
 } as const;

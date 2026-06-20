@@ -1,5 +1,6 @@
 import { t } from '../i18n';
 import { dayOfTick } from '../sim/calendar';
+import { isUnlocked } from '../sim/researchTree';
 import type { GameSpeed, GameState } from '../sim/state';
 import { worldPopulation } from '../sim/state';
 import { fmtClock, fmtDate, fmtInt } from './format';
@@ -17,14 +18,24 @@ export function createHud(
   onOpenSettings: () => void,
   onOpenEncyclopedia: () => void,
 ): { update(state: GameState, tickFloat: number): void; refreshLabels(): void } {
+  // stanghette divisorie (.hud-sep) fra i campi: dopo data, humt, pop, abd,
+  // dead, wave e il gruppo velocità; non fra Radar/Salva né prima di ?/gear
+  // (la coppia di icone resta spinta a destra da #hud-encyclopedia margin-left).
   root.innerHTML = `
     <span id="hud-date"></span>
+    <i class="hud-sep"></i>
     <span id="hud-humt"></span>
+    <i class="hud-sep"></i>
     <span id="hud-pop"></span>
+    <i class="hud-sep"></i>
     <span id="hud-abd"></span>
+    <i class="hud-sep"></i>
     <span id="hud-dead"></span>
+    <i class="hud-sep"></i>
     <span id="hud-wave"></span>
+    <i class="hud-sep"></i>
     <span id="hud-speeds"></span>
+    <i class="hud-sep"></i>
     <button id="hud-radar"></button>
     <button id="hud-save"></button>
     <button id="hud-encyclopedia" class="icon-btn">${encyclopediaIcon}</button>
@@ -75,9 +86,16 @@ export function createHud(
       root.querySelector('#hud-dead')!.textContent = t('hud.dead', {
         n: fmtInt(state.stats.populationLost),
       });
+      // il preavviso ondate richiede il Telescopio Orbitale (nodo Ricerca `telescopio`):
+      // senza, niente conto alla rovescia e il pulsante Radar resta disabilitato
+      const hasRadar = isUnlocked(state, 'radar');
       const days = Math.max(0, dayOfTick(state.nextWave.arrivalTick) - dayOfTick(state.tick));
-      root.querySelector('#hud-wave')!.textContent =
-        state.ufos.length > 0 ? t('hud.attackInProgress') : t('hud.nextWave', { days });
+      root.querySelector('#hud-wave')!.textContent = !hasRadar
+        ? t('hud.nextWaveUnknown')
+        : state.ufos.length > 0
+          ? t('hud.attackInProgress')
+          : t('hud.nextWave', { days });
+      root.querySelector<HTMLButtonElement>('#hud-radar')!.disabled = !hasRadar;
       for (const btn of speedsEl.querySelectorAll('button')) {
         // in fase di fondazione il tempo è congelato: la velocità non ha effetto
         btn.disabled = state.hqCityId === null;

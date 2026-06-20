@@ -13,6 +13,7 @@ export const it = {
   'hud.dead': 'Morti: {n}',
   'hud.attackInProgress': '⚠ ATTACCO IN CORSO',
   'hud.nextWave': 'Prossima ondata: {days}g',
+  'hud.nextWaveUnknown': 'Prossima ondata: ???',
   'hud.skipToNextAttack': 'Salta al prossimo attacco',
 
   // pannello città
@@ -63,7 +64,8 @@ export const it = {
     'Ciao, sono Terzo Occhio, il tuo assistente personale. Siamo a inizio partita, quindi ti guiderò attraverso i concetti iniziali del gioco!',
   'tutorial.step2':
     "Con la sparizione improvvisa di quasi tutte le città terrestri, l'economia e la società sono di colpo collassate. Il sistema economico si è azzerato e il dollaro non ha più senso di esistere dopo il collasso. Solo l'istituzione di una nuova società può tentare di riavviare tutto. E tu sarai il fondatore di questa nuova società.",
-  'tutorial.step3': 'Scegli una città iniziale dove fondare il Quartier Generale.',
+  'tutorial.step3':
+    'Apri il pannello Ricerca e sblocca il Quartier Generale (è gratis): poi scegli una città dove fondarlo.',
   'tutorial.founded': 'Ben fatto! Quartier Generale fondato a {city}!',
   'tutorial.next': '>',
   'tutorial.nextLabel': 'Avanti',
@@ -78,7 +80,7 @@ export const it = {
   'banner.gameSaved': 'Partita salvata',
   'banner.selectDestination': 'Seleziona la città di destinazione (Esc per annullare)',
   'banner.comingSoon': 'Funzione in arrivo',
-  'banner.chooseHq': 'Il mondo è collassato. Scegli una città dove fondare il Quartier Generale della nuova umanità',
+  'banner.chooseHq': 'Il mondo è collassato. Apri la Ricerca e sblocca il Quartier Generale (gratis), poi scegli una città dove fondarlo',
   'banner.hqFounded': 'Quartier Generale fondato a {city}',
 
   // pannello bilancio
@@ -110,29 +112,45 @@ export const it = {
   'bar.citta': 'Città',
 
   // albero della ricerca (ui/researchPanel.ts + sim/researchTree.ts)
-  // NB: anteprima della sola struttura — le funzionalità di gioco arriveranno dopo
-  'tech.title': 'Albero della Ricerca',
-  'tech.subtitle': 'Anteprima della struttura — le funzionalità arriveranno presto',
+  'tech.title': 'Ricerca',
+  'tech.subtitle': 'Sblocca tecnologie spendendo risorse',
   'tech.close': 'Chiudi',
   'tech.branch.combat': 'Combattimento',
   'tech.branch.economy': 'Economia',
   'tech.branch.orbital': 'Contromisure orbitali',
-  'tech.combat-ap.title': 'Munizioni perforanti',
-  'tech.combat-ap.desc': 'Aumenta l’attacco degli squadroni.',
-  'tech.combat-armor.title': 'Blindatura rinforzata',
-  'tech.combat-armor.desc': 'Aumenta l’armatura degli squadroni.',
-  'tech.combat-nextgen.title': 'Caccia di nuova generazione',
-  'tech.combat-nextgen.desc': 'Velivoli più robusti: più punti vita per gli squadroni.',
-  'tech.economy-extraction.title': 'Ottimizzazione estrattiva',
-  'tech.economy-extraction.desc': 'Aumenta la produzione di risorse delle città collegate.',
-  'tech.economy-tax.title': 'Riforma fiscale',
-  'tech.economy-tax.desc': 'Aumenta il gettito delle tasse.',
-  'tech.economy-diplomacy.title': 'Diplomazia efficiente',
-  'tech.economy-diplomacy.desc': 'Riduce il costo delle ambasciate.',
-  'tech.orbital-radar.title': 'Radar a lungo raggio',
-  'tech.orbital-radar.desc': 'Preavviso più lungo sugli attacchi in arrivo.',
-  'tech.orbital-interceptors.title': 'Intercettori suborbitali',
-  'tech.orbital-interceptors.desc': 'Permette di ingaggiare gli UFO a quote più alte.',
+  // chrome del pannello
+  'tech.requirements': 'Requisiti:',
+  'tech.req.none': 'Nessuno',
+  'tech.cost': 'Costo:',
+  'tech.free': 'Gratis',
+  'tech.confirm': 'Conferma',
+  'tech.cancel': 'Annulla',
+  'tech.locked': 'Prerequisiti mancanti',
+  'tech.zoom.in': 'Ingrandisci',
+  'tech.zoom.out': 'Riduci',
+  'tech.zoom.reset': 'Reimposta',
+  'tech.hint': 'Trascina per spostarti, rotella per lo zoom',
+  // nodi (titolo + descrizione del tooltip)
+  'tech.minigun.title': 'Torretta minigun per velivoli',
+  'tech.minigun.desc': 'Modulo arma montabile sui velivoli da combattimento.',
+  'tech.blindatura.title': 'Blindatura rinforzata per velivoli',
+  'tech.blindatura.desc': 'Modulo armatura montabile sui velivoli da combattimento.',
+  'tech.caccia.title': 'Intercettore UFO di prima generazione',
+  'tech.caccia.desc':
+    'Permette di costruire il nostro primo velivolo per difendere le città durante i rapimenti in superficie.',
+  'tech.quartier_gen.title': 'Quartier Generale',
+  'tech.quartier_gen.desc':
+    'Permette di fondare il nostro quartier generale in una città e di rifondare il sistema economico post-apocalittico.',
+  'tech.collegamento.title': 'Collegamento città alla rete di difesa planetaria',
+  'tech.collegamento.desc': 'Permette di aggiungere altre città alla nostra rete di difesa planetaria.',
+  'tech.laboratorio.title': 'Laboratorio di ricerca Terrestre',
+  'tech.laboratorio.desc': 'Permette la costruzione di Laboratori di ricerca Terrestri nelle città.',
+  'tech.telescopio.title': 'Telescopio Orbitale',
+  'tech.telescopio.desc': 'Permette di osservare lo spazio profondo in cerca di minacce in arrivo.',
+  'tech.diplomazia.title': 'Diplomazia',
+  'tech.diplomazia.desc': 'Funzione in arrivo.',
+  'tech.intercettore.title': 'Intercettore orbitale',
+  'tech.intercettore.desc': 'Funzione in arrivo.',
 
   // errori dei comandi (codici da sim/commands.ts: la sim non conosce i testi)
   'cmd.cityUnavailable': 'Città non disponibile',
@@ -145,6 +163,9 @@ export const it = {
   'cmd.hqAlreadyFounded': 'Il Quartier Generale è già stato fondato',
   'cmd.hqNotFounded': 'Prima fonda il Quartier Generale',
   'cmd.alreadyConnected': 'Città già collegata alla rete',
+  'cmd.researchLocked': 'Ricerca necessaria',
+  'cmd.researchAlreadyDone': 'Ricerca già completata',
+  'cmd.researchPrereqMissing': 'Prerequisiti di ricerca mancanti',
 
   // risorse (chiave = ResourceType in sim/resources.ts)
   'res.agroalimentare': 'Agroalimentare',

@@ -14,6 +14,7 @@ export const en: Record<MessageKey, string> = {
   'hud.dead': 'Deaths: {n}',
   'hud.attackInProgress': '⚠ UNDER ATTACK',
   'hud.nextWave': 'Next wave: {days}d',
+  'hud.nextWaveUnknown': 'Next wave: ???',
   'hud.skipToNextAttack': 'Skip to next attack',
 
   // city panel
@@ -64,7 +65,8 @@ export const en: Record<MessageKey, string> = {
     "Hi, I'm Third Eye, your personal assistant. We're at the start of a new game, so I'll guide you through the basics!",
   'tutorial.step2':
     'With the sudden disappearance of almost every city on Earth, the economy and society collapsed overnight. The economic system was wiped out, and the dollar no longer has any reason to exist after the collapse. Only the founding of a new society can attempt to restart everything. And you will be the founder of this new society.',
-  'tutorial.step3': 'Choose a starting city where you will found the Headquarters.',
+  'tutorial.step3':
+    "Open the Research panel and unlock the Headquarters (it's free): then choose a city to found it.",
   'tutorial.founded': 'Well done! Headquarters founded in {city}!',
   'tutorial.next': '>',
   'tutorial.nextLabel': 'Next',
@@ -79,7 +81,7 @@ export const en: Record<MessageKey, string> = {
   'banner.gameSaved': 'Game saved',
   'banner.selectDestination': 'Select the destination city (Esc to cancel)',
   'banner.comingSoon': 'Coming soon',
-  'banner.chooseHq': 'The world has collapsed. Choose a city to found the Headquarters of the new humanity',
+  'banner.chooseHq': 'The world has collapsed. Open Research and unlock the Headquarters (free), then choose a city to found it',
   'banner.hqFounded': 'Headquarters founded in {city}',
 
   // balance panel
@@ -111,29 +113,45 @@ export const en: Record<MessageKey, string> = {
   'bar.citta': 'Cities',
 
   // research tree (ui/researchPanel.ts + sim/researchTree.ts)
-  // NB: structure preview only — gameplay functionality comes later
-  'tech.title': 'Research Tree',
-  'tech.subtitle': 'Structure preview — functionality coming soon',
+  'tech.title': 'Research',
+  'tech.subtitle': 'Unlock technologies by spending resources',
   'tech.close': 'Close',
   'tech.branch.combat': 'Combat',
   'tech.branch.economy': 'Economy',
   'tech.branch.orbital': 'Orbital countermeasures',
-  'tech.combat-ap.title': 'Armor-piercing rounds',
-  'tech.combat-ap.desc': 'Increases squadron attack.',
-  'tech.combat-armor.title': 'Reinforced plating',
-  'tech.combat-armor.desc': 'Increases squadron armor.',
-  'tech.combat-nextgen.title': 'Next-generation fighter',
-  'tech.combat-nextgen.desc': 'Tougher aircraft: more hit points for squadrons.',
-  'tech.economy-extraction.title': 'Extraction optimization',
-  'tech.economy-extraction.desc': 'Increases resource production of connected cities.',
-  'tech.economy-tax.title': 'Fiscal reform',
-  'tech.economy-tax.desc': 'Increases tax income.',
-  'tech.economy-diplomacy.title': 'Efficient diplomacy',
-  'tech.economy-diplomacy.desc': 'Reduces the cost of embassies.',
-  'tech.orbital-radar.title': 'Long-range radar',
-  'tech.orbital-radar.desc': 'Longer warning of incoming attacks.',
-  'tech.orbital-interceptors.title': 'Suborbital interceptors',
-  'tech.orbital-interceptors.desc': 'Lets you engage UFOs at higher altitudes.',
+  // panel chrome
+  'tech.requirements': 'Requirements:',
+  'tech.req.none': 'None',
+  'tech.cost': 'Cost:',
+  'tech.free': 'Free',
+  'tech.confirm': 'Confirm',
+  'tech.cancel': 'Cancel',
+  'tech.locked': 'Missing prerequisites',
+  'tech.zoom.in': 'Zoom in',
+  'tech.zoom.out': 'Zoom out',
+  'tech.zoom.reset': 'Reset',
+  'tech.hint': 'Drag to pan, scroll to zoom',
+  // nodes (title + tooltip description)
+  'tech.minigun.title': 'Aircraft minigun turret',
+  'tech.minigun.desc': 'Weapon module mountable on combat aircraft.',
+  'tech.blindatura.title': 'Reinforced aircraft plating',
+  'tech.blindatura.desc': 'Armor module mountable on combat aircraft.',
+  'tech.caccia.title': 'First-generation UFO interceptor',
+  'tech.caccia.desc':
+    'Lets you build our first aircraft to defend cities during surface abductions.',
+  'tech.quartier_gen.title': 'Headquarters',
+  'tech.quartier_gen.desc':
+    'Lets you found our headquarters in a city and restart the post-apocalyptic economy.',
+  'tech.collegamento.title': 'City link to the planetary defense network',
+  'tech.collegamento.desc': 'Lets you add more cities to our planetary defense network.',
+  'tech.laboratorio.title': 'Terrestrial research lab',
+  'tech.laboratorio.desc': 'Enables building Terrestrial research labs in cities.',
+  'tech.telescopio.title': 'Orbital telescope',
+  'tech.telescopio.desc': 'Lets you watch deep space for incoming threats.',
+  'tech.diplomazia.title': 'Diplomacy',
+  'tech.diplomazia.desc': 'Coming soon.',
+  'tech.intercettore.title': 'Orbital interceptor',
+  'tech.intercettore.desc': 'Coming soon.',
 
   // command errors
   'cmd.cityUnavailable': 'City unavailable',
@@ -146,6 +164,9 @@ export const en: Record<MessageKey, string> = {
   'cmd.hqAlreadyFounded': 'The Headquarters has already been founded',
   'cmd.hqNotFounded': 'Found the Headquarters first',
   'cmd.alreadyConnected': 'City already connected to the network',
+  'cmd.researchLocked': 'Research required',
+  'cmd.researchAlreadyDone': 'Already researched',
+  'cmd.researchPrereqMissing': 'Missing research prerequisites',
 
   // resources (key = ResourceType in sim/resources.ts)
   'res.agroalimentare': 'Agri-food',

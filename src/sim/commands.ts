@@ -2,6 +2,7 @@ import { CONFIG } from './config';
 import { embassyCost, isConnected } from './economy';
 import { emitEvent } from './events';
 import { greatCircleKm } from './geo';
+import { isResearched, isUnlocked, researchById } from './researchTree';
 import type { Cost, ResourceType } from './resources';
 import { squadronCost, transferTicks } from './squadrons';
 import type { GameSpeed, GameState } from './state';
@@ -19,7 +20,10 @@ export type CommandErrorCode =
   | 'sameCity'
   | 'hqAlreadyFounded'
   | 'hqNotFounded'
-  | 'alreadyConnected';
+  | 'alreadyConnected'
+  | 'researchLocked' // funzione non ancora sbloccata nell'albero della Ricerca
+  | 'researchAlreadyDone'
+  | 'researchPrereqMissing';
 
 export type CommandResult =
   | { ok: true }
@@ -46,12 +50,30 @@ function payCost(state: GameState, cost: Cost): CommandResult {
   return { ok: true };
 }
 
+// Sblocca un nodo dell'albero della Ricerca: verifica prereq + risorse, scala il costo
+// (per il QG è 0: ricerca iniziale gratuita) e segna il nodo come ricercato. È l'unico
+// canale che apre le funzioni gated (fondare il QG, squadroni, ambasciate, armi, radar).
+export function cmdUnlockResearch(state: GameState, nodeId: string): CommandResult {
+  const node = researchById.get(nodeId);
+  if (!node || node.placeholder) return { ok: false, code: 'researchLocked' };
+  if (isResearched(state, nodeId)) return { ok: false, code: 'researchAlreadyDone' };
+  if (!node.prereqs.every(p => isResearched(state, p))) {
+    return { ok: false, code: 'researchPrereqMissing' };
+  }
+  const paid = payCost(state, node.cost);
+  if (!paid.ok) return paid;
+  state.research.unlocked.push(nodeId);
+  return { ok: true };
+}
+
 // fonda il QG della nuova umanità: gratuito, una tantum, istituisce l'economia
 // e accredita il kit di partenza (riserve recuperate dalle macerie)
 export function cmdFoundHq(state: GameState, cityId: string): CommandResult {
   if (state.hqCityId !== null) return { ok: false, code: 'hqAlreadyFounded' };
   const city = state.cities.find(c => c.id === cityId);
   if (!city || !city.alive) return { ok: false, code: 'cityUnavailable' };
+  // gated dietro il nodo Ricerca gratuito `quartier_gen` (prima ricerca della partita)
+  if (!isUnlocked(state, 'foundHq')) return { ok: false, code: 'researchLocked' };
   state.hqCityId = cityId;
   const kit = CONFIG.economy.starterKit;
   state.humt += kit.humt;
@@ -64,6 +86,7 @@ export function cmdFoundHq(state: GameState, cityId: string): CommandResult {
 // apre un'ambasciata: collega la città alla rete (produzione + tasse)
 export function cmdBuildEmbassy(state: GameState, cityId: string): CommandResult {
   if (state.hqCityId === null) return { ok: false, code: 'hqNotFounded' };
+  if (!isUnlocked(state, 'embassy')) return { ok: false, code: 'researchLocked' };
   const city = state.cities.find(c => c.id === cityId);
   if (!city || !city.alive) return { ok: false, code: 'cityUnavailable' };
   if (isConnected(state, city)) return { ok: false, code: 'alreadyConnected' };
@@ -75,6 +98,7 @@ export function cmdBuildEmbassy(state: GameState, cityId: string): CommandResult
 
 export function cmdBuildSquadron(state: GameState, cityId: string): CommandResult {
   if (state.hqCityId === null) return { ok: false, code: 'hqNotFounded' };
+  if (!isUnlocked(state, 'squadron')) return { ok: false, code: 'researchLocked' };
   const city = state.cities.find(c => c.id === cityId);
   if (!city || !city.alive) return { ok: false, code: 'cityUnavailable' };
   const paid = payCost(state, squadronCost(state, cityId));
@@ -133,7 +157,9 @@ export function cmdSetSpeed(state: GameState, speed: GameSpeed): CommandResult {
 export function cmdDamageSquadron(state: GameState, squadronId: number, amount: number): void {
   const sq = state.squadrons.find(s => s.id === squadronId);
   if (!sq) return;
-  sq.hp -= amount;
+  // la blindatura (nodo `blindatura` ricercato) riduce ogni colpo, minimo 1 di danno
+  const armor = isUnlocked(state, 'armor') ? CONFIG.squadron.armor : 0;
+  sq.hp -= Math.max(1, amount - armor);
   if (sq.hp <= 0) state.squadrons = state.squadrons.filter(s => s.id !== squadronId);
 }
 

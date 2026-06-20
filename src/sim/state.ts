@@ -96,6 +96,10 @@ export interface GameState {
   outcome: Outcome;
   events: SimEvent[]; // registro recente (trimEvents), letto dalla UI senza mutarlo
   nextEventId: number;
+  // Albero della Ricerca: id dei nodi sbloccati (vedi sim/researchTree.ts). Le funzioni
+  // (fondare il QG, costruire squadroni/ambasciate, montare il minigun, ecc.) sono gated
+  // dietro lo sblocco del nodo relativo.
+  research: { unlocked: string[] };
 }
 
 interface CityRow {
@@ -150,6 +154,7 @@ export function createNewGame(seed: number): GameState {
     outcome: 'playing',
     events: [],
     nextEventId: 1,
+    research: { unlocked: [] }, // nuova partita: niente sbloccato (prima si ricerca il QG, gratis)
   };
   const w = CONFIG.waves;
   const day =

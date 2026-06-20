@@ -2,6 +2,7 @@ import type { PerspectiveCamera } from 'three';
 import { activeBattles } from '../sim/combat';
 import { CONFIG } from '../sim/config';
 import { ufoSquadronDistanceKm } from '../sim/measure';
+import { isUnlocked } from '../sim/researchTree';
 import type { GameState } from '../sim/state';
 import { WEAPON_STATS } from '../sim/weapons';
 import type { UfoLayer } from './ufoLayer';
@@ -56,6 +57,11 @@ export class SquadronWeaponLayer {
   }
 
   update(state: GameState, units: UnitLayer, ufos: UfoLayer, camera: PerspectiveCamera): void {
+    // minigun non ancora ricercato: nessuna arma montata sui caccia
+    if (!isUnlocked(state, 'weapon.minigun')) {
+      if (this.guns.size) this.reset();
+      return;
+    }
     // squadroni ingaggiati → primo UFO bersaglio (lo stesso del motore di combattimento)
     const targetBySquadron = new Map<number, number>();
     for (const battle of activeBattles(state)) {

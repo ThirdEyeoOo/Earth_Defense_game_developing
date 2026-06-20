@@ -21,6 +21,7 @@ import {
   cmdFoundHq,
   cmdRelocateSquadron,
   cmdSetSpeed,
+  cmdUnlockResearch,
   type CommandResult,
 } from './sim/commands';
 import { deserialize, SAVE_KEY, serialize } from './sim/save';
@@ -190,8 +191,26 @@ const bottomBar = createBottomBar(document.getElementById('bottom-bar')!, action
 });
 const radar = createRadar(document.getElementById('radar-panel')!);
 const balancePanel = createBalancePanel(document.getElementById('balance-panel')!);
-// pannello Ricerca: per ora sola anteprima della struttura dell'albero (funzionalità in arrivo)
-const researchPanel = createResearchPanel(document.getElementById('research-modal')!);
+// pannello Ricerca: albero tecnologico interattivo. La conferma di un nodo sblocca
+// la funzione relativa (gate dei comandi) pagando il costo; lo stato si persiste subito.
+const researchPanel = createResearchPanel(document.getElementById('research-modal')!, {
+  getState: () => state,
+  onUnlock: nodeId => {
+    const result = cmdUnlockResearch(state, nodeId);
+    if (!result.ok) {
+      showCommandError(result);
+      return false;
+    }
+    lastPanelKey = ''; // sbloccare il QG/funzioni cambia i pulsanti del pannello città
+    // l'autosave scatta al cambio giorno (e mai in fondazione): salva subito lo sblocco
+    try {
+      localStorage.setItem(SAVE_KEY, serialize(state));
+    } catch {
+      // storage non disponibile: si continua senza salvare
+    }
+    return true;
+  },
+});
 // finestra di scontro stile FTL: si apre dal badge di battaglia sul globo
 const combatWindow = createCombatWindow(document.getElementById('combat-window')!);
 // Terzo Occhio: in fondazione il fumetto guida; il banner-istruzione resta

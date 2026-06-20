@@ -7,6 +7,7 @@ import {
   cmdFoundHq,
   cmdRelocateSquadron,
   cmdSetSpeed,
+  cmdUnlockResearch,
 } from './commands';
 import { CONFIG } from './config';
 import { embassyCost, isConnected } from './economy';
@@ -18,6 +19,7 @@ import { grantRiches, newGameWithHq } from './testUtils';
 describe('cmdFoundHq', () => {
   it('fonda il QG una tantum e accredita il kit di partenza', () => {
     const s = createNewGame(1);
+    s.research.unlocked.push('quartier_gen'); // la fondazione è gated dietro la ricerca (gratis)
     expect(s.humt).toBe(0);
     const r = cmdFoundHq(s, 'rome');
     expect(r.ok).toBe(true);
@@ -60,6 +62,7 @@ describe('cmdBuildEmbassy', () => {
   it('rifiuta senza QG, su città già collegate e senza fondi', () => {
     const s = createNewGame(1);
     expect(cmdBuildEmbassy(s, 'paris')).toEqual({ ok: false, code: 'hqNotFounded' });
+    s.research.unlocked.push('quartier_gen', 'collegamento'); // fondazione + ambasciate sbloccate
     cmdFoundHq(s, 'rome');
     expect(cmdBuildEmbassy(s, 'rome')).toEqual({ ok: false, code: 'alreadyConnected' });
     const cost = embassyCost(s, 'paris');
@@ -103,6 +106,8 @@ describe('cmdBuildSquadron', () => {
   it('rifiuta senza QG, fondi insufficienti e città non valide', () => {
     const s = createNewGame(1);
     expect(cmdBuildSquadron(s, 'rome')).toEqual({ ok: false, code: 'hqNotFounded' });
+    // fondazione + catena fino a `caccia` (squadroni) sbloccate
+    s.research.unlocked.push('quartier_gen', 'minigun', 'blindatura', 'caccia');
     cmdFoundHq(s, 'rome');
     s.humt = 100;
     expect(cmdBuildSquadron(s, 'rome')).toEqual({
@@ -198,17 +203,69 @@ describe('cmdSetSpeed', () => {
 
 describe('cmdDamageSquadron', () => {
   it('sottrae gli HP e rimuove lo squadrone a 0 (no-op se id assente)', () => {
-    const s = newGameWithHq(1, 'rome');
+    const s = newGameWithHq(1, 'rome'); // sblocca tutto, blindatura compresa
     grantRiches(s);
     cmdBuildSquadron(s, 'rome');
     const sq = s.squadrons[0];
     const hp0 = sq.hp;
     cmdDamageSquadron(s, sq.id, 15);
-    expect(sq.hp).toBe(hp0 - 15);
+    // la blindatura ricercata riduce ogni colpo di CONFIG.squadron.armor
+    expect(sq.hp).toBe(hp0 - (15 - CONFIG.squadron.armor));
     cmdDamageSquadron(s, 999, 15); // id inesistente: no-op
     expect(s.squadrons).toHaveLength(1);
     cmdDamageSquadron(s, sq.id, hp0); // porta a ≤0 → distrutto
     expect(s.squadrons).toHaveLength(0);
+  });
+});
+
+describe('cmdUnlockResearch e gating', () => {
+  it('il Quartier Generale è gratis e abilita la fondazione', () => {
+    const s = createNewGame(1);
+    expect(cmdFoundHq(s, 'rome')).toEqual({ ok: false, code: 'researchLocked' });
+    const r = cmdUnlockResearch(s, 'quartier_gen');
+    expect(r.ok).toBe(true);
+    expect(s.humt).toBe(0); // gratis: nessun costo
+    expect(s.research.unlocked).toContain('quartier_gen');
+    expect(cmdFoundHq(s, 'rome').ok).toBe(true);
+  });
+
+  it('rifiuta placeholder, nodi inesistenti, prerequisiti mancanti e doppio sblocco', () => {
+    const s = createNewGame(1);
+    grantRiches(s);
+    expect(cmdUnlockResearch(s, 'diplomazia')).toEqual({ ok: false, code: 'researchLocked' });
+    expect(cmdUnlockResearch(s, 'inesistente')).toEqual({ ok: false, code: 'researchLocked' });
+    expect(cmdUnlockResearch(s, 'caccia')).toEqual({ ok: false, code: 'researchPrereqMissing' });
+    cmdUnlockResearch(s, 'minigun');
+    cmdUnlockResearch(s, 'blindatura');
+    expect(cmdUnlockResearch(s, 'caccia').ok).toBe(true);
+    expect(cmdUnlockResearch(s, 'caccia')).toEqual({ ok: false, code: 'researchAlreadyDone' });
+  });
+
+  it('paga il costo del nodo (rifiuto se le risorse non bastano, senza scalare nulla)', () => {
+    const s = createNewGame(1);
+    expect(cmdUnlockResearch(s, 'minigun')).toEqual({
+      ok: false,
+      code: 'insufficientHumt',
+      params: { cost: 200 },
+    });
+    grantRiches(s);
+    const humt = s.humt;
+    expect(cmdUnlockResearch(s, 'minigun').ok).toBe(true);
+    expect(s.humt).toBe(humt - 200);
+    expect(s.resources.industria).toBe(9999 - 15);
+    expect(s.resources.tecnologia).toBe(9999 - 10);
+  });
+
+  it('gate squadroni e ambasciate dietro la ricerca', () => {
+    const s = createNewGame(1);
+    s.research.unlocked.push('quartier_gen');
+    cmdFoundHq(s, 'rome');
+    grantRiches(s);
+    expect(cmdBuildSquadron(s, 'rome')).toEqual({ ok: false, code: 'researchLocked' });
+    expect(cmdBuildEmbassy(s, 'paris')).toEqual({ ok: false, code: 'researchLocked' });
+    s.research.unlocked.push('minigun', 'blindatura', 'caccia', 'collegamento');
+    expect(cmdBuildSquadron(s, 'rome').ok).toBe(true);
+    expect(cmdBuildEmbassy(s, 'paris').ok).toBe(true);
   });
 });
 

@@ -3,6 +3,7 @@ import { activeBattles, isEngageable } from '../sim/combat';
 import { cmdDamageSquadron, cmdDamageUfo } from '../sim/commands';
 import { CONFIG } from '../sim/config';
 import { ufoSquadronDistanceKm } from '../sim/measure';
+import { isUnlocked } from '../sim/researchTree';
 import type { GameState, UfoState } from '../sim/state';
 import type { WeaponModuleId } from '../sim/weapons';
 import { WEAPON_STATS } from '../sim/weapons';
@@ -77,8 +78,9 @@ export class CombatEngine {
             });
           }
         }
-        // minigun dei caccia difensori → un UFO attaccante
+        // minigun dei caccia difensori → un UFO attaccante (solo se l'arma è ricercata)
         for (const sq of battle.defenders) {
+          if (!isUnlocked(state, 'weapon.minigun')) break;
           if (!state.squadrons.some(s => s.id === sq.id)) continue;
           for (const side of SIDES) {
             this.scheduleFire(state, gameMinutes, speed, liveKeys, {

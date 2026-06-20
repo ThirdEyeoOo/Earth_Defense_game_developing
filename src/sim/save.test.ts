@@ -131,6 +131,22 @@ describe('save', () => {
     expect(loaded.hqCityId).toBe(mostPopulous.id);
   });
 
+  it('migra i salvataggi v5: nasce research.unlocked coi nodi implementati', () => {
+    const s = newGameWithHq(23);
+    for (let i = 0; i < 60; i++) tick(s);
+    const raw = JSON.parse(serialize(s));
+    raw.version = 5;
+    delete raw.research; // com'era prima dell'albero della Ricerca
+    const loaded = deserialize(JSON.stringify(raw))!;
+    expect(loaded).not.toBeNull();
+    expect(loaded.version).toBe(CONFIG.saveVersion);
+    // le partite in corso restano giocabili: tutto lo sbloccabile è già sbloccato
+    expect(loaded.research.unlocked).toContain('quartier_gen');
+    expect(loaded.research.unlocked).toContain('caccia');
+    expect(loaded.research.unlocked).not.toContain('diplomazia'); // placeholder escluso
+    for (let i = 0; i < 50; i++) tick(loaded);
+  });
+
   it('rifiuta salvataggi con versione valida ma forma errata', () => {
     expect(deserialize('{"version":4}')).toBeNull();
     expect(deserialize('{"version":4,"cities":"x","squadrons":[],"ufos":[],"tick":0,"humt":1}')).toBeNull();

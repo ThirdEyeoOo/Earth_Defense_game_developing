@@ -1,6 +1,7 @@
 import citiesData from '../data/cities.json';
 import { CONFIG } from './config';
 import { lunarCrossTick } from './orbit';
+import { IMPLEMENTED_NODE_IDS } from './researchTree';
 import type { CityResource } from './resources';
 import { emptyStockpile } from './resources';
 import type { GameState } from './state';
@@ -117,6 +118,14 @@ const MIGRATIONS: Record<number, Migration> = {
     }
     return { ...raw, version: 5 };
   },
+  // v5 → v6: albero della Ricerca con meccanica di sblocco. Le partite in corso hanno già
+  // QG/squadroni/ambasciate/armi attivi senza averli "ricercati": sblocchiamo tutti i nodi
+  // implementati così restano giocabili (i nuovi giochi partono invece da zero).
+  5: raw => ({
+    ...raw,
+    research: { unlocked: [...IMPLEMENTED_NODE_IDS] },
+    version: 6,
+  }),
 };
 
 export function serialize(state: GameState): string {

@@ -1,13 +1,16 @@
 import { cmdFoundHq } from './commands';
+import { IMPLEMENTED_NODE_IDS } from './researchTree';
 import { RESOURCE_TYPES } from './resources';
 import type { GameState, UfoPhase } from './state';
 import { createNewGame } from './state';
 import { progressUfos } from './ufos';
 
 // Nuova partita con QG già fondato: senza, tick() è un no-op (fase di fondazione).
-// Roma di default, come nei test storici.
+// Roma di default, come nei test storici. Sblocca tutti i nodi implementati così i test
+// che fondano/costruiscono non incappano nel gating della Ricerca.
 export function newGameWithHq(seed: number, cityId = 'rome'): GameState {
   const state = createNewGame(seed);
+  state.research.unlocked = [...IMPLEMENTED_NODE_IDS];
   cmdFoundHq(state, cityId);
   return state;
 }
