@@ -6,8 +6,12 @@ import {
   altitudeKm,
   GAME_SECONDS_PER_TICK,
   speedKmH,
+  squadronAltitudeKm,
   squadronSpeedKmH,
+  ufoAltitudeKm,
   ufoEtaTicks,
+  ufoSpeedKmH,
+  ufoSquadronDistanceKm,
 } from './measure';
 
 const orbit: OrbitalParams = {
@@ -30,6 +34,7 @@ function ufo(phase: UfoState['phase'], ticksRemaining: number): UfoState {
     phase,
     ticksRemaining,
     phaseTotalTicks: Math.max(ticksRemaining, 1),
+    phaseStartFraction: 0,
     abducted: 0,
     spawnDir: orbit.spawnDir,
     orbit,
@@ -57,6 +62,23 @@ describe('measure', () => {
   it('crociera squadrone = 2250 km/h', () => {
     expect(squadronSpeedKmH()).toBe(CONFIG.squadron.speedKmPerDay / 24);
     expect(squadronSpeedKmH()).toBe(2250);
+  });
+
+  it('fuga avviata a metà tick: a inizio fuga velocità ~0 e quota = superficie (niente salto)', () => {
+    // la fuga scatta in tempo reale a una frazione di tick qualsiasi (qui 0,4): col
+    // phaseStartFraction il progresso letto al momento dell'avvio è 0 esatto
+    const f0 = 0.4;
+    const fleeing: UfoState = { ...ufo('escaping', 5), phaseTotalTicks: 5, phaseStartFraction: f0 };
+    // ticksRemaining = phaseTotalTicks ⇒ siamo all'istante di avvio della fuga
+    fleeing.ticksRemaining = fleeing.phaseTotalTicks;
+    expect(ufoSpeedKmH(fleeing, f0)).toBeLessThan(100); // ~0, non "1000 km/h"
+    expect(ufoAltitudeKm(fleeing, f0)).toBeCloseTo(altitudeKm(orbit.surfaceRadius), 5);
+  });
+
+  it('distanza caccia↔UFO = |quota UFO − quota caccia| (km)', () => {
+    const u = ufo('abducting', 5); // quota UFO = surfaceRadius
+    const expected = Math.abs(altitudeKm(orbit.surfaceRadius) - squadronAltitudeKm());
+    expect(ufoSquadronDistanceKm(u, 0)).toBeCloseTo(expected, 5);
   });
 
   it('ETA: decresce avvicinandosi, null in rapimento/fuga', () => {

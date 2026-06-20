@@ -88,10 +88,20 @@ function buildSvgModel(
   return { model, parts };
 }
 
-// progresso continuo di una fase: tick svolti + frazione del tick corrente
-function phaseProgress(ticksRemaining: number, totalTicks: number, tickFraction: number): number {
+// progresso continuo di una fase: tick svolti + frazione del tick corrente, meno la
+// frazione in cui la fase è iniziata (per le fasi avviate a metà tick, es. la fuga in
+// tempo reale: così il progresso parte da 0 esatto, niente salto di posizione/velocità).
+function phaseProgress(
+  ticksRemaining: number,
+  totalTicks: number,
+  tickFraction: number,
+  startFraction = 0,
+): number {
   const done = totalTicks - ticksRemaining;
-  return Math.min(1, Math.max(0, (done + tickFraction) / totalTicks));
+  // la fase dura (totalTicks − startFraction) tick reali: chi parte a metà tick raggiunge
+  // comunque 1 alla fine (altrimenti i trasferimenti brevi arriverebbero "tagliati")
+  const denom = Math.max(1e-6, totalTicks - startFraction);
+  return Math.min(1, Math.max(0, (done + tickFraction - startFraction) / denom));
 }
 
 // orienta un oggetto piatto: piano tangente al globo (normale = radiale) e "muso" (+Y locale) lungo forward
@@ -242,7 +252,12 @@ export class UnitLayer {
         boostTarget = 1;
         const from = state.cities.find(c => c.id === sq.transfer!.fromCityId)!;
         const to = state.cities.find(c => c.id === sq.transfer!.toCityId)!;
-        const frac = phaseProgress(sq.transfer.ticksRemaining, sq.transfer.totalTicks, tickFraction);
+        const frac = phaseProgress(
+          sq.transfer.ticksRemaining,
+          sq.transfer.totalTicks,
+          tickFraction,
+          sq.transfer.startFraction ?? 0,
+        );
         const a = cityPosition(from, 1).normalize();
         const b = cityPosition(to, 1).normalize();
         const angle = a.angleTo(b);
@@ -321,7 +336,12 @@ export class UnitLayer {
   // La traiettoria è calcolata dal modulo fisico condiviso (src/sim/orbit.ts):
   // qui si traduce solo il progresso continuo (tick + frazione) in posizione 3D.
   private ufoTarget(ufo: UfoState, tickFraction: number): THREE.Vector3 {
-    const progress = phaseProgress(ufo.ticksRemaining, ufo.phaseTotalTicks, tickFraction);
+    const progress = phaseProgress(
+      ufo.ticksRemaining,
+      ufo.phaseTotalTicks,
+      tickFraction,
+      ufo.phaseStartFraction ?? 0,
+    );
     const p = positionAt(ufo.phase, progress, ufo.orbit);
     return new THREE.Vector3(p.x, p.y, p.z);
   }

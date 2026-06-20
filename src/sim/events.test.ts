@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CONFIG } from './config';
-import { cmdBuildSquadron, cmdRelocateSquadron } from './commands';
+import { cmdAbduct, cmdBuildSquadron, cmdRelocateSquadron } from './commands';
 import { EVENT_RETENTION_TICKS, emitEvent } from './events';
 import { createNewGame } from './state';
 import { advanceUfoToPhase, advanceUfosUntilGone, newGameWithHq } from './testUtils';
@@ -46,17 +45,17 @@ describe('events', () => {
     });
   });
 
-  it('abductedTotal accumula durante i rapimenti, coerente con il contatore di bordo', () => {
+  it('abductedTotal accumula uno alla volta, coerente con il contatore di bordo', () => {
     const s = createNewGame(1);
     spawnUfo(s, 'rome');
     advanceUfoToPhase(s, 'abducting');
     expect(s.ufos[0].phase).toBe('abducting');
     expect(s.stats.abductedTotal).toBe(0);
     const n = 6;
-    for (let i = 0; i < n; i++) progressUfos(s);
-    const perTick = CONFIG.ufoAbductor.abductionPerDay / CONFIG.ticksPerDay;
-    expect(s.stats.abductedTotal).toBeCloseTo(n * perTick);
-    expect(s.stats.abductedTotal).toBeCloseTo(s.ufos[0].abducted);
+    // rapimento in tempo reale: cmdAbduct prende UNA persona per chiamata
+    for (let i = 0; i < n; i++) cmdAbduct(s, s.ufos[0].id);
+    expect(s.stats.abductedTotal).toBe(n);
+    expect(s.stats.abductedTotal).toBe(s.ufos[0].abducted);
   });
 
   it('determinismo: stesso seed e stessi comandi → stesso registro eventi', () => {

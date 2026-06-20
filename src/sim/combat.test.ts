@@ -35,7 +35,7 @@ describe('activeBattles', () => {
     const s = createNewGame(1);
     addSquadron(s, 'rome');
     s.squadrons[0].transfer = {
-      fromCityId: 'paris', toCityId: 'rome', ticksRemaining: 5, totalTicks: 5,
+      fromCityId: 'paris', toCityId: 'rome', ticksRemaining: 5, totalTicks: 5, startFraction: 0,
     };
     spawnDescendingUfo(s, 'rome');
     expect(activeBattles(s)).toHaveLength(0);

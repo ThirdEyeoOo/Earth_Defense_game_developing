@@ -152,6 +152,8 @@ body {
 #city-panel ul { padding-left: 16px; }
 /* elenco risorse con icona: niente pallino, l'icona fa da marcatore */
 #city-panel .resource-list { list-style: none; padding-left: 0; }
+/* potenziale città (Σ amount / 1000) = livello di sviluppo, sopra le quote % */
+#city-panel .city-potential { margin: 2px 0 6px; font-size: 12px; color: #8fe6b0; font-weight: 600; }
 /* iconcina colorata accanto al nome di una risorsa (ui/resourceIcons.ts) */
 .res-icon {
   display: inline-block;
@@ -181,6 +183,11 @@ body {
   z-index: 20;
 }
 #settings-modal { z-index: 30; } /* sopra anche allo start screen */
+/* start screen: artwork del titolo (Assets/Intro) come sfondo a tutto schermo, senza veli
+   (immagine a piena luminosità). Vite bundla l'immagine dall'url(). */
+#start-screen {
+  background: url("../../Assets/Intro/Earth Defense Title.jpg") center / cover no-repeat;
+}
 .end-box, .start-box, .settings-box {
   text-align: center;
   background: #0b1424;
@@ -188,11 +195,39 @@ body {
   border-radius: 8px;
   padding: 28px 48px;
 }
-.start-box { position: relative; }
-.start-box button { margin: 6px; font-size: 16px; padding: 8px 22px; }
+/* finestra start screen: semitrasparente così traspare l'artwork del titolo dietro */
+.start-box {
+  position: relative;
+  background: rgba(11, 20, 36, 0.5);
+  backdrop-filter: blur(3px);
+  border-color: rgba(109, 255, 174, 0.35);
+}
+/* titolo "Earth Defense": font Quantico, verde con glow */
+.start-box h1 {
+  font-family: 'Quantico', sans-serif;
+  font-weight: 700;
+  font-size: 38px;
+  letter-spacing: 3px;
+  color: #6dffae;
+  text-shadow: 0 0 8px rgba(109, 255, 174, 0.9), 0 0 20px rgba(109, 255, 174, 0.55),
+    0 0 36px rgba(109, 255, 174, 0.35);
+}
+/* versione del gioco, sotto il titolo */
+.start-box .start-version {
+  margin: -6px 0 14px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: rgba(143, 230, 176, 0.7);
+}
+/* pulsanti start screen impilati verticalmente, larghezza uniforme */
+.start-box button { display: block; margin: 8px auto; font-size: 16px; padding: 8px 22px; min-width: 200px; }
 .settings-box button { margin: 4px; padding: 6px 16px; }
 .settings-box button.active { background: #2c4a73; }
 .settings-box h1 { font-size: 20px; }
+/* cursore volume musica: etichetta sopra, slider a piena larghezza del box */
+.settings-music { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.settings-music label { font-size: 13px; }
+.settings-music input[type='range'] { width: 220px; accent-color: #6dffae; cursor: pointer; }
 
 /* finestra Enciclopedia (ui/encyclopedia.ts): nav voci + contenuto */
 .enc-box {

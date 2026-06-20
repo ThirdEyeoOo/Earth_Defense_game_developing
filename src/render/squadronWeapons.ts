@@ -1,10 +1,14 @@
 import type { PerspectiveCamera } from 'three';
 import { activeBattles } from '../sim/combat';
 import { CONFIG } from '../sim/config';
+import { ufoSquadronDistanceKm } from '../sim/measure';
 import type { GameState } from '../sim/state';
+import { WEAPON_STATS } from '../sim/weapons';
 import type { UfoLayer } from './ufoLayer';
 import { HARDPOINT_FORWARD_DY, HARDPOINTS, type UnitLayer } from './units';
 import { WEAPON_MODULES } from './weaponModules';
+
+const MINIGUN_RANGE_KM = WEAPON_STATS[CONFIG.squadron.weaponModule].rangeKm; // gittata minigun
 
 // Moduli arma dei CACCIA sul globo (minigun sugli hardpoint delle ali). Speculare a come
 // UfoLayer monta le torrette sull'UFO, ma il caccia è una mesh Three.js: qui montiamo il
@@ -72,7 +76,12 @@ export class SquadronWeaponLayer {
       const px = clamp(rect.w * MINIGUN_TO_JET_WIDTH, MIN_PX, MAX_PX);
       const h = px * (this.art.viewH / this.art.viewW);
       const targetUfoId = targetBySquadron.get(sq.id);
-      const aim = targetUfoId != null ? ufos.ufoBodyRect(targetUfoId) : null;
+      // ufoCombatRect (non ufoBodyRect): la mira deve agganciare l'UFO anche in rapimento
+      const aim = targetUfoId != null ? ufos.ufoCombatRect(targetUfoId) : null;
+      // GITTATA: il minigun fa fuoco (.on) solo se l'UFO è entro la portata; intanto continua
+      // a INSEGUIRLO col puntamento (rotazione) anche fuori gittata
+      const targetUfo = targetUfoId != null ? state.ufos.find(u => u.id === targetUfoId) : undefined;
+      const inRange = targetUfo != null && ufoSquadronDistanceKm(targetUfo) <= MINIGUN_RANGE_KM;
 
       for (const side of SIDES) {
         const key = `${sq.id}:${side}`;
@@ -107,7 +116,7 @@ export class SquadronWeaponLayer {
         gun.host.style.top = `${(hp.y - h / 2).toFixed(1)}px`;
         gun.host.style.transform = `rotate(${rot.toFixed(1)}deg)`;
         gun.host.style.display = '';
-        const on = aim != null;
+        const on = aim != null && inRange; // spin/lampo solo in gittata
         if (on !== gun.on) {
           gun.svg.classList.toggle('on', on);
           gun.on = on;

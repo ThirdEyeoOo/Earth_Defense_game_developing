@@ -19,8 +19,10 @@ export const CONFIG = {
       tessuti: 3,
       finanza: 1,
     } satisfies Record<ResourceType, number>,
-    conversionRate: 0.1, // unità prodotte al giorno per punto di capacità
-    taxRatePerDay: 0.09, // gettito = Σ(peso×amount) × popFactor × aliquota (~52–203 Ħ/g per città)
+    // Modello "potenziale 1000 su 30 giorni": potenziale città = Σ amount (max 1000) =
+    // produzione su `cycleDays` giorni; il tick economico accredita 1/cycleDays al giorno.
+    cycleDays: 30, // giorni su cui si distribuisce produzione e gettito (megalopoli piena = 1000/30g)
+    taxRatePerDay: 0.09, // gettito su 30g = potenziale × popFactor × sizeMultiplier × aliquota (max 90/30g)
     embassy: { baseHumt: 150, baseAgro: 20, distanceDivisorKm: 5000 },
     // riserve recuperate dalle macerie alla fondazione del QG: bastano per il
     // primo squadrone subito, o squadrone + ambasciata vicina in 1-2 giorni
@@ -63,8 +65,11 @@ export const CONFIG = {
   physics: {
     mu: 28.7, // G·M ≈ 28,7 raggi³/tick² (g reale, τ=4320 s/tick) → periodo LEO ~2,4 tick
     orbitRadius: 1.6, // quota dell'orbita di parcheggio
-    surfaceRadius: 1.02, // quota di hover in superficie (rapimento)
-    visualStartDistance: 8, // quota di comparsa per il RENDER (il timing viene dalla distanza fisica)
+    surfaceRadius: 1.004, // quota di hover in rapimento ≈ 25 km: l'UFO scende vicino alla città
+    // (prima 1.02 ≈ 127 km) così il caccia (15 km) lo raggiunge con la gittata di 50 km
+    visualStartDistance: 160, // quota di comparsa per il RENDER (il timing viene dalla distanza
+    // fisica): grande di proposito così l'UFO si vede arrivare VELOCE dallo spazio profondo
+    // (spawn ≥10.000 km/h nel readout) — è un puntino lontano (MIN_SCALE) al primo avvistamento
     auInRadii: 23482, // 1 UA in raggi terrestri: per il timing fisico della crociera flip-and-burn
     lunarDistance: 60, // raggi: soglia (fisica) di rientro a 1x del tasto ">>>"
     engageAltitude: 1.6, // quota sotto cui i caccia possono ingaggiare (default = quota d'orbita)

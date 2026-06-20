@@ -7,7 +7,7 @@ export const it = {
   // HUD
   'hud.radar': 'Radar',
   'hud.save': 'Salva',
-  'hud.humt': 'Ħ {n}',
+  'hud.humt': '🪙 HumT {n}',
   'hud.pop': 'Pop. {n}',
   'hud.abductions': 'Abductions: {n}',
   'hud.dead': 'Morti: {n}',
@@ -29,6 +29,8 @@ export const it = {
   'panel.networkNeutral': '○ Neutrale (fuori rete)',
   'panel.resources': 'Risorse',
   'panel.productionPerDay': '+{n}/g',
+  'panel.resourcePct': '{n}%',
+  'panel.cityPotential': 'Potenziale: {n}/1000',
   'panel.foundHq': 'Fonda qui il Quartier Generale (gratis)',
   'panel.starterKit': 'Kit di partenza: Ħ {humt} + {ind} industria + {fuel} combustibili + {agro} agroalimentare',
   'panel.openEmbassy': 'Apri ambasciata (Ħ {humt} + {agro} agroalimentare)',
@@ -70,6 +72,8 @@ export const it = {
   // schermata iniziale e banner
   'start.continue': 'Continua',
   'start.newGame': 'Nuova partita',
+  'start.exit': 'Esci',
+  'start.exitHint': 'Chiudi la scheda del browser per uscire.',
   'start.invalidSave': 'Salvataggio non valido o incompatibile',
   'banner.gameSaved': 'Partita salvata',
   'banner.selectDestination': 'Seleziona la città di destinazione (Esc per annullare)',
@@ -202,6 +206,7 @@ export const it = {
   // menu impostazioni
   'settings.title': 'Impostazioni',
   'settings.language': 'Lingua',
+  'settings.musicVolume': 'Volume musica: {n}%',
   'settings.close': 'Chiudi',
   'settings.open': 'Impostazioni',
 

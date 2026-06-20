@@ -76,6 +76,7 @@ export function spawnUfo(state: GameState, targetCityId: string): void {
     phase: 'approaching',
     ticksRemaining: cruise,
     phaseTotalTicks: cruise,
+    phaseStartFraction: 0,
     abducted: 0,
     spawnDir,
     orbit,
@@ -83,11 +84,23 @@ export function spawnUfo(state: GameState, targetCityId: string): void {
   });
 }
 
-// imposta la fase successiva con la durata fisica corrispondente
+// imposta la fase successiva con la durata fisica corrispondente. Le transizioni del
+// tick avvengono a bordo di tick ⇒ frazione iniziale ~0.
 function enterPhase(ufo: UfoState, phase: UfoPhase, duration: number): void {
   ufo.phase = phase;
   ufo.ticksRemaining = duration;
   ufo.phaseTotalTicks = duration;
+  ufo.phaseStartFraction = 0;
+}
+
+// Avvio della fuga a capienza piena / città esaurita. Il rapimento ora avviene in
+// TEMPO REALE (src/render/abductionEngine.ts → cmdAbduct), quindi è il comando a
+// decidere questa transizione, non più il tick. `startFraction` è la frazione del tick
+// in cui scatta la fuga: memorizzata così il render fa partire il progresso da 0 esatto
+// (la fuga parte dal punto in cui l'UFO si trova, a velocità 0).
+export function startEscape(ufo: UfoState, startFraction = 0): void {
+  enterPhase(ufo, 'escaping', descentDuration(ufo.orbit));
+  ufo.phaseStartFraction = startFraction;
 }
 
 export function progressUfos(state: GameState): void {
@@ -104,17 +117,9 @@ export function progressUfos(state: GameState): void {
       continue;
     }
     ufo.ticksRemaining--;
-    if (ufo.phase === 'abducting') {
-      // rapisce fino alla capienza, senza superare le persone ancora prelevabili
-      const take = Math.min(perTick, capacity - ufo.abducted, Math.max(0, city.population - ufo.abducted));
-      ufo.abducted += take;
-      state.stats.abductedTotal += take;
-      // pieno (o ha già "preso tutti"): parte in fuga subito
-      if (ufo.abducted >= capacity || ufo.abducted >= city.population) {
-        enterPhase(ufo, 'escaping', descentDuration(ufo.orbit));
-        continue;
-      }
-    }
+    // Il prelievo delle persone NON avviene più qui: è in tempo reale, uno alla volta,
+    // nell'AbductionEngine (src/render). Il tick mantiene solo la macchina a fasi e, per
+    // la fase 'abducting', un fallback a tempo (durata stimata scaduta → fuga).
     if (ufo.ticksRemaining > 0) continue;
     if (ufo.phase === 'approaching') {
       enterPhase(ufo, 'orbiting', orbitDuration(ufo.orbit));

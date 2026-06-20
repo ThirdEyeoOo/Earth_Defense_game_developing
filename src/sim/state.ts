@@ -25,6 +25,11 @@ export interface TransferState {
   toCityId: string;
   ticksRemaining: number;
   totalTicks: number;
+  // Frazione di tick in cui è partito il trasferimento (può iniziare a metà tick). Il
+  // render la sottrae così la rotta parte da 0 esatto sopra la città di partenza, invece
+  // che già a metà arco (i trasferimenti brevi durano pochi tick). Assente nei salvataggi
+  // vecchi ⇒ 0.
+  startFraction: number;
 }
 
 export interface SquadronState {
@@ -43,6 +48,11 @@ export interface UfoState {
   phase: UfoPhase;
   ticksRemaining: number; // tick alla fine della fase corrente
   phaseTotalTicks: number; // durata totale della fase corrente (fisica, intera); per il progresso continuo
+  // Frazione di tick in cui è iniziata la fase corrente. ~0 per le transizioni a bordo di
+  // tick (progressUfos), ma una fase avviata in TEMPO REALE a metà tick (la fuga, da
+  // cmdAbduct) parte a frazione qualsiasi: il render la sottrae così il progresso parte da 0
+  // (niente "teletrasporto" né velocità iniziale fittizia). Assente nei salvataggi vecchi ⇒ 0.
+  phaseStartFraction: number;
   abducted: number; // contatore di bordo, accumula 0.5/tick in abducting
   spawnDir: { x: number; y: number; z: number }; // direzione di arrivo dallo spazio profondo (unitaria)
   orbit: OrbitalParams; // parametri di traiettoria (condivisi sim↔render via orbit.ts)
@@ -65,7 +75,7 @@ export interface GameStats {
 export type Outcome = 'playing' | 'victory' | 'defeat';
 
 // 0 = pausa. 1000 si raggiunge solo col tasto ">>>" (salta al prossimo attacco).
-export type GameSpeed = 0 | 1 | 2 | 4 | 10 | 100 | 1000;
+export type GameSpeed = 0 | 1 | 5 | 25 | 100 | 1000;
 
 export interface GameState {
   version: number;

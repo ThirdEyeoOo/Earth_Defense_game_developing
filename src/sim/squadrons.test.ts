@@ -37,7 +37,7 @@ describe('squadrons', () => {
     addSquadron(s, 'rome');
     const sq = s.squadrons[0];
     sq.cityId = 'tokyo';
-    sq.transfer = { fromCityId: 'rome', toCityId: 'tokyo', ticksRemaining: 2, totalTicks: 2 };
+    sq.transfer = { fromCityId: 'rome', toCityId: 'tokyo', ticksRemaining: 2, totalTicks: 2, startFraction: 0 };
     progressTransfers(s);
     expect(sq.transfer?.ticksRemaining).toBe(1);
     progressTransfers(s);

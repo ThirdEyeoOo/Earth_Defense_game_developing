@@ -3,7 +3,7 @@ import { CONFIG } from '../sim/config';
 import { dailyIncome, dailyProductionByType, isConnected } from '../sim/economy';
 import { RESOURCE_TYPES } from '../sim/resources';
 import type { GameState } from '../sim/state';
-import { fmtInt } from './format';
+import { fmtDecimal1, fmtInt } from './format';
 import { resourceIcon } from './resourceIcons';
 
 // risorse dalla più importante alla meno importante (peso 10 → 1); a parità di
@@ -24,14 +24,14 @@ export function createBalancePanel(root: HTMLElement): {
     },
     update(state: GameState) {
       if (root.classList.contains('hidden')) return;
-      const production = dailyProductionByType(state);
+      const production = dailyProductionByType(state); // delta GIORNALIERO (potenziale/30)
       const connected = state.cities.filter(c => isConnected(state, c)).length;
       const rows = RESOURCES_BY_WEIGHT.map(
         type => `
           <tr>
             <td class="res-name">${resourceIcon(type)}<span class="res-label">${t(`res.${type}`)}</span></td>
             <td class="num">${fmtInt(Math.floor(state.resources[type]))}</td>
-            <td class="num gain">${t('panel.productionPerDay', { n: production[type].toFixed(1) })}</td>
+            <td class="num gain">${t('panel.productionPerDay', { n: fmtDecimal1(production[type]) })}</td>
           </tr>`,
       ).join('');
       root.innerHTML = `

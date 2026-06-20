@@ -1,11 +1,11 @@
 import { cityName, countryName, t } from '../i18n';
 import { CONFIG } from '../sim/config';
-import { cityProductionPerDay, embassyCost, isConnected } from '../sim/economy';
+import { cityPotential, cityProductionPerDay, embassyCost, isConnected } from '../sim/economy';
 import type { Cost, ResourceType } from '../sim/resources';
 import { squadronCost } from '../sim/squadrons';
 import type { CityState, GameState } from '../sim/state';
 import { populationTier, sizeMultiplier } from '../sim/population';
-import { fmtInt, fmtMultiplier } from './format';
+import { fmtDecimal1, fmtInt, fmtMultiplier } from './format';
 import { resourceIcon } from './resourceIcons';
 
 export interface CityPanelCallbacks {
@@ -24,19 +24,24 @@ function canAfford(state: GameState, cost: Cost): boolean {
   );
 }
 
-// elenco risorse della città; con la produzione/giorno se la città è collegata
+// elenco risorse della città: quota % di ogni risorsa sul totale della città (le 10
+// quote sommano a 100%) + produzione su 30 giorni se la città è collegata. In testa il
+// Potenziale (Σ amount /1000) = livello di sviluppo (la quota % da sola non lo mostra).
 function resourcesHtml(state: GameState, city: CityState): string {
   const connected = isConnected(state, city);
-  const prod = cityProductionPerDay(city);
+  const prod = cityProductionPerDay(city); // delta GIORNALIERO (potenziale/30)
+  const pot = cityPotential(city);
   const rows = city.resources
     .map(r => {
+      const share = pot > 0 ? (r.amount / pot) * 100 : 0;
       const perDay = connected
-        ? ` <small>${t('panel.productionPerDay', { n: prod[r.type]!.toFixed(1) })}</small>`
+        ? ` <small>${t('panel.productionPerDay', { n: fmtDecimal1(prod[r.type]!) })}</small>`
         : '';
-      return `<li>${resourceIcon(r.type)}${t(`res.${r.type}`)}: <strong>${r.amount}</strong>${perDay}</li>`;
+      return `<li>${resourceIcon(r.type)}${t(`res.${r.type}`)}: <strong>${t('panel.resourcePct', { n: fmtDecimal1(share) })}</strong>${perDay}</li>`;
     })
     .join('');
-  return `<h3>${t('panel.resources')}</h3><ul class="resource-list">${rows}</ul>`;
+  const potLine = `<p class="city-potential">${t('panel.cityPotential', { n: pot })}</p>`;
+  return `<h3>${t('panel.resources')}</h3>${potLine}<ul class="resource-list">${rows}</ul>`;
 }
 
 function networkStatus(state: GameState, city: CityState): string {

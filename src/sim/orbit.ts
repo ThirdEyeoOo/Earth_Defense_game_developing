@@ -4,16 +4,18 @@
 // interi, deterministici), il render disegna la posizione continua.
 //
 // Modello (l'UFO ha i motori), a VELOCITÀ CONTINUA (C1) a ogni bordo di fase:
-//  - avvicinamento: arriva GIÀ in moto (profilo radiale ease-out, niente partenza
-//    da fermo), frena radialmente e vira nell'ultimo tratto per inserirsi TANGENTE
-//    all'orbita con la stessa velocità angolare (nessuno scatto);
+//  - avvicinamento: arriva GIÀ in moto (velocità radiale d'ingresso > 0, spawn lontano e
+//    veloce) e ACCELERA avvicinandosi alla Terra (la velocità radiale cresce da v0 al max
+//    vicino all'orbita), poi nell'ultima frazione (CAPTURE_FRACTION) fa il "capture-burn"
+//    che azzera la velocità radiale e vira per inserirsi TANGENTE all'orbita (nessuno scatto);
 //  - orbita: rotazione attorno all'asse del piano (spawnDir×cityDir); spazza T−Δ
 //    (Δ = arco che completerà la discesa), così l'orbita "lascia" l'ultimo tratto
 //    alla spirale di discesa;
 //  - discesa: SPIRALE che decelera (deorbit) — parte a velocità orbitale, perde
 //    quota e velocità tangenziale e atterra ESATTAMENTE sopra la città a velocità ~0;
 //  - rapimento: hover propulso fermo in superficie;
-//  - fuga: specchio della discesa (spirale che risale accelerando).
+//  - fuga: lancio propulso che parte da FERMO in superficie e ACCELERA salendo
+//    (quota ease-in), arrivando a quota d'orbita alla massima velocità e sparendo.
 import type { UfoPhase } from './state';
 
 export interface Vec3 {
@@ -177,17 +179,36 @@ export function computeCaptureSweep(p: OrbitalParams, cruiseTicks: number): numb
 
 // --- profili di quota per fase (progress ∈ [0,1]) ---
 
-// avvicinamento: frazione di distanza percorsa nel tempo. Ease-out (s'(0)=2 → parte
-// in MOTO, non da fermo; s'(1)=0 → velocità radiale nulla all'orbita = tangente).
+// pendenza radiale all'ingresso s'(0): >0 ⇒ l'UFO spawna GIÀ in moto (veloce); <1 ⇒
+// accelera (il picco di velocità radiale 2−ENTRY_SLOPE è vicino alla Terra, a p=c).
+const APPROACH_ENTRY_SLOPE = 0.7;
+
+// avvicinamento: frazione di distanza percorsa nel tempo. Entra già in moto e ACCELERA
+// (velocità radiale da ENTRY_SLOPE al max vicino alla Terra), poi nell'ultima
+// CAPTURE_FRACTION fa il capture-burn che la riporta a 0 (inserimento tangente all'orbita).
+//  - [0, c]  s = a·p + (1−a)·p²/c            s'(0)=a, s'(c)=2−a (max, vicino alla Terra)
+//  - [c, 1]  s = c + (1−c)·H(τ), τ=(p−c)/CF  H=−a τ³+(2a−1)τ²+(2−a)τ   s'(c)=2−a (C1), s'(1)=0
 function approachRadialFraction(progress: number): number {
   const p = clamp(progress, 0, 1);
-  return p * (2 - p);
+  const c = 1 - CAPTURE_FRACTION;
+  const a = APPROACH_ENTRY_SLOPE;
+  if (p <= c) return a * p + (1 - a) * ((p * p) / c);
+  const tau = (p - c) / CAPTURE_FRACTION;
+  return c + (1 - c) * (-a * tau * tau * tau + (2 * a - 1) * tau * tau + (2 - a) * tau);
 }
 
-// inverso di approachRadialFraction: progresso a cui si è percorsa la frazione f
+// inverso di approachRadialFraction (per lunarCrossTick). s(p) è monotona crescente ⇒
+// bisezione deterministica (evita di invertire a mano il ramo cubico della cattura).
 function approachRadialProgress(fraction: number): number {
   const f = clamp(fraction, 0, 1);
-  return 1 - Math.sqrt(1 - f);
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 50; i++) {
+    const mid = (lo + hi) * 0.5;
+    if (approachRadialFraction(mid) < f) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) * 0.5;
 }
 
 // angolo durante l'avvicinamento: dritto in arrivo (−sweep) fino all'ultima
@@ -225,9 +246,12 @@ export function altitudeAt(phase: UfoPhase, progress: number, p: OrbitalParams):
       return p.orbitRadius + (p.surfaceRadius - p.orbitRadius) * smoothstep01(progress);
     case 'abducting':
       return p.surfaceRadius;
-    case 'escaping':
-      // specchio della discesa: risalita superficie→orbita
-      return p.orbitRadius + (p.surfaceRadius - p.orbitRadius) * smoothstep01(1 - progress);
+    case 'escaping': {
+      // lancio propulso: parte da FERMO in superficie e ACCELERA salendo (ease-in p²:
+      // velocità radiale 0 all'avvio, max a quota d'orbita), poi sparisce
+      const e = clamp(progress, 0, 1);
+      return p.surfaceRadius + (p.orbitRadius - p.surfaceRadius) * (e * e);
+    }
   }
 }
 
@@ -249,8 +273,10 @@ export function positionAt(phase: UfoPhase, progress: number, p: OrbitalParams):
   }
 
   if (phase === 'descending' || phase === 'escaping') {
-    // spirale nel piano orbitale: angolo da (T−Δ) verso T, quota smoothstep.
+    // spirale nel piano orbitale: angolo da (T−Δ) verso T (discesa) o all'inverso (fuga).
     // g(τ)=2τ−τ²: g'(0)=2 → rate iniziale = ω (C1 con orbita), g'(1)=0 → rate finale 0.
+    // Quota: smoothstep (discesa, atterraggio dolce) / ease-in (fuga, accelera salendo),
+    // entrambe da altitudeAt — la fuga parte e finisce dunque con velocità ben definite.
     const axis = orbitalAxis(spawnDir, cityDir);
     const swept = orbitSweptAngle(p);
     const delta = descentSweep(p);

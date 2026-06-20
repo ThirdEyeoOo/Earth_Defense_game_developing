@@ -26,3 +26,6 @@ coverage/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# PDF di review economia (artefatto locale)
+/economia-potenziale-1000.pdf

@@ -2,7 +2,8 @@ import type { Battle } from '../sim/combat';
 import { activeBattles, isEngageable } from '../sim/combat';
 import { cmdDamageSquadron, cmdDamageUfo } from '../sim/commands';
 import { CONFIG } from '../sim/config';
-import type { GameState } from '../sim/state';
+import { ufoSquadronDistanceKm } from '../sim/measure';
+import type { GameState, UfoState } from '../sim/state';
 import type { WeaponModuleId } from '../sim/weapons';
 import { WEAPON_STATS } from '../sim/weapons';
 
@@ -70,6 +71,7 @@ export class CombatEngine {
               weapon: CONFIG.ufoAbductor.weaponModule,
               damage: ufoWeapon.damage,
               cooldown: ufoWeapon.cooldownGameMinutes,
+              rangeKm: ufoWeapon.rangeKm,
               targetKind: 'squadron',
               findTarget: () => firstDefender(state, battle),
             });
@@ -84,6 +86,7 @@ export class CombatEngine {
               weapon: CONFIG.squadron.weaponModule,
               damage: jetWeapon.damage,
               cooldown: jetWeapon.cooldownGameMinutes,
+              rangeKm: jetWeapon.rangeKm,
               targetKind: 'ufo',
               findTarget: () => firstAttacker(state, battle),
             });
@@ -120,6 +123,7 @@ export class CombatEngine {
       weapon: WeaponModuleId;
       damage: number;
       cooldown: number;
+      rangeKm: number;
       targetKind: UnitKind;
       findTarget: () => { id: number } | null | undefined;
     },
@@ -128,6 +132,15 @@ export class CombatEngine {
     liveKeys.add(key);
     if (!this.nextFireAt.has(key)) {
       this.nextFireAt.set(key, gameMinutes + (spec.from.side === 'right' ? spec.cooldown / 2 : 0));
+    }
+    // GITTATA: l'UFO della coppia è `from` (torretta) o il bersaglio (minigun). Fuori gittata
+    // niente fuoco e niente arretrati (riparte da adesso quando rientra), così non si scarica
+    // una raffica accumulata appena il bersaglio entra in portata.
+    const target0 = spec.findTarget();
+    const pairUfo = this.pairUfo(state, spec.from, target0);
+    if (!pairUfo || ufoSquadronDistanceKm(pairUfo) > spec.rangeKm) {
+      this.nextFireAt.set(key, gameMinutes);
+      return;
     }
     let at = this.nextFireAt.get(key)!;
     let fired = 0;
@@ -160,6 +173,17 @@ export class CombatEngine {
     // backlog enorme (pausa lunga / 1000×): non accodare, riparti da adesso
     if (fired >= cap && gameMinutes > at) at = gameMinutes;
     this.nextFireAt.set(key, at);
+  }
+
+  // L'UFO coinvolto in una coppia di fuoco: è la sorgente (torretta UFO) o il bersaglio
+  // (minigun caccia). Serve per misurare la distanza caccia↔UFO (gating della gittata).
+  private pairUfo(
+    state: GameState,
+    from: ShotEnd & { side: Side },
+    target: { id: number } | null | undefined,
+  ): UfoState | null {
+    const id = from.kind === 'ufo' ? from.id : target?.id;
+    return id != null ? (state.ufos.find(u => u.id === id) ?? null) : null;
   }
 
   private applyImpact(state: GameState, kind: UnitKind, id: number, damage: number): void {

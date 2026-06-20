@@ -23,20 +23,18 @@ describe('economia HumT', () => {
     expect(Object.values(dailyProductionByType(s)).every(v => v === 0)).toBe(true);
   });
 
-  it('gettito città = Σ(peso×amount) × popFactor × sizeMultiplier × aliquota', () => {
+  it('gettito città = potenziale × popFactor × sizeMultiplier × aliquota / cycleDays', () => {
     const s = newGameWithHq(1, 'rome');
     const rome = s.cities.find(c => c.id === 'rome')!;
-    const gdp = rome.resources.reduce(
-      (sum, r) => sum + CONFIG.economy.resourceWeights[r.type] * r.amount,
-      0,
-    );
+    const e = CONFIG.economy;
+    const pot = rome.resources.reduce((sum, r) => sum + r.amount, 0); // somma non pesata
     const sm = sizeMultiplier(rome.population);
-    expect(cityIncomePerDay(rome)).toBeCloseTo(gdp * sm * CONFIG.economy.taxRatePerDay);
-    expect(dailyIncome(s)).toBe(Math.round(cityIncomePerDay(rome)));
+    expect(cityIncomePerDay(rome)).toBeCloseTo((pot * sm * e.taxRatePerDay) / e.cycleDays);
+    expect(dailyIncome(s)).toBeCloseTo(cityIncomePerDay(rome)); // float, non arrotondato
     // dimezzare la popolazione dimezza il popFactor E può abbassare la fascia
     rome.population = rome.initialPopulation / 2;
     const sm2 = sizeMultiplier(rome.population);
-    expect(cityIncomePerDay(rome)).toBeCloseTo(gdp * 0.5 * sm2 * CONFIG.economy.taxRatePerDay);
+    expect(cityIncomePerDay(rome)).toBeCloseTo((pot * 0.5 * sm2 * e.taxRatePerDay) / e.cycleDays);
   });
 
   it('producono solo le città collegate (QG + ambasciate), non le neutrali o distrutte', () => {
@@ -44,18 +42,18 @@ describe('economia HumT', () => {
     const before = dailyIncome(s);
     const paris = s.cities.find(c => c.id === 'paris')!;
     paris.embassy = true;
-    expect(dailyIncome(s)).toBe(before + Math.round(cityIncomePerDay(paris)));
+    expect(dailyIncome(s)).toBeCloseTo(before + cityIncomePerDay(paris));
     paris.alive = false;
-    expect(dailyIncome(s)).toBe(before);
+    expect(dailyIncome(s)).toBeCloseTo(before);
   });
 
-  it('produzione giornaliera = amount × tasso × popFactor × sizeMultiplier, per tipo', () => {
+  it('produzione giornaliera = amount × popFactor × sizeMultiplier / cycleDays, per tipo', () => {
     const s = newGameWithHq(1, 'rome');
     const rome = s.cities.find(c => c.id === 'rome')!;
     const sm = sizeMultiplier(rome.population);
     const prod = dailyProductionByType(s);
     for (const r of rome.resources) {
-      expect(prod[r.type]).toBeCloseTo(r.amount * CONFIG.economy.conversionRate * sm);
+      expect(prod[r.type]).toBeCloseTo((r.amount * sm) / CONFIG.economy.cycleDays);
     }
   });
 
@@ -82,7 +80,7 @@ describe('economia HumT', () => {
     const sm = sizeMultiplier(rome.population);
     for (const r of rome.resources) {
       expect(s.resources[r.type] - before[r.type]).toBeCloseTo(
-        r.amount * CONFIG.economy.conversionRate * sm,
+        (r.amount * sm) / CONFIG.economy.cycleDays,
       );
     }
   });
