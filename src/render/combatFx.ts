@@ -98,12 +98,13 @@ export class CombatFxLayer {
       const r = units.squadronRect(shot.to.id, camera);
       return r ? { x: r.cx, y: r.cy } : null;
     }
-    const r = ufos.ufoBodyRect(shot.to.id);
+    // bersaglio UFO: ufoCombatRect (non ufoBodyRect) così funziona ANCHE in rapimento
+    const r = ufos.ufoCombatRect(shot.to.id);
     return r ? { x: r.cx, y: r.cy } : null;
   }
 
   private ufoCenter(ufos: UfoLayer, id: number): Pt | null {
-    const r = ufos.ufoBodyRect(id);
+    const r = ufos.ufoCombatRect(id);
     return r ? { x: r.cx, y: r.cy } : null;
   }
 

@@ -3,7 +3,9 @@ import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import ufoArtRaw from '../../Assets/Alieni/UFO/alien_abductor.svg?raw';
 import { activeBattles } from '../sim/combat';
 import { CONFIG } from '../sim/config';
+import { ufoSquadronDistanceKm } from '../sim/measure';
 import type { GameState, UfoState } from '../sim/state';
+import { WEAPON_STATS } from '../sim/weapons';
 import { cityPosition } from './cities';
 import { isOccludedByGlobe } from './horizon';
 import type { ScreenRect } from './selection';
@@ -32,6 +34,7 @@ const LABEL_CLEARANCE_PX = 14; // distanza a cui la base del raggio resta sopra 
 // rapporto unico; lo snodo #mount cade sull'hardpoint.
 const UFO_VIEW_W = 600;
 const TURRET_MODULE = WEAPON_MODULES[CONFIG.ufoAbductor.weaponModule];
+const TURRET_RANGE_KM = WEAPON_STATS[CONFIG.ufoAbductor.weaponModule].rangeKm; // gittata torretta
 const TURRET_VB_W = TURRET_TO_UFO_WIDTH * UFO_VIEW_W; // ≈132 unità viewBox
 const TURRET_VB_H = (TURRET_VB_W * TURRET_MODULE.viewH) / TURRET_MODULE.viewW; // ≈220
 const TURRET_VB_OFFSET_Y = -TURRET_VB_H * 0.375; // centro dell'ettagono (viewBox y=150/400) sull'hardpoint
@@ -128,9 +131,10 @@ export class UfoLayer {
         inst.svgEl.classList.toggle('on', on);
         inst.lastOn = on;
       }
-      // fuoco delle torrette: acceso finché l'UFO è ingaggiato (toggle idempotente,
-      // non ri-avvia l'animazione se la classe è già presente)
+      // fuoco delle torrette: acceso solo se ingaggiato E il caccia è entro la GITTATA
+      // (la torretta intanto può comunque INSEGUIRE il bersaglio col puntamento).
       const firing = engaged.has(ufo.id);
+      const inRange = firing && ufoSquadronDistanceKm(ufo, tickFraction) <= TURRET_RANGE_KM;
       // bersaglio = primo difensore vivo sulla città attaccata (lo stesso del motore)
       let aimTarget: { cx: number; cy: number } | null = null;
       if (firing) {
@@ -140,7 +144,7 @@ export class UfoLayer {
         if (def) aimTarget = units.squadronRect(def.id, camera);
       }
       for (const turret of inst.turrets) {
-        turret.svg.classList.toggle('on', firing);
+        turret.svg.classList.toggle('on', inRange); // lampo/animazione di fuoco solo in gittata
         // in fuoco: orienta verso il bersaglio (segue il caccia); a riposo: posa SW
         let rot = TURRET_IDLE_ROT_DEG;
         if (firing && aimTarget && turret.bracket) {
@@ -187,15 +191,27 @@ export class UfoLayer {
     }
   }
 
-  // Rettangolo (px schermo) della SOLA nave (#ufo), per il reticolo di selezione:
-  // getBoundingClientRect tiene conto di scala/offset/animazioni correnti ed
-  // esclude il raggio traente. null se non visibile, occluso o in rapimento.
-  ufoBodyRect(id: number): ScreenRect | null {
-    const inst = this.ufos.get(id);
-    if (!inst || !inst.object.visible || inst.lastOn || !inst.ship) return null;
+  // Rettangolo (px schermo) della SOLA nave (#ufo): getBoundingClientRect tiene conto di
+  // scala/offset/animazioni correnti ed esclude il raggio traente. null se non visibile/occluso.
+  private shipRect(inst: Ufo): ScreenRect | null {
+    if (!inst.object.visible || !inst.ship) return null;
     const r = inst.ship.getBoundingClientRect();
     if (r.width < 1 || r.height < 1) return null;
     return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, w: r.width, h: r.height };
+  }
+
+  // Per il RETICOLO di selezione: nascosto durante il rapimento (si sovrapporrebbe al raggio).
+  ufoBodyRect(id: number): ScreenRect | null {
+    const inst = this.ufos.get(id);
+    if (!inst || inst.lastOn) return null;
+    return this.shipRect(inst);
+  }
+
+  // Per il COMBATTIMENTO (bersaglio dei minigun, mira): serve la posizione della nave ANCHE
+  // durante il rapimento — è proprio allora che il caccia spara all'UFO in hover sulla città.
+  ufoCombatRect(id: number): ScreenRect | null {
+    const inst = this.ufos.get(id);
+    return inst ? this.shipRect(inst) : null;
   }
 
   // Centro-schermo (px) della volata (#muzzle) di una torretta montata: origine dei

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cmdAbduct } from './commands';
 import { CONFIG } from './config';
 import { createNewGame } from './state';
 import { newGameWithHq } from './testUtils';
@@ -60,7 +61,12 @@ describe('tick', () => {
 
   it('una partita giocata a lungo senza difese spawna ondate e perde popolazione', () => {
     const s = newGameWithHq(3);
-    for (let i = 0; i < 40 * CONFIG.ticksPerDay; i++) tick(s);
+    // il rapimento è in tempo reale (AbductionEngine, src/render); qui lo simuliamo nel
+    // ciclo a tick prelevando una persona per tick da ogni UFO in fase di rapimento.
+    for (let i = 0; i < 40 * CONFIG.ticksPerDay; i++) {
+      tick(s);
+      for (const u of s.ufos) if (u.phase === 'abducting') cmdAbduct(s, u.id);
+    }
     expect(s.wavesSpawned).toBeGreaterThanOrEqual(2);
     expect(s.stats.populationLost).toBeGreaterThan(0);
   });

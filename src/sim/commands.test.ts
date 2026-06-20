@@ -138,6 +138,16 @@ describe('cmdRelocateSquadron', () => {
     expect(sq.transfer).not.toBeNull();
     expect(sq.transfer!.fromCityId).toBe('rome');
     expect(sq.transfer!.ticksRemaining).toBeGreaterThan(1); // Roma-Tokyo è lontana
+    expect(sq.transfer!.startFraction).toBe(0); // default senza tickFraction
+  });
+
+  it('memorizza la frazione di tick di partenza (rotta dalla città, non a metà arco)', () => {
+    const s = newGameWithHq(1, 'rome');
+    grantRiches(s);
+    cmdBuildSquadron(s, 'rome');
+    const sq = s.squadrons[0];
+    cmdRelocateSquadron(s, sq.id, 'tokyo', 0.7);
+    expect(sq.transfer!.startFraction).toBe(0.7);
   });
 
   it('rifiuta se già in volo, destinazione uguale o non valida', () => {
@@ -177,12 +187,12 @@ describe('cmdRelocateSquadron', () => {
 describe('cmdSetSpeed', () => {
   it('cambia la velocità', () => {
     const s = createNewGame(1);
-    expect(cmdSetSpeed(s, 4).ok).toBe(true);
-    expect(s.speed).toBe(4);
+    expect(cmdSetSpeed(s, 5).ok).toBe(true);
+    expect(s.speed).toBe(5);
     cmdSetSpeed(s, 0);
     expect(s.speed).toBe(0);
-    cmdSetSpeed(s, 10);
-    expect(s.speed).toBe(10);
+    cmdSetSpeed(s, 25);
+    expect(s.speed).toBe(25);
   });
 });
 

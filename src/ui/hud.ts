@@ -6,7 +6,7 @@ import { fmtClock, fmtDate, fmtInt } from './format';
 import { encyclopediaIcon, gearIcon } from './icons';
 
 // 1000x non è un pulsante normale: ci si arriva solo col tasto ">>>"
-const SPEEDS: Array<0 | 1 | 2 | 4 | 10 | 100> = [0, 1, 2, 4, 10, 100];
+const SPEEDS: Array<0 | 1 | 5 | 25 | 100> = [0, 1, 5, 25, 100];
 
 export function createHud(
   root: HTMLElement,

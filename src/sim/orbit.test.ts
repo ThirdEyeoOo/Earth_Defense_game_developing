@@ -119,6 +119,20 @@ describe('altitudeAt', () => {
       altitudeAt('approaching', 0.75, params),
     );
   });
+
+  it('l’avvicinamento ACCELERA entrando (più quota persa nel tratto vicino alla Terra)', () => {
+    // distanza radiale coperta in un intervallo tardivo > in uno iniziale di pari ampiezza
+    const early = altitudeAt('approaching', 0.1, params) - altitudeAt('approaching', 0.3, params);
+    const late = altitudeAt('approaching', 0.6, params) - altitudeAt('approaching', 0.8, params);
+    expect(late).toBeGreaterThan(early);
+  });
+
+  it('la fuga ACCELERA salendo (più quota guadagnata verso la fine)', () => {
+    // parte da fermo in superficie e accelera: guadagno di quota crescente nel tempo
+    const early = altitudeAt('escaping', 0.3, params) - altitudeAt('escaping', 0.1, params);
+    const late = altitudeAt('escaping', 0.8, params) - altitudeAt('escaping', 0.6, params);
+    expect(late).toBeGreaterThan(early);
+  });
 });
 
 describe('lunarCrossTick (tasto >>>)', () => {
@@ -194,6 +208,23 @@ describe('continuità di velocità orbita→discesa e discesa→hover', () => {
     const prev = positionAt('descending', 1 - h / Tf, params);
     const v = Math.hypot((end.x - prev.x) / h, (end.y - prev.y) / h, (end.z - prev.z) / h);
     expect(v).toBeLessThan(0.2);
+  });
+
+  it('a inizio fuga la velocità ≈ 0 (parte da fermo) e a fine fuga è > 0 (accelera via)', () => {
+    const Tf = freefallTicks(params.orbitRadius, params.surfaceRadius, params.mu);
+    const h = 0.001;
+    const start = positionAt('escaping', 0, params);
+    const next = positionAt('escaping', h / Tf, params);
+    const vStart = Math.hypot(
+      (next.x - start.x) / h,
+      (next.y - start.y) / h,
+      (next.z - start.z) / h,
+    );
+    const end = positionAt('escaping', 1, params);
+    const prev = positionAt('escaping', 1 - h / Tf, params);
+    const vEnd = Math.hypot((end.x - prev.x) / h, (end.y - prev.y) / h, (end.z - prev.z) / h);
+    expect(vStart).toBeLessThan(0.2); // parte da fermo
+    expect(vEnd).toBeGreaterThan(vStart); // accelera salendo
   });
 });
 

@@ -2,7 +2,7 @@
   "name": "earth-defense",
   "private": true,
   "license": "MIT",
-  "version": "0.1.0",
+  "version": "0.120.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,6 +13,7 @@
   "dependencies": {
     "@fontsource/michroma": "^5.2.8",
     "@fontsource/orbitron": "^5.2.8",
+    "@fontsource/quantico": "^5.2.7",
     "three": "^0.165.0"
   },
   "devDependencies": {

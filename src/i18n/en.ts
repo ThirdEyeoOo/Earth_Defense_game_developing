@@ -8,7 +8,7 @@ export const en: Record<MessageKey, string> = {
   // HUD
   'hud.radar': 'Radar',
   'hud.save': 'Save',
-  'hud.humt': 'Ħ {n}',
+  'hud.humt': '🪙 HumT {n}',
   'hud.pop': 'Pop. {n}',
   'hud.abductions': 'Abductions: {n}',
   'hud.dead': 'Deaths: {n}',
@@ -30,6 +30,8 @@ export const en: Record<MessageKey, string> = {
   'panel.networkNeutral': '○ Neutral (off the network)',
   'panel.resources': 'Resources',
   'panel.productionPerDay': '+{n}/d',
+  'panel.resourcePct': '{n}%',
+  'panel.cityPotential': 'Potential: {n}/1000',
   'panel.foundHq': 'Found the Headquarters here (free)',
   'panel.starterKit': 'Starter kit: Ħ {humt} + {ind} industry + {fuel} fuel + {agro} agri-food',
   'panel.openEmbassy': 'Open embassy (Ħ {humt} + {agro} agri-food)',
@@ -71,6 +73,8 @@ export const en: Record<MessageKey, string> = {
   // start screen and banners
   'start.continue': 'Continue',
   'start.newGame': 'New game',
+  'start.exit': 'Exit',
+  'start.exitHint': 'Close the browser tab to exit.',
   'start.invalidSave': 'Invalid or incompatible save',
   'banner.gameSaved': 'Game saved',
   'banner.selectDestination': 'Select the destination city (Esc to cancel)',
@@ -203,6 +207,7 @@ export const en: Record<MessageKey, string> = {
   // settings menu
   'settings.title': 'Settings',
   'settings.language': 'Language',
+  'settings.musicVolume': 'Music volume: {n}%',
   'settings.close': 'Close',
   'settings.open': 'Settings',
 

@@ -93,7 +93,9 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
   **Fix rendering**: volata dei traccianti dal bbox del gruppo arma (non da `#bocca_3` r=0); dimensione
   globo `MINIGUN_TO_JET_WIDTH` 0,34→0,11; armi montate anche in trasferimento. **Danno minigun = 1**
   (da playtest). **Skill di progetto `weapon-modules`** (`.claude/skills/`). Nessuna migrazione salvataggi.
-- Release: a ogni merge chiedere il nome semver all'utente (proponendone uno) e aggiornare
+- Release: a ogni merge chiedere il nome semver all'utente (proponendone uno), **bumpare
+  `package.json` `"version"` allo stesso semver** (la UI lo legge e lo mostra nello start
+  screen — `src/main.ts` importa `version` da package.json), e aggiornare
   `lista aggiornamenti/releases.txt` (nuova voce IN ALTO; il file è locale, la cartella è
   gitignorata) con recap + delta byte (somma dimensioni `git ls-files`); tag ANNOTATO.
   `commits.txt` si aggiorna da solo (hook git).

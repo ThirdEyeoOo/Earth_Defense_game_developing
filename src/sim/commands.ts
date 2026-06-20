@@ -5,7 +5,7 @@ import { greatCircleKm } from './geo';
 import type { Cost, ResourceType } from './resources';
 import { squadronCost, transferTicks } from './squadrons';
 import type { GameSpeed, GameState } from './state';
-import { removeUfo } from './ufos';
+import { removeUfo, startEscape } from './ufos';
 
 // La sim non conosce i testi: gli errori sono codici (+ parametri)
 // che la UI traduce con t(`cmd.${code}`) — vedi src/i18n/.
@@ -88,10 +88,13 @@ export function cmdBuildSquadron(state: GameState, cityId: string): CommandResul
   return { ok: true };
 }
 
+// `tickFraction` (0..1, frazione del tick in corso) viene memorizzata sul trasferimento:
+// il render la sottrae così la rotta parte dalla città di partenza, non già a metà arco.
 export function cmdRelocateSquadron(
   state: GameState,
   squadronId: number,
   toCityId: string,
+  tickFraction = 0,
 ): CommandResult {
   const sq = state.squadrons.find(s => s.id === squadronId);
   if (!sq) return { ok: false, code: 'squadronNotFound' };
@@ -102,7 +105,13 @@ export function cmdRelocateSquadron(
   if (!to || !to.alive) return { ok: false, code: 'destinationUnavailable' };
   if (to.id === from.id) return { ok: false, code: 'sameCity' };
   const ticks = transferTicks(greatCircleKm(from.lat, from.lon, to.lat, to.lon));
-  sq.transfer = { fromCityId: from.id, toCityId: to.id, ticksRemaining: ticks, totalTicks: ticks };
+  sq.transfer = {
+    fromCityId: from.id,
+    toCityId: to.id,
+    ticksRemaining: ticks,
+    totalTicks: ticks,
+    startFraction: tickFraction,
+  };
   sq.cityId = to.id;
   emitEvent(state, {
     type: 'squadronTransferStarted',
@@ -136,4 +145,27 @@ export function cmdDamageUfo(state: GameState, ufoId: number, amount: number): v
   if (!ufo) return;
   ufo.hp -= amount;
   if (ufo.hp <= 0) removeUfo(state, ufoId, 'shotDown');
+}
+
+// Rapisce UNA persona: canale di mutazione del motore di rapimento in tempo reale
+// (src/render/abductionEngine.ts), che lo invoca alla cadenza giusta — così il contatore
+// sale di uno alla volta invece che a blocchi di tick. A capienza piena o città esaurita
+// l'UFO parte subito in fuga. No-op se l'UFO non sta più rapendo o la città è sparita.
+// `tickFraction` (0..1, frazione del tick in corso) serve solo se questo prelievo fa
+// scattare la fuga: viene memorizzato sull'UFO così il render fa partire la fuga dal
+// punto esatto in cui si trova, a velocità 0 (vedi UfoState.phaseStartFraction).
+export function cmdAbduct(state: GameState, ufoId: number, tickFraction = 0): void {
+  const ufo = state.ufos.find(u => u.id === ufoId);
+  if (!ufo || ufo.phase !== 'abducting') return;
+  const city = state.cities.find(c => c.id === ufo.targetCityId);
+  if (!city) return;
+  const capacity = CONFIG.ufoAbductor.captureCapacity;
+  const limit = Math.min(capacity, city.population);
+  if (ufo.abducted >= limit) {
+    startEscape(ufo, tickFraction); // già al limite: nessuno da prelevare, via
+    return;
+  }
+  ufo.abducted += 1;
+  state.stats.abductedTotal += 1;
+  if (ufo.abducted >= limit) startEscape(ufo, tickFraction);
 }

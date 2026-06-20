@@ -9,6 +9,11 @@ export function fmtMultiplier(n: number): string {
   return n.toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+// numero con 1 decimale, separatore decimale locale (es. 11,7 in it / 11.7 in en)
+export function fmtDecimal1(n: number): string {
+  return n.toLocaleString(getLocale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+}
+
 export function fmtDate(tick: number): string {
   return dateOfTick(tick).toLocaleDateString(getLocale(), {
     day: 'numeric',

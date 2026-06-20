@@ -38,6 +38,17 @@ describe('CombatEngine — combattimento a due sensi', () => {
     expect(after === undefined || after.hp < hp0).toBe(true);
   });
 
+  it('fuori gittata (UFO in discesa alta) non si spara', () => {
+    const s = newGameWithHq(1, 'rome');
+    grantRiches(s);
+    cmdBuildSquadron(s, 'rome');
+    spawnUfo(s, 'rome');
+    advanceUfoToPhase(s, 'descending'); // ~quota d'orbita (migliaia di km), oltre i 50 km
+    const eng = new CombatEngine();
+    eng.update(s, 5, 1);
+    expect(eng.shots.length).toBe(0); // nessuno è entro gittata
+  });
+
   it('a velocità normale genera proiettili in ENTRAMBE le direzioni', () => {
     const s = engagedState();
     const eng = new CombatEngine();

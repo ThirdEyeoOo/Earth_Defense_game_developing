@@ -33,10 +33,14 @@ export function etaGameSeconds(ticks: number): number {
   return ticks * GAME_SECONDS_PER_TICK;
 }
 
-// progresso continuo della fase corrente, in [0,1]
+// progresso continuo della fase corrente, in [0,1]. Sottrae la frazione di tick in cui la
+// fase è iniziata (per le fasi avviate a metà tick, es. la fuga in tempo reale): così la
+// velocità/quota letta parte da 0/superficie esatti, coerente col render.
 function progressOf(ufo: UfoState, tickFraction: number): number {
   const total = Math.max(1, ufo.phaseTotalTicks);
-  return Math.min(1, Math.max(0, (total - ufo.ticksRemaining + tickFraction) / total));
+  const f0 = ufo.phaseStartFraction ?? 0;
+  const denom = Math.max(1e-6, total - f0); // chi parte a metà tick arriva comunque a 1
+  return Math.min(1, Math.max(0, (total - ufo.ticksRemaining + tickFraction - f0) / denom));
 }
 
 // --- UFO: quota/velocità dalla traiettoria fisica (coerenti con lo schermo) ---
@@ -57,6 +61,12 @@ export function ufoSpeedKmH(ufo: UfoState, tickFraction: number): number {
   const span = hi - lo;
   const raggiPerTick = span > 0 ? dist / span / Math.max(1, ufo.phaseTotalTicks) : 0;
   return speedKmH(raggiPerTick);
+}
+
+// Distanza (km reali) caccia↔UFO per il gating della gittata delle armi. Entrambi sono
+// sopra la stessa città, quindi domina la differenza di QUOTA: |quota UFO − quota caccia|.
+export function ufoSquadronDistanceKm(ufo: UfoState, tickFraction = 0): number {
+  return Math.abs(ufoAltitudeKm(ufo, tickFraction) - squadronAltitudeKm());
 }
 
 // ETA (in tick) fino all'inizio del RAPIMENTO (l'UFO "arriva" sulla città):

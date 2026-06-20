@@ -22,12 +22,17 @@ function popFactor(city: CityState): number {
   return city.initialPopulation > 0 ? city.population / city.initialPopulation : 0;
 }
 
-// gettito giornaliero della città: gdp post-apoc "vivo" (Σ peso×amount sugli
-// amount correnti, che i nemici potranno danneggiare) × popolazione × aliquota
+// Potenziale della città = somma non pesata dei 10 amount (0–100 ciascuno) → max 1000.
+// È la produzione su `cycleDays` giorni di una città pienamente sviluppata a popolazione piena.
+export function cityPotential(city: CityState): number {
+  return city.resources.reduce((sum, r) => sum + r.amount, 0);
+}
+
+// gettito GIORNALIERO della città: il gettito su 30g = potenziale × popolazione ×
+// sizeMultiplier × aliquota; al giorno è quel valore diviso cycleDays.
 export function cityIncomePerDay(city: CityState): number {
   const e = CONFIG.economy;
-  const gdp = city.resources.reduce((sum, r) => sum + e.resourceWeights[r.type] * r.amount, 0);
-  return gdp * popFactor(city) * sizeMultiplier(city.population) * e.taxRatePerDay;
+  return (cityPotential(city) * popFactor(city) * sizeMultiplier(city.population) * e.taxRatePerDay) / e.cycleDays;
 }
 
 export function dailyIncome(state: GameState): number {
@@ -36,15 +41,19 @@ export function dailyIncome(state: GameState): number {
     if (!isConnected(state, c) || underAbduction(state, c.id)) continue;
     total += cityIncomePerDay(c);
   }
-  return Math.round(total);
+  // float: con la base 30 giorni il gettito/giorno è < 1; l'HumT si accumula a frazioni
+  // (la UI mostra il floor), esattamente come le risorse — evita che si arrotondi a 0.
+  return total;
 }
 
-// produzione giornaliera della città per tipo, in unità di magazzino
+// produzione GIORNALIERA della città per tipo (unità di magazzino): la produzione su 30g
+// per risorsa = amount × popFactor × sizeMultiplier; al giorno è quel valore / cycleDays.
 export function cityProductionPerDay(city: CityState): Partial<Record<ResourceType, number>> {
   const out: Partial<Record<ResourceType, number>> = {};
   const sm = sizeMultiplier(city.population);
+  const pf = popFactor(city);
   for (const r of city.resources) {
-    out[r.type] = r.amount * CONFIG.economy.conversionRate * popFactor(city) * sm;
+    out[r.type] = (r.amount * pf * sm) / CONFIG.economy.cycleDays;
   }
   return out;
 }
@@ -54,8 +63,9 @@ export function dailyProductionByType(state: GameState): Record<ResourceType, nu
   for (const c of state.cities) {
     if (!isConnected(state, c) || underAbduction(state, c.id)) continue;
     const sm = sizeMultiplier(c.population);
+    const pf = popFactor(c);
     for (const r of c.resources) {
-      total[r.type] += r.amount * CONFIG.economy.conversionRate * popFactor(c) * sm;
+      total[r.type] += (r.amount * pf * sm) / CONFIG.economy.cycleDays;
     }
   }
   return total;

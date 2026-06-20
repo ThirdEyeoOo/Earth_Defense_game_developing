@@ -1,6 +1,9 @@
 import '@fontsource/michroma'; // font UI di default
 import '@fontsource/orbitron/400.css'; // nomi città sulla mappa
 import '@fontsource/orbitron/700.css';
+import '@fontsource/quantico/400.css'; // titolo "Earth Defense" sullo start screen
+import '@fontsource/quantico/700.css';
+import { version as APP_VERSION } from '../package.json'; // versione mostrata nello start screen
 import * as THREE from 'three';
 import {
   cityName,
@@ -25,6 +28,7 @@ import { createNewGame, type GameState } from './sim/state';
 import { tick } from './sim/tick';
 import { BattleBadgeLayer } from './render/battleBadges';
 import { CityLayer } from './render/cities';
+import { AbductionEngine } from './render/abductionEngine';
 import { CombatEngine } from './render/combatEngine';
 import { CombatFxLayer } from './render/combatFx';
 import { SquadronWeaponLayer } from './render/squadronWeapons';
@@ -43,8 +47,8 @@ import { createCombatWindow } from './ui/combatWindow';
 import { createEncyclopedia } from './ui/encyclopedia';
 import { createEndScreen } from './ui/endScreen';
 import { createHud } from './ui/hud';
-import { gearIcon } from './ui/icons';
 import { createIntro } from './ui/intro';
+import { createMusic } from './ui/music';
 import { loadPrefs, savePrefs } from './ui/prefs';
 import { createRadar } from './ui/radar';
 import { createResearchPanel } from './ui/researchPanel';
@@ -94,6 +98,13 @@ function selectLanguage(lang: Lang): void {
   savePrefs({ ...loadPrefs(), language: lang });
 }
 
+// --- musica: tema in loop dallo start screen, volume da preferenze (default 50%) ---
+const music = createMusic(loadPrefs().musicVolume ?? 0.5);
+function selectMusicVolume(volume: number): void {
+  music.setVolume(volume);
+  savePrefs({ ...loadPrefs(), musicVolume: volume });
+}
+
 // --- scena ---
 const ctx = createScene(document.getElementById('scene-container')!);
 createGlobe(ctx.scene);
@@ -110,6 +121,7 @@ const selection = new SelectionWidget();
 // combattimento in tempo reale: il motore possiede gli "shot" e applica il danno;
 // il layer FX disegna i proiettili sul globo (la finestra di scontro li disegna da sé)
 const combatEngine = new CombatEngine();
+const abductionEngine = new AbductionEngine();
 const combatFx = new CombatFxLayer();
 const squadronWeapons = new SquadronWeaponLayer();
 
@@ -163,7 +175,12 @@ const hud = createHud(
   () => settings.open(),
   () => encyclopedia.open(),
 );
-const settings = createSettings(document.getElementById('settings-modal')!, selectLanguage);
+const settings = createSettings(
+  document.getElementById('settings-modal')!,
+  selectLanguage,
+  () => music.getVolume(),
+  selectMusicVolume,
+);
 const encyclopedia = createEncyclopedia(document.getElementById('encyclopedia-modal')!);
 // barra inferiore: Bilancio apre il pannello, gli altri sono ancora segnaposto
 const bottomBar = createBottomBar(document.getElementById('bottom-bar')!, action => {
@@ -217,7 +234,8 @@ const endScreen = createEndScreen(document.getElementById('end-screen')!, () => 
 function handleCityClick(cityId: string): void {
   if (!state) return;
   if (transferringSquadronId !== null) {
-    showCommandError(cmdRelocateSquadron(state, transferringSquadronId, cityId));
+    // acc = frazione del tick corrente: la rotta parte dalla città, non già a metà arco
+    showCommandError(cmdRelocateSquadron(state, transferringSquadronId, cityId, acc));
     transferringSquadronId = null;
     banner.classList.add('hidden');
   } else {
@@ -247,6 +265,7 @@ function bootGame(gameState: GameState): void {
   acc = 0;
   gameMinutes = 0;
   combatEngine.reset();
+  abductionEngine.reset();
   combatFx.reset();
   squadronWeapons.reset();
   lastSavedDay = dayOfTick(state.tick);
@@ -282,18 +301,26 @@ function setupStartScreen(): void {
   const saved = savedJson ? deserialize(savedJson) : null;
   root.innerHTML = `
     <div class="start-box">
-      <button id="start-settings" class="icon-btn" title="${t('settings.open')}">${gearIcon}</button>
       <h1>EARTH DEFENSE</h1>
+      <p class="start-version">v${APP_VERSION}</p>
       ${saved ? `<button id="continue-btn">${t('start.continue')}</button>` : ''}
       ${savedJson && !saved ? `<p class="danger">${t('start.invalidSave')}</p>` : ''}
       <button id="newgame-btn">${t('start.newGame')}</button>
+      <button id="settings-btn">${t('settings.open')}</button>
+      <button id="exit-btn">${t('start.exit')}</button>
     </div>
   `;
   root.querySelector('#newgame-btn')!.addEventListener('click', startNewGame);
   if (saved) {
     root.querySelector('#continue-btn')!.addEventListener('click', () => bootGame(saved));
   }
-  root.querySelector('#start-settings')!.addEventListener('click', () => settings.open());
+  root.querySelector('#settings-btn')!.addEventListener('click', () => settings.open());
+  // Esci: nel browser window.close() chiude solo le finestre aperte da script; in un
+  // eventuale build desktop chiude l'app. Fallback: messaggio se la scheda resta aperta.
+  root.querySelector('#exit-btn')!.addEventListener('click', () => {
+    window.close();
+    showBanner(t('start.exitHint'), 4000);
+  });
 }
 
 function autosave(): void {
@@ -352,6 +379,9 @@ function frame(now: number): void {
       ufoLayer.update(state, unitLayer, ctx.camera, tickFraction);
       // combattimento in tempo reale: applica il danno (via comando) prima che HP/FX leggano
       combatEngine.update(state, gameMinutes, state.speed);
+      // rapimento in tempo reale: una persona alla volta, alla cadenza giusta
+      // (tickFraction: se scatta la fuga, l'UFO riparte dal punto esatto, a velocità 0)
+      abductionEngine.update(state, gameMinutes, state.speed, tickFraction);
       effects.update(state, unitLayer);
       hpBars.update(state, unitLayer, ctx.camera, selectedUnit);
       floatingText.update(state, unitLayer, ctx.camera);
@@ -422,8 +452,8 @@ onLanguageChange(() => {
   tutorial.refreshLabels();
 });
 
-// l'intro copre lo start screen (z-25) e si nasconde da sola a fine video;
-// onDone resta come hook futuro (es. musica di menu sullo stesso user gesture)
-const intro = createIntro(document.getElementById('intro-screen')!, () => {});
+// l'intro copre lo start screen (z-25) e si nasconde da sola a fine video; a fine intro
+// parte il tema di menu (onDone scatta su un gesto utente ⇒ l'autoplay non viene bloccato)
+const intro = createIntro(document.getElementById('intro-screen')!, () => music.play());
 setupStartScreen();
 requestAnimationFrame(frame);
