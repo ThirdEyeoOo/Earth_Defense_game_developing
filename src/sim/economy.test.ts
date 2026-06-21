@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { CONFIG } from './config';
-import { sizeMultiplier } from './population';
 import {
   applyDailyEconomy,
   cityIncomePerDay,
+  cityPotential,
+  cityProductionPerDay,
   dailyIncome,
   dailyProductionByType,
   embassyCost,
@@ -15,6 +16,11 @@ import { createNewGame } from './state';
 import { newGameWithHq } from './testUtils';
 import { spawnUfo } from './ufos';
 
+// output(città) = (popolazione × potenziale)^outputExponent (curva unica, vedi economy.ts)
+function output(population: number, potential: number): number {
+  return Math.pow(population * potential, CONFIG.economy.outputExponent);
+}
+
 describe('economia HumT', () => {
   it('senza QG nessuna città è collegata: zero entrate e produzione', () => {
     const s = createNewGame(1);
@@ -23,18 +29,36 @@ describe('economia HumT', () => {
     expect(Object.values(dailyProductionByType(s)).every(v => v === 0)).toBe(true);
   });
 
-  it('gettito città = potenziale × popFactor × sizeMultiplier × aliquota / cycleDays', () => {
+  it('gettito città = incomeCoeff × (pop × potenziale)^outputExponent', () => {
     const s = newGameWithHq(1, 'rome');
     const rome = s.cities.find(c => c.id === 'rome')!;
     const e = CONFIG.economy;
-    const pot = rome.resources.reduce((sum, r) => sum + r.amount, 0); // somma non pesata
-    const sm = sizeMultiplier(rome.population);
-    expect(cityIncomePerDay(rome)).toBeCloseTo((pot * sm * e.taxRatePerDay) / e.cycleDays);
+    const pot = cityPotential(rome);
+    expect(cityIncomePerDay(rome)).toBeCloseTo(e.incomeCoeff * output(rome.population, pot));
     expect(dailyIncome(s)).toBeCloseTo(cityIncomePerDay(rome)); // float, non arrotondato
-    // dimezzare la popolazione dimezza il popFactor E può abbassare la fascia
+  });
+
+  it('il gettito cresce con la popolazione attuale (niente initialPopulation)', () => {
+    const s = newGameWithHq(1, 'rome');
+    const rome = s.cities.find(c => c.id === 'rome')!;
+    const base = cityIncomePerDay(rome);
+    // dimezzare la popolazione abbassa il gettito (sublineare, non più 1:1)
     rome.population = rome.initialPopulation / 2;
-    const sm2 = sizeMultiplier(rome.population);
-    expect(cityIncomePerDay(rome)).toBeCloseTo((pot * 0.5 * sm2 * e.taxRatePerDay) / e.cycleDays);
+    expect(cityIncomePerDay(rome)).toBeLessThan(base);
+    // crescere OLTRE la popolazione iniziale aumenta il gettito: nessun tetto su initialPopulation
+    rome.population = rome.initialPopulation * 3;
+    expect(cityIncomePerDay(rome)).toBeGreaterThan(base);
+  });
+
+  it('ancoraggi della curva: Shanghai ≈ 25, Suva ≈ 1, beni di Tokyo ≈ 18', () => {
+    const s = createNewGame(1);
+    const shanghai = s.cities.find(c => c.id === 'shanghai')!;
+    const suva = s.cities.find(c => c.id === 'suva')!;
+    const tokyo = s.cities.find(c => c.id === 'tokyo')!;
+    expect(cityIncomePerDay(shanghai)).toBeCloseTo(25, 0); // città col max pop·potenziale
+    expect(cityIncomePerDay(suva)).toBeCloseTo(1, 1); // città col min pop·potenziale
+    const tokyoGoods = Object.values(cityProductionPerDay(tokyo)).reduce((a, b) => a + b, 0);
+    expect(tokyoGoods).toBeCloseTo(18.1, 0);
   });
 
   it('producono solo le città collegate (QG + ambasciate), non le neutrali o distrutte', () => {
@@ -47,14 +71,20 @@ describe('economia HumT', () => {
     expect(dailyIncome(s)).toBeCloseTo(before);
   });
 
-  it('produzione giornaliera = amount × popFactor × sizeMultiplier / cycleDays, per tipo', () => {
+  it('produzione per tipo = productionCoeff × output × (amount / potenziale); somma = totale beni', () => {
     const s = newGameWithHq(1, 'rome');
     const rome = s.cities.find(c => c.id === 'rome')!;
-    const sm = sizeMultiplier(rome.population);
-    const prod = dailyProductionByType(s);
+    const pot = cityPotential(rome);
+    const total = CONFIG.economy.productionCoeff * output(rome.population, pot);
+    const prod = cityProductionPerDay(rome);
     for (const r of rome.resources) {
-      expect(prod[r.type]).toBeCloseTo((r.amount * sm) / CONFIG.economy.cycleDays);
+      expect(prod[r.type]).toBeCloseTo((total * r.amount) / pot);
     }
+    const sum = Object.values(prod).reduce((a, b) => a + b, 0);
+    expect(sum).toBeCloseTo(total);
+    // la stessa città dà gli stessi beni nel totale globale, se è l'unica collegata
+    const byType = dailyProductionByType(s);
+    expect(Object.values(byType).reduce((a, b) => a + b, 0)).toBeCloseTo(total);
   });
 
   it('un rapimento attivo sospende produzione e gettito della città', () => {
@@ -77,11 +107,9 @@ describe('economia HumT', () => {
     applyDailyEconomy(s);
     expect(s.humt).toBe(humt + dailyIncome(s));
     const rome = s.cities.find(c => c.id === 'rome')!;
-    const sm = sizeMultiplier(rome.population);
+    const prod = cityProductionPerDay(rome);
     for (const r of rome.resources) {
-      expect(s.resources[r.type] - before[r.type]).toBeCloseTo(
-        (r.amount * sm) / CONFIG.economy.cycleDays,
-      );
+      expect(s.resources[r.type] - before[r.type]).toBeCloseTo(prod[r.type]!);
     }
   });
 

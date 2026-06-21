@@ -19,10 +19,15 @@ export const CONFIG = {
       tessuti: 3,
       finanza: 1,
     } satisfies Record<ResourceType, number>,
-    // Modello "potenziale 1000 su 30 giorni": potenziale città = Σ amount (max 1000) =
-    // produzione su `cycleDays` giorni; il tick economico accredita 1/cycleDays al giorno.
-    cycleDays: 30, // giorni su cui si distribuisce produzione e gettito (megalopoli piena = 1000/30g)
-    taxRatePerDay: 0.09, // gettito su 30g = potenziale × popFactor × sizeMultiplier × aliquota (max 90/30g)
+    // Modello a CURVA UNICA: output(città) = (popolazione_attuale × potenziale)^outputExponent
+    // (potenziale = Σ amount, max 1000). Gettito e produzione di beni sono due scalature
+    // della stessa curva (stessa forma, due costanti) — NON c'è più aliquota/accoppiamento.
+    // Solo popolazione ATTUALE: il gettito cresce se la città cresce e cala se viene spopolata.
+    // Esponente e costanti calibrati su tutte le 50 città (vedi memoria/diario sessione):
+    //   ancoraggi gettito max 25 (Shanghai) / min 1 (Suva); beni tarati su Tokyo ~18/g.
+    outputExponent: 0.5469, // = ln25 / ln(top/bottom) sul prodotto pop·potenziale (rendimenti decrescenti)
+    incomeCoeff: 5.6864e-5, // HumT/g = incomeCoeff × output → Suva 1, Shanghai 25
+    productionCoeff: 4.2e-5, // beni/g totali = productionCoeff × output (≈0,739 × gettito) → Tokyo ~18
     embassy: { baseHumt: 150, baseAgro: 20, distanceDivisorKm: 5000 },
     // riserve recuperate dalle macerie alla fondazione del QG: bastano per il
     // primo squadrone subito, o squadrone + ambasciata vicina in 1-2 giorni
@@ -30,19 +35,6 @@ export const CONFIG = {
       humt: 450,
       resources: { industria: 30, combustibili_fossili: 20, agroalimentare: 25 },
     },
-    // Moltiplicatore economico per fascia di popolazione (vedi
-    // docs/superpowers/specs/2026-06-18-bilancio-popolazione-design.md).
-    // Dinamico: la fascia è calcolata dalla popolazione ATTUALE.
-    // Schema B (àncora Megalopoli = 1×). minPopulation in ordine crescente;
-    // la fascia è l'ultima con minPopulation <= popolazione.
-    populationTiers: [
-      { key: 'cittadina', minPopulation: 0, multiplier: 0.2 },
-      { key: 'citta', minPopulation: 1_000_000, multiplier: 0.3 },
-      { key: 'metropoli', minPopulation: 4_000_000, multiplier: 0.4 },
-      { key: 'megacitta', minPopulation: 10_000_000, multiplier: 0.56 },
-      { key: 'metacitta', minPopulation: 18_000_000, multiplier: 0.76 },
-      { key: 'megalopoli', minPopulation: 26_000_001, multiplier: 1 },
-    ],
   },
   squadron: {
     attack: 6,

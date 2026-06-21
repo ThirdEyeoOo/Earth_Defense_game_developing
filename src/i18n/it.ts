@@ -179,15 +179,6 @@ export const it = {
   'res.tecnologia': 'Tecnologia',
   'res.tessuti': 'Tessuti',
 
-  // fasce di popolazione (chiave = PopulationTierKey in sim/population.ts)
-  'panel.tier': 'Fascia:',
-  'tier.cittadina': 'Cittadina',
-  'tier.citta': 'Città',
-  'tier.metropoli': 'Metropoli',
-  'tier.megacitta': 'Megacittà',
-  'tier.metacitta': 'Metacittà',
-  'tier.megalopoli': 'Megalopoli',
-
   // scritte fluttuanti (render/floatingText.ts)
   'float.squadronTransferStarted': 'squadrone in viaggio',
   'float.ufoOrbiting': 'in orbita',
@@ -210,19 +201,19 @@ export const it = {
   'enc.open': 'Enciclopedia',
   'enc.title': 'Enciclopedia',
   'enc.close': 'Chiudi',
-  'enc.humt.title': 'HumT e gettito giornaliero',
+  'enc.humt.title': 'HumT, gettito e produzione',
   'enc.humt.body':
     '<p><strong>HumT</strong> (Humanity Treasure) è la valuta della nuova umanità. Dopo il collasso quasi tutte le città sono sparite: il dollaro non vale più nulla e ogni scambio passa dagli HumT.</p>' +
-    '<p>Il <strong>gettito giornaliero</strong> è la somma delle tasse versate ogni giorno dalle città collegate alla rete (Quartier Generale e ambasciate). Una città contribuisce solo se è viva, collegata e non sotto rapimento.</p>' +
-    '<p>Per ogni città il gettito è:</p>' +
-    '<p class="enc-formula">PIL × fattore popolazione × aliquota</p>' +
+    '<p>Ogni città collegata alla rete (Quartier Generale e ambasciate) ti dà due cose ogni giorno: un <strong>gettito</strong> in HumT, cioè le tasse, e una <strong>produzione di beni</strong>, cioè le risorse che finiscono nel magazzino. Una città conta solo se è viva, collegata e non sotto rapimento.</p>' +
+    '<p>Quanto rende una città dipende da due cose semplici:</p>' +
+    '<p class="enc-formula">quanto è grande × quanto è sviluppata</p>' +
     '<ul>' +
-    '<li><strong>PIL</strong>: somma di (peso della risorsa × capacità) su tutte le risorse della città. La capacità (0–100) può essere danneggiata dai nemici, riducendo il PIL.</li>' +
-    '<li><strong>Fattore popolazione</strong>: popolazione attuale ÷ popolazione iniziale (scende se la città perde abitanti).</li>' +
-    '<li><strong>Aliquota</strong>: 9% al giorno.</li>' +
+    '<li><strong>Quanto è grande</strong>: la sua popolazione attuale. Più abitanti significa più ricchezza e più beni. Se la popolazione cala — per esempio durante i rapimenti — scendono sia il gettito sia la produzione; se cresce, salgono.</li>' +
+    '<li><strong>Quanto è sviluppata</strong>: il suo <strong>Potenziale</strong>, cioè quanto è capace nelle dieci risorse (energia, industria, tecnologia, finanza e così via). A parità di abitanti, una città ben attrezzata rende più di una arretrata.</li>' +
     '</ul>' +
-    '<p>Pesi delle risorse (valore in HumT per punto di capacità): agroalimentare 10, energia 9, chimica 8, combustibili fossili 8, materiali da costruzione 7, industria 6, metalli preziosi e minerali 5, tecnologia 4, tessuti 3, finanza 1.</p>' +
-    '<p>Il totale, arrotondato, viene aggiunto agli HumT a ogni cambio di giorno. Un rapimento in corso sospende gettito e produzione della città colpita.</p>',
+    '<p>La crescita però non è infinita: le metropoli enormi rendono di più, ma non in modo esattamente proporzionale — raddoppiare la popolazione non raddoppia il gettito. Così anche le città piccole restano utili.</p>' +
+    '<p>Gettito e produzione vanno di pari passo: una città che frutta molti HumT produce anche molti beni. Il <strong>tipo</strong> di beni rispecchia il suo carattere — una capitale tecnologica sforna soprattutto tecnologia ed energia, una città petrolifera soprattutto combustibili e chimica.</p>' +
+    '<p>Un rapimento in corso sospende del tutto gettito e produzione della città colpita. I nemici, inoltre, possono danneggiare le sue capacità, abbassando in modo permanente ciò che la città produce.</p>',
 
   // menu impostazioni
   'settings.title': 'Impostazioni',

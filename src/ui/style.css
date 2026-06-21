@@ -266,7 +266,12 @@ body {
 .enc-nav { flex: 0 0 190px; display: flex; flex-direction: column; gap: 6px; }
 .enc-nav button { text-align: left; }
 .enc-nav button.active { background: #2c4a73; }
-.enc-content { flex: 1; min-width: 0; overflow-y: auto; font-size: 13px; line-height: 1.6; }
+.enc-content { flex: 1; min-width: 0; overflow-y: auto; font-size: 13px; line-height: 1.6; padding-right: 10px; }
+/* scrollbar verticale coerente col tema (il contenuto può essere lungo) */
+.enc-content { scrollbar-width: thin; scrollbar-color: #2c4a73 transparent; }
+.enc-content::-webkit-scrollbar { width: 8px; }
+.enc-content::-webkit-scrollbar-thumb { background: #2c4a73; border-radius: 4px; }
+.enc-content::-webkit-scrollbar-thumb:hover { background: #3a5e8f; }
 .enc-content h2 { margin-top: 0; font-size: 16px; color: #ffd76a; }
 .enc-content ul { padding-left: 18px; }
 .enc-content li { margin: 3px 0; }

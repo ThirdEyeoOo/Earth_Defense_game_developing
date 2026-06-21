@@ -4,8 +4,7 @@ import { cityPotential, cityProductionPerDay, embassyCost, isConnected } from '.
 import type { Cost, ResourceType } from '../sim/resources';
 import { squadronCost } from '../sim/squadrons';
 import type { CityState, GameState } from '../sim/state';
-import { populationTier, sizeMultiplier } from '../sim/population';
-import { fmtDecimal1, fmtInt, fmtMultiplier } from './format';
+import { fmtDecimal1, fmtInt } from './format';
 import { resourceIcon } from './resourceIcons';
 
 export interface CityPanelCallbacks {
@@ -25,11 +24,11 @@ function canAfford(state: GameState, cost: Cost): boolean {
 }
 
 // elenco risorse della città: quota % di ogni risorsa sul totale della città (le 10
-// quote sommano a 100%) + produzione su 30 giorni se la città è collegata. In testa il
-// Potenziale (Σ amount /1000) = livello di sviluppo (la quota % da sola non lo mostra).
+// quote sommano a 100%) + produzione GIORNALIERA di beni se la città è collegata. In testa
+// il Potenziale (Σ amount /1000) = livello di sviluppo (la quota % da sola non lo mostra).
 function resourcesHtml(state: GameState, city: CityState): string {
   const connected = isConnected(state, city);
-  const prod = cityProductionPerDay(city); // delta GIORNALIERO (potenziale/30)
+  const prod = cityProductionPerDay(city); // beni/giorno per tipo (curva unica)
   const pot = cityPotential(city);
   const rows = city.resources
     .map(r => {
@@ -63,11 +62,9 @@ export function createCityPanel(
         return;
       }
       root.classList.remove('hidden');
-      const tierKey = populationTier(city.population);
       const header = `
         <h2>${cityName(city.id, city.name)} <small>(${countryName(city.country)})</small></h2>
         <p>${t('panel.population')} <strong>${fmtInt(city.population)}</strong></p>
-        <p>${t('panel.tier')} <strong>${t(`tier.${tierKey}`)}</strong> <small>(×${fmtMultiplier(sizeMultiplier(city.population))})</small></p>
       `;
 
       // fase di fondazione: solo informazioni e bottone "fonda qui"

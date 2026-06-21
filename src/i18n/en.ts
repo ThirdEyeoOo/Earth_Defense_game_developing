@@ -180,15 +180,6 @@ export const en: Record<MessageKey, string> = {
   'res.tecnologia': 'Technology',
   'res.tessuti': 'Textiles',
 
-  // population size classes (key = PopulationTierKey in sim/population.ts)
-  'panel.tier': 'Size class:',
-  'tier.cittadina': 'Town',
-  'tier.citta': 'City',
-  'tier.metropoli': 'Metropolis',
-  'tier.megacitta': 'Megacity',
-  'tier.metacitta': 'Meta-city',
-  'tier.megalopoli': 'Megalopolis',
-
   // floating texts
   'float.squadronTransferStarted': 'squadron en route',
   'float.ufoOrbiting': 'in orbit',
@@ -211,19 +202,19 @@ export const en: Record<MessageKey, string> = {
   'enc.open': 'Encyclopedia',
   'enc.title': 'Encyclopedia',
   'enc.close': 'Close',
-  'enc.humt.title': 'HumT and daily income',
+  'enc.humt.title': 'HumT, income and production',
   'enc.humt.body':
     '<p><strong>HumT</strong> (Humanity Treasure) is the currency of the new humanity. After the collapse almost every city vanished: the dollar is worthless and every exchange goes through HumT.</p>' +
-    '<p><strong>Daily income</strong> is the sum of the taxes paid each day by the cities connected to the network (Headquarters and embassies). A city contributes only if it is alive, connected and not under abduction.</p>' +
-    '<p>For each city the income is:</p>' +
-    '<p class="enc-formula">GDP × population factor × tax rate</p>' +
+    '<p>Every city connected to the network (Headquarters and embassies) gives you two things each day: an <strong>income</strong> in HumT, that is taxes, and a <strong>goods production</strong>, that is the resources that fill your warehouse. A city counts only if it is alive, connected and not under abduction.</p>' +
+    '<p>How much a city yields depends on two simple things:</p>' +
+    '<p class="enc-formula">how big it is × how developed it is</p>' +
     '<ul>' +
-    '<li><strong>GDP</strong>: sum of (resource weight × capacity) over all the city resources. Capacity (0–100) can be damaged by enemies, lowering the GDP.</li>' +
-    '<li><strong>Population factor</strong>: current population ÷ initial population (drops if the city loses inhabitants).</li>' +
-    '<li><strong>Tax rate</strong>: 9% per day.</li>' +
+    '<li><strong>How big it is</strong>: its current population. More inhabitants means more wealth and more goods. If the population drops — for example during abductions — both income and production fall; if it grows, they rise.</li>' +
+    '<li><strong>How developed it is</strong>: its <strong>Potential</strong>, that is how capable it is across the ten resources (energy, industry, technology, finance and so on). For the same population, a well-equipped city yields more than a backward one.</li>' +
     '</ul>' +
-    '<p>Resource weights (HumT value per capacity point): agrifood 10, energy 9, chemicals 8, fossil fuels 8, construction materials 7, industry 6, precious metals & minerals 5, technology 4, textiles 3, finance 1.</p>' +
-    '<p>The total, rounded, is added to your HumT at every day change. An ongoing abduction suspends the income and production of the affected city.</p>',
+    '<p>Growth is not endless, though: huge metropolises yield more, but not in exact proportion — doubling the population does not double the income. This keeps small cities useful too.</p>' +
+    '<p>Income and production go hand in hand: a city that yields a lot of HumT also produces a lot of goods. The <strong>type</strong> of goods reflects its character — a tech capital mostly turns out technology and energy, an oil city mostly fuels and chemicals.</p>' +
+    '<p>An ongoing abduction fully suspends the affected city income and production. Enemies can also damage its capacities, permanently lowering what the city produces.</p>',
 
   // settings menu
   'settings.title': 'Settings',

@@ -1,13 +1,12 @@
 import { CONFIG } from './config';
 import { greatCircleKm } from './geo';
-import { sizeMultiplier } from './population';
 import type { Cost, ResourceType } from './resources';
 import { RESOURCE_TYPES, emptyStockpile } from './resources';
 import type { CityState, GameState } from './state';
 
 // Economia post-collasso (vedi Economy-model/ECONOMIA.md): producono e pagano
 // tasse solo le città collegate alla rete della nuova umanità (QG + ambasciate).
-// Tutto scala con la popolazione superstite; un rapimento in corso sospende
+// Tutto scala con la popolazione ATTUALE; un rapimento in corso sospende
 // produzione e gettito della città.
 
 export function isConnected(state: GameState, city: CityState): boolean {
@@ -18,21 +17,23 @@ export function underAbduction(state: GameState, cityId: string): boolean {
   return state.ufos.some(u => u.targetCityId === cityId && u.phase === 'abducting');
 }
 
-function popFactor(city: CityState): number {
-  return city.initialPopulation > 0 ? city.population / city.initialPopulation : 0;
-}
-
 // Potenziale della città = somma non pesata dei 10 amount (0–100 ciascuno) → max 1000.
-// È la produzione su `cycleDays` giorni di una città pienamente sviluppata a popolazione piena.
+// Indice di sviluppo della città (peso nella curva e mix delle risorse prodotte).
 export function cityPotential(city: CityState): number {
   return city.resources.reduce((sum, r) => sum + r.amount, 0);
 }
 
-// gettito GIORNALIERO della città: il gettito su 30g = potenziale × popolazione ×
-// sizeMultiplier × aliquota; al giorno è quel valore diviso cycleDays.
-export function cityIncomePerDay(city: CityState): number {
+// Output economico della città: una sola curva sublineare (rendimenti decrescenti) sulla
+// POPOLAZIONE ATTUALE e sul potenziale. Gettito e produzione di beni ne sono due scalature.
+// Niente initialPopulation: cresce se la città cresce, cala se viene spopolata.
+function cityOutput(city: CityState): number {
   const e = CONFIG.economy;
-  return (cityPotential(city) * popFactor(city) * sizeMultiplier(city.population) * e.taxRatePerDay) / e.cycleDays;
+  return Math.pow(city.population * cityPotential(city), e.outputExponent);
+}
+
+// gettito GIORNALIERO della città (HumT): incomeCoeff × output.
+export function cityIncomePerDay(city: CityState): number {
+  return CONFIG.economy.incomeCoeff * cityOutput(city);
 }
 
 export function dailyIncome(state: GameState): number {
@@ -46,14 +47,14 @@ export function dailyIncome(state: GameState): number {
   return total;
 }
 
-// produzione GIORNALIERA della città per tipo (unità di magazzino): la produzione su 30g
-// per risorsa = amount × popFactor × sizeMultiplier; al giorno è quel valore / cycleDays.
+// produzione GIORNALIERA della città per tipo (unità di magazzino): i beni totali =
+// productionCoeff × output (stessa curva del gettito), ripartiti per quota amount/potenziale.
 export function cityProductionPerDay(city: CityState): Partial<Record<ResourceType, number>> {
   const out: Partial<Record<ResourceType, number>> = {};
-  const sm = sizeMultiplier(city.population);
-  const pf = popFactor(city);
+  const pot = cityPotential(city);
+  const total = CONFIG.economy.productionCoeff * cityOutput(city);
   for (const r of city.resources) {
-    out[r.type] = (r.amount * pf * sm) / CONFIG.economy.cycleDays;
+    out[r.type] = pot > 0 ? (total * r.amount) / pot : 0;
   }
   return out;
 }
@@ -62,10 +63,11 @@ export function dailyProductionByType(state: GameState): Record<ResourceType, nu
   const total = emptyStockpile();
   for (const c of state.cities) {
     if (!isConnected(state, c) || underAbduction(state, c.id)) continue;
-    const sm = sizeMultiplier(c.population);
-    const pf = popFactor(c);
+    const pot = cityPotential(c);
+    if (pot <= 0) continue;
+    const cityTotal = CONFIG.economy.productionCoeff * cityOutput(c);
     for (const r of c.resources) {
-      total[r.type] += (r.amount * pf * sm) / CONFIG.economy.cycleDays;
+      total[r.type] += (cityTotal * r.amount) / pot;
     }
   }
   return total;
