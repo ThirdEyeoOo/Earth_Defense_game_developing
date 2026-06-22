@@ -219,6 +219,9 @@ export const it = {
   'settings.title': 'Impostazioni',
   'settings.language': 'Lingua',
   'settings.musicVolume': 'Volume musica: {n}%',
+  'settings.fullscreen': 'Schermo intero',
+  'settings.fullscreenEnter': 'Attiva schermo intero',
+  'settings.fullscreenExit': 'Esci da schermo intero',
   'settings.close': 'Chiudi',
   'settings.open': 'Impostazioni',
 

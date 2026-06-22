@@ -153,7 +153,7 @@ body {
   padding: 12px 16px;
   font-size: 14px;
 }
-#city-panel { right: 12px; }
+#city-panel { right: 12px; width: 360px; }
 #radar-panel { left: 12px; }
 /* il bilancio si apre dalla barra inferiore: ancorato in basso a sinistra */
 #balance-panel { top: auto; bottom: 64px; left: 12px; width: 320px; }
@@ -191,7 +191,19 @@ body {
 .network-connected { color: #6ee7a0; }
 .network-neutral { color: #8aa3c4; }
 .resource-list { font-size: 13px; }
-.resource-list small { color: #6ee7a0; }
+/* riga risorsa: nome+quota a sinistra, resa/g incolonnata a destra */
+.resource-list li { display: flex; align-items: baseline; gap: 8px; }
+.res-main { flex: 1 1 auto; min-width: 0; }
+.res-day { flex: 0 0 auto; margin-left: auto; white-space: nowrap; color: #6ee7a0; }
+/* incolonna i decimali nonostante Michroma non abbia cifre tabulari: parte intera in
+   cella fissa allineata a destra (il separatore cade sempre nella stessa colonna),
+   resto in cella fissa allineata a sinistra (così anche "/g" resta incolonnato) */
+.res-day .d-int { display: inline-block; min-width: 2.2em; text-align: right; }
+/* separatore decimale con spazio prima e dopo */
+.res-day .d-sep { display: inline-block; padding: 0 0.28em; }
+.res-day .d-frac { display: inline-block; min-width: 2.4em; text-align: left; }
+/* città non ancora collegata: la resa è solo potenziale → grigio, non verde */
+.res-day--potential { color: #8aa3c4; }
 #end-screen, #start-screen, #settings-modal, #encyclopedia-modal, #research-modal {
   position: fixed;
   inset: 0;
@@ -291,8 +303,34 @@ body {
 @keyframes research-icoFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.2px); } }
 @keyframes research-icoPop { 0% { transform: scale(1); } 38% { transform: scale(1.14) rotate(-3deg); } 100% { transform: scale(1) rotate(0); } }
 @keyframes research-twinkle { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.7); } }
+/* nodo "pronto": alone bianco pulsante (call-to-action) — distingue ready da done a colpo d'occhio */
+@keyframes research-readyPulse {
+  0%, 100% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 7px 18px -6px rgba(0, 0, 0, 0.55), 0 0 0 1.5px rgba(255, 255, 255, 0.35), 0 0 14px -2px rgba(255, 255, 255, 0.3); }
+  50% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 7px 18px -6px rgba(0, 0, 0, 0.55), 0 0 0 2px rgba(255, 255, 255, 0.7), 0 0 26px -1px rgba(255, 255, 255, 0.6); }
+}
 
-#research-scaler { transform-origin: center center; }
+#research-scaler { transform-origin: center center; position: relative; }
+/* scorte globali in tempo reale: SOLO iconcine + valore (HumT in testa). Agganciata allo
+   scaler (NON allo stage, che ha overflow:hidden) appena fuori dal bordo sinistro della card
+   e allineata in basso → adiacente e solidale col pannello (si scala/muove con esso) */
+.research-resources {
+  position: absolute; right: 100%; bottom: 0; margin-right: 12px; z-index: 1;
+  display: flex; flex-direction: column; gap: 6px; width: 122px;
+  padding: 12px 12px; border-radius: 10px;
+  background: rgba(8, 14, 26, 0.66); border: 1px solid #1d3450;
+}
+.research-resources .rr-item { display: flex; align-items: center; gap: 8px; color: #cdd6e2; font-size: 14px; }
+.research-resources .rr-item .res-icon { width: 18px; height: 18px; vertical-align: middle; margin-right: 0; }
+.research-resources .rr-coin { width: 18px; text-align: center; font-size: 15px; }
+.research-resources .rr-val { margin-left: auto; }
+/* nei requisiti/costo del popover: icone (risorsa o nodo) al posto dei nomi */
+.research-stage .reqval .res-icon { width: 16px; height: 16px; vertical-align: -3px; margin: 0 0 0 2px; }
+.research-stage .rq-cost { display: inline-flex; align-items: center; gap: 1px; margin-left: 10px; }
+.research-stage .rq-cost:first-child { margin-left: 0; }
+.research-stage .rq-coin { margin-right: 3px; }
+.research-stage .rq-prereq { display: inline-flex; align-items: center; margin-left: 6px; }
+.research-stage .rq-prereq:first-child { margin-left: 0; }
+.research-stage .rq-prereq svg { width: 20px; height: 20px; }
 .research-stage {
   --panel: #0b1424; --panel-edge: #1b2a42; --ink: #e8edf5; --muted: #6f86a6; --arrow: #56688a;
   --red: #ff5436; --red-bright: #ff6a4d; --red-fill: #2a1412;
@@ -377,8 +415,23 @@ body {
 .research-stage .node.result { --c: var(--red-bright); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 0 34px rgba(255, 84, 54, 0.3), 0 8px 20px -6px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 84, 54, 0.55), 0 0 26px -2px rgba(255, 84, 54, 0.5); }
 .research-stage .node.selected { border-color: var(--ink); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 0 0 2px rgba(255, 255, 255, 0.14), 0 0 26px -2px rgba(var(--glow, 90, 110, 140), 0.6); }
 .research-stage.has-selection .node:not(.selected) { opacity: 0.5; }
-.research-stage .node.locked { opacity: 0.55; }
-.research-stage.has-selection .node.locked:not(.selected) { opacity: 0.4; }
+/* nodo "spento": bloccato, non ancora pagabile o placeholder. Le variabili di colore
+   diventano grigie (bar/bordo/sfondo icona seguono --c/--f/--glow) e l'icona è desaturata */
+.research-stage .node.off { --c: #5b6675; --f: #1b2230; --glow: 120, 134, 154; opacity: 0.62; }
+.research-stage .node.off .ic { filter: grayscale(1) brightness(0.8); opacity: 0.55; }
+.research-stage.has-selection .node.off:not(.selected) { opacity: 0.4; }
+/* nodo "pronto" (sbloccabile ora): BIANCO (accento/bordo/icona/alone), fill neutro per
+   tenere leggibile il testo. Niente colore di categoria → distinto da done (verde) e off (grigio) */
+.research-stage .node.ready {
+  --c: #ffffff; --glow: 255, 255, 255; --f: #262c35;
+  opacity: 1;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 7px 18px -6px rgba(0, 0, 0, 0.55), 0 0 0 1.5px rgba(255, 255, 255, 0.4), 0 0 16px -2px rgba(255, 255, 255, 0.35);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .research-stage .node.ready { animation: research-readyPulse 1.7s ease-in-out infinite; }
+}
+/* un nodo-obiettivo ancora spento non deve tenere l'alone colorato del bordo result */
+.research-stage .node.result.off { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 7px 18px -6px rgba(0, 0, 0, 0.55); }
 .research-stage .node.with-icon { justify-content: flex-start; gap: 12px; text-align: left; padding-left: 14px; }
 .research-stage .node .ic {
   flex: 0 0 auto; width: 42px; height: 42px; padding: 6px; border-radius: 10px;
@@ -386,12 +439,13 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 12px -2px rgba(var(--glow, 90, 110, 140), 0.6);
 }
 .research-stage .node .ic > svg { width: 100%; height: 100%; display: block; }
-.research-stage .node .badge {
-  position: absolute; top: -9px; right: -9px; width: 21px; height: 21px; border-radius: 50%;
-  background: #3f9a5a; color: #fff; font-size: 13px; display: flex; align-items: center; justify-content: center;
-  border: 2px solid var(--panel); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+/* nodo completato: anello verde STATICO marcato + leggera velatura verde interna (calmo,
+   nessuna animazione) → contrasta con l'alone bianco pulsante dei "ready" */
+.research-stage .node.done {
+  border-color: rgba(63, 200, 110, 0.85);
+  box-shadow: inset 0 0 0 1px rgba(63, 200, 110, 0.35), inset 0 0 22px rgba(34, 224, 122, 0.18),
+    0 0 0 2.5px rgba(63, 200, 110, 0.7), 0 0 16px -3px rgba(34, 224, 122, 0.55), 0 7px 18px -6px rgba(0, 0, 0, 0.55);
 }
-.research-stage .node.done { box-shadow: 0 0 0 2px rgba(63, 154, 90, 0.45); }
 
 .research-stage .divider { position: absolute; left: 18px; right: 18px; height: 0; border-top: 1px dashed rgba(120, 150, 190, 0.28); }
 .research-stage .band-label {

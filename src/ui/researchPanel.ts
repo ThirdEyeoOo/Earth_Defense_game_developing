@@ -8,8 +8,11 @@ import {
   type ResearchBranch,
   type ResearchNode,
 } from '../sim/researchTree';
+import { RESOURCE_TYPES, type ResourceType } from '../sim/resources';
 import type { GameState } from '../sim/state';
+import { fmtInt } from './format';
 import { RESEARCH_ICONS } from './researchIcons';
+import { resourceIcon } from './resourceIcons';
 
 // Pannello Ricerca: ricreazione del prototipo di design (Albero della Ricerca.html) —
 // overlay DOM/CSS data-driven da RESEARCH_TREE. Campo zoomabile/trascinabile con nodi
@@ -51,14 +54,33 @@ function nodeFontSize(title: string): string {
   return '';
 }
 
-// costo composito → testo (es. "Ħ 200 · 15 Industria · 10 Tecnologia"), o "Gratis"
-function costText(node: ResearchNode): string {
+// costo composito → HTML con SOLE ICONCINE (niente nomi risorsa): "🪙 200  15<ind>  10<tec>",
+// o "Gratis". Il nome resta nel title per il tooltip al passaggio del mouse.
+function costHtml(node: ResearchNode): string {
   const parts: string[] = [];
-  if (node.cost.humt > 0) parts.push(`Ħ ${node.cost.humt}`);
+  if (node.cost.humt > 0) parts.push(`<span class="rq-cost"><span class="rq-coin">🪙</span>${node.cost.humt}</span>`);
   for (const [type, amount] of Object.entries(node.cost.resources)) {
-    parts.push(`${amount} ${tk(`res.${type}`)}`);
+    const rt = type as ResourceType;
+    parts.push(
+      `<span class="rq-cost" title="${esc(tk(`res.${rt}`))}">${amount}${resourceIcon(rt)}</span>`,
+    );
   }
-  return parts.length ? parts.join(' · ') : tk('tech.free');
+  return parts.length ? parts.join('') : esc(tk('tech.free'));
+}
+
+// requisiti (nodi prerequisito) → SOLE ICONCINE dei nodi (nome nel title); "Nessuno" se vuoto
+function prereqHtml(node: ResearchNode): string {
+  if (!node.prereqs.length) return esc(tk('tech.req.none'));
+  return node.prereqs
+    .map(p => {
+      const pr = researchById.get(p)!;
+      const ico = pr.icon ? RESEARCH_ICONS[pr.icon] : '';
+      const name = esc(tk(pr.titleKey));
+      return ico
+        ? `<span class="rq-prereq" title="${name}">${ico}</span>`
+        : `<span class="rq-prereq">${name}</span>`;
+    })
+    .join('');
 }
 
 // filo di prerequisito: bordo destro del prereq → bordo sinistro del nodo, curva a S
@@ -81,7 +103,13 @@ export interface ResearchPanelOptions {
 export function createResearchPanel(
   root: HTMLElement,
   opts: ResearchPanelOptions,
-): { toggle(): void; close(): void; isOpen(): boolean; refresh(): void } {
+): {
+  toggle(): void;
+  close(): void;
+  isOpen(): boolean;
+  refresh(): void;
+  updateAffordability(): void;
+} {
   // stato della vista (zoom/pan): persiste tra i refresh, si azzera a ogni apertura
   let z = 1;
   let tx = 0;
@@ -94,6 +122,7 @@ export function createResearchPanel(
   let inner: HTMLElement;
   let tip: HTMLElement;
   let reqbox: HTMLElement;
+  let resBox: HTMLElement;
   let selectedNode: HTMLElement | null = null;
   let reqNodeId: string | null = null;
   let panning = false;
@@ -111,18 +140,30 @@ export function createResearchPanel(
     return 'available';
   }
 
+  // true se le risorse/HumT attuali bastano a pagare il costo del nodo
+  function canAfford(node: ResearchNode): boolean {
+    const state = opts.getState();
+    if (!state) return false;
+    if (state.humt < node.cost.humt) return false;
+    return Object.entries(node.cost.resources).every(
+      ([type, amount]) => state.resources[type as ResourceType] >= (amount ?? 0),
+    );
+  }
+
   function nodeHtml(node: ResearchNode): string {
     const cls = ['node', CAT_CLASS[node.branch]];
     if (node.icon) cls.push('with-icon');
     if (node.isResult) cls.push('result');
+    // tre livelli di "accensione": done (ricercato, pieno) → ready (sbloccabile ORA con le
+    // risorse attuali, acceso) → off (bloccato / non ancora pagabile / placeholder, grigio spento)
     const st = nodeState(node);
     if (st === 'done') cls.push('done');
-    if (st === 'locked') cls.push('locked');
+    else if (st === 'available' && canAfford(node)) cls.push('ready');
+    else cls.push('off');
     const title = tk(node.titleKey);
     const icon = node.icon ? `<div class="ic">${RESEARCH_ICONS[node.icon] ?? ''}</div>` : '';
-    const badge = st === 'done' ? '<span class="badge">✓</span>' : '';
     return `<div class="${cls.join(' ')}" data-node="${node.id}"
-      style="left:${node.pos.x}px;top:${node.pos.y}px;${nodeFontSize(title)}">${icon}<span>${esc(title)}</span>${badge}</div>`;
+      style="left:${node.pos.x}px;top:${node.pos.y}px;${nodeFontSize(title)}">${icon}<span>${esc(title)}</span></div>`;
   }
 
   function bandsHtml(): string {
@@ -146,6 +187,29 @@ export function createResearchPanel(
     return RESEARCH_TREE.flatMap(node =>
       node.prereqs.map(p => wirePath(researchById.get(p)!, node)),
     ).join('');
+  }
+
+  // widget delle scorte globali nella striscia a sinistra: SOLO iconcine + valore (niente
+  // nomi), HumT in testa. I valori si aggiornano in tempo reale (vedi updateResources).
+  function resourcesWidgetHtml(): string {
+    const coin = `<div class="rr-item" title="HumT"><span class="rr-coin">🪙</span><span class="rr-val" data-res="humt">0</span></div>`;
+    const rows = RESOURCE_TYPES.map(
+      type =>
+        `<div class="rr-item" title="${esc(tk(`res.${type}`))}">${resourceIcon(type)}<span class="rr-val" data-res="${type}">0</span></div>`,
+    ).join('');
+    return coin + rows;
+  }
+
+  // aggiorna i numeri delle scorte (HumT + 10 risorse) senza ridisegnare il widget
+  function updateResources(): void {
+    const state = opts.getState();
+    if (!state || !resBox) return;
+    const set = (key: string, v: number): void => {
+      const el = resBox.querySelector<HTMLElement>(`.rr-val[data-res="${key}"]`);
+      if (el) el.textContent = fmtInt(Math.floor(v));
+    };
+    set('humt', state.humt);
+    for (const type of RESOURCE_TYPES) set(type, state.resources[type]);
   }
 
   function render(): void {
@@ -178,6 +242,7 @@ export function createResearchPanel(
           <div class="tooltip" id="research-tip"></div>
           <div class="reqbox" id="research-reqbox"></div>
         </div>
+        <div class="research-resources" id="research-resources">${resourcesWidgetHtml()}</div>
       </div>`;
 
     scaler = root.querySelector('#research-scaler')!;
@@ -186,6 +251,7 @@ export function createResearchPanel(
     inner = root.querySelector('#research-field-inner')!;
     tip = root.querySelector('#research-tip')!;
     reqbox = root.querySelector('#research-reqbox')!;
+    resBox = root.querySelector('#research-resources')!;
     selectedNode = null;
     reqNodeId = null;
 
@@ -194,6 +260,7 @@ export function createResearchPanel(
     wireZoomPan();
     applyTransform();
     fit();
+    updateResources();
   }
 
   // ---- nodi: hover (tooltip) + click (popover requisiti) ----
@@ -245,13 +312,10 @@ export function createResearchPanel(
     reqNodeId = node.id;
 
     const state = nodeState(node);
-    const reqText = node.prereqs.length
-      ? node.prereqs.map(p => esc(tk(researchById.get(p)!.titleKey))).join(', ')
-      : esc(tk('tech.req.none'));
     const canConfirm = state === 'available';
     reqbox.innerHTML = `
-      <div class="reqhead">${esc(tk('tech.requirements'))}<span class="reqval">${reqText}</span></div>
-      <div class="reqhead">${esc(tk('tech.cost'))}<span class="reqval">${esc(costText(node))}</span></div>
+      <div class="reqhead">${esc(tk('tech.requirements'))}<span class="reqval">${prereqHtml(node)}</span></div>
+      <div class="reqhead">${esc(tk('tech.cost'))}<span class="reqval">${costHtml(node)}</span></div>
       ${state === 'locked' ? `<div class="reqhead reqlocked">${esc(tk('tech.locked'))}</div>` : ''}
       <div class="reqacts">
         <button class="rq ok" id="research-ok" title="${esc(tk('tech.confirm'))}" ${canConfirm ? '' : 'disabled'}>${CHECK}</button>
@@ -345,9 +409,11 @@ export function createResearchPanel(
     let stx = 0;
     let sty = 0;
     field.addEventListener('pointerdown', e => {
+      // azzera SEMPRE moved a inizio interazione: altrimenti, dopo un pan (moved=true), il
+      // pointerdown su un nodo uscirebbe prima di resettarlo e il suo click verrebbe scartato
+      moved = false;
       if ((e.target as HTMLElement).closest('.node')) return; // i click sui nodi restano validi
       panning = true;
-      moved = false;
       sx = e.clientX;
       sy = e.clientY;
       stx = tx;
@@ -426,6 +492,21 @@ export function createResearchPanel(
     if (isOpen()) fit();
   });
 
+  // ricalcola i livelli di accensione (ready/off) SENZA ridisegnare: i nodi disponibili
+  // diventano "ready" appena le risorse bastano (e viceversa) mentre il pannello è aperto,
+  // senza distruggere hover/pan/popover. done e placeholder non cambiano stato qui.
+  function updateAffordability(): void {
+    if (!isOpen() || !stage) return;
+    updateResources(); // scorte globali in tempo reale nel widget a sinistra
+    for (const el of stage.querySelectorAll<HTMLElement>('.node')) {
+      const node = researchById.get(el.dataset.node!);
+      if (!node || nodeState(node) !== 'available') continue;
+      const ready = canAfford(node);
+      el.classList.toggle('ready', ready);
+      el.classList.toggle('off', !ready);
+    }
+  }
+
   return {
     toggle,
     close,
@@ -433,5 +514,6 @@ export function createResearchPanel(
     refresh() {
       if (isOpen()) render();
     },
+    updateAffordability,
   };
 }

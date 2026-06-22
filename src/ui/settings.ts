@@ -1,6 +1,22 @@
 import { getLanguage, t, type Lang } from '../i18n';
 
-// Modal impostazioni: selezione della lingua + volume musica.
+// true se la pagina è in modalità schermo intero (Fullscreen API, non F11).
+function isFullscreen(): boolean {
+  return document.fullscreenElement !== null;
+}
+
+// Attiva/disattiva lo schermo intero VERO (Fullscreen API): a differenza dell'F11
+// del browser, il bordo superiore non rivela più la barra del browser al passaggio
+// del mouse. Va invocato da un gesto utente (click sul bottone).
+function toggleFullscreen(): void {
+  if (isFullscreen()) {
+    void document.exitFullscreen().catch(() => {});
+  } else {
+    void document.documentElement.requestFullscreen().catch(() => {});
+  }
+}
+
+// Modal impostazioni: selezione della lingua + volume musica + schermo intero.
 // Overlay stile end-screen, sopra anche allo start screen (z-index in CSS).
 export function createSettings(
   root: HTMLElement,
@@ -23,6 +39,12 @@ export function createSettings(
           <label id="music-volume-label" for="music-volume">${t('settings.musicVolume', { n: pct })}</label>
           <input type="range" id="music-volume" min="0" max="100" step="1" value="${pct}">
         </p>
+        <p>${t('settings.fullscreen')}</p>
+        <p>
+          <button id="fullscreen-toggle">${t(
+            isFullscreen() ? 'settings.fullscreenExit' : 'settings.fullscreenEnter',
+          )}</button>
+        </p>
         <button id="settings-close">${t('settings.close')}</button>
       </div>
     `;
@@ -35,8 +57,14 @@ export function createSettings(
       onMusicVolume(Number(slider.value) / 100);
       label.textContent = t('settings.musicVolume', { n: slider.value });
     });
+    root.querySelector('#fullscreen-toggle')!.addEventListener('click', toggleFullscreen);
     root.querySelector('#settings-close')!.addEventListener('click', close);
   }
+
+  // l'etichetta del bottone segue lo stato reale (anche se si esce con Esc/F11)
+  document.addEventListener('fullscreenchange', () => {
+    if (isOpen()) render();
+  });
 
   function open(): void {
     render();

@@ -428,6 +428,7 @@ function frame(now: number): void {
       hud.update(state, state.tick + tickFraction);
       radar.update(state);
       balancePanel.update(state);
+      researchPanel.updateAffordability();
       tutorial.update(state);
       // il pannello ha pulsanti: si ricostruisce solo quando i dati cambiano,
       // non a ogni frame, altrimenti i click cadrebbero su elementi distrutti
@@ -475,4 +476,19 @@ onLanguageChange(() => {
 // parte il tema di menu (onDone scatta su un gesto utente ⇒ l'autoplay non viene bloccato)
 const intro = createIntro(document.getElementById('intro-screen')!, () => music.play());
 setupStartScreen();
+
+// Avvio a schermo intero: i browser concedono il fullscreen SOLO da un gesto utente,
+// quindi non si può forzare al primo paint. Lo richiediamo al PRIMISSIMO gesto (già
+// sull'intro/schermata iniziale), una sola volta per caricamento. Se l'utente esce
+// (Esc), non rientriamo da soli: servirà un nuovo avvio o il toggle in Impostazioni.
+function enterFullscreenOnce(): void {
+  window.removeEventListener('pointerdown', enterFullscreenOnce, true);
+  window.removeEventListener('keydown', enterFullscreenOnce, true);
+  if (!document.fullscreenElement) {
+    void document.documentElement.requestFullscreen().catch(() => {});
+  }
+}
+window.addEventListener('pointerdown', enterFullscreenOnce, true);
+window.addEventListener('keydown', enterFullscreenOnce, true);
+
 requestAnimationFrame(frame);

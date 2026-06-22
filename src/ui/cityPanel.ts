@@ -30,13 +30,27 @@ function resourcesHtml(state: GameState, city: CityState): string {
   const connected = isConnected(state, city);
   const prod = cityProductionPerDay(city); // beni/giorno per tipo (curva unica)
   const pot = cityPotential(city);
+  // la resa/g si mostra SEMPRE: per le città collegate è in verde (produzione reale),
+  // per quelle ancora neutrali è in grigio (potenziale, non ancora accreditato)
+  const dayClass = connected ? 'res-day' : 'res-day res-day--potential';
+  // separatore decimale della lingua corrente (',' in it, '.' in en): unico carattere
+  // non-cifra in un numero formattato → serve a spezzare la resa per incolonnare i decimali
+  const decSep = fmtDecimal1(0).replace(/[\d-]/g, '');
   const rows = city.resources
     .map(r => {
       const share = pot > 0 ? (r.amount / pot) * 100 : 0;
-      const perDay = connected
-        ? ` <small>${t('panel.productionPerDay', { n: fmtDecimal1(prod[r.type]!) })}</small>`
-        : '';
-      return `<li>${resourceIcon(r.type)}${t(`res.${r.type}`)}: <strong>${t('panel.resourcePct', { n: fmtDecimal1(share) })}</strong>${perDay}</li>`;
+      // spezza "+0,8/g" in parte intera ("+0"), separatore e resto ("8/g"): la parte intera
+      // va in una cella fissa allineata a destra → il separatore (e i decimali) si incolonnano;
+      // il separatore ha spazio prima/dopo (vedi .d-sep in style.css)
+      const day = t('panel.productionPerDay', { n: fmtDecimal1(prod[r.type]!) });
+      const sepAt = day.indexOf(decSep);
+      const intPart = day.slice(0, sepAt);
+      const fracPart = day.slice(sepAt + decSep.length);
+      const dayHtml = `<span class="d-int">${intPart}</span><span class="d-sep">${decSep}</span><span class="d-frac">${fracPart}</span>`;
+      // nome a sinistra (può andare a capo), quota legata con &nbsp; così il % non resta MAI
+      // orfano su una riga propria; resa/g incolonnata a destra (vedi .res-day in style.css)
+      const main = `<span class="res-main">${resourceIcon(r.type)}${t(`res.${r.type}`)}:&nbsp;<strong>${t('panel.resourcePct', { n: fmtDecimal1(share) })}</strong></span>`;
+      return `<li>${main}<small class="${dayClass}">${dayHtml}</small></li>`;
     })
     .join('');
   const potLine = `<p class="city-potential">${t('panel.cityPotential', { n: pot })}</p>`;

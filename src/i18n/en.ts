@@ -220,6 +220,9 @@ export const en: Record<MessageKey, string> = {
   'settings.title': 'Settings',
   'settings.language': 'Language',
   'settings.musicVolume': 'Music volume: {n}%',
+  'settings.fullscreen': 'Fullscreen',
+  'settings.fullscreenEnter': 'Enter fullscreen',
+  'settings.fullscreenExit': 'Exit fullscreen',
   'settings.close': 'Close',
   'settings.open': 'Settings',
 
