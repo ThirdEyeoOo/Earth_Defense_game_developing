@@ -1,6 +1,6 @@
 # Earth Defense — Contesto operativo
 
-Aggiornato: 2026-06-20 (chiusura sessione 15, commit #110; Ricerca interattiva + meccanica su `main` NON pushato; ultima release v0.120.0)
+Aggiornato: 2026-06-22 (chiusura sessione 16, commit #114; release v0.121.0 — push su GitHub eseguito; design-system da risincronizzare)
 Repo pubblico: github.com/ThirdEyeoOo/Earth_Defense_game_developing (README bilingue, MIT, FUNDING).
 
 ## Cos'è
@@ -112,6 +112,28 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
   artwork `Assets/Intro/Earth Defense Title.jpg`, titolo Quantico verde con glow, finestra semitrasparente,
   **versione letta da `package.json`**, pulsanti Impostazioni/Esci (rimosso l'ingranaggio). **HUD**: valuta
   `🪙 HumT`, velocità 1x/5x/25x/100x/≫. Nessuna migrazione salvataggi.
+- **v0.121.0** — rifiniture UI/UX da playtest. **Avvio a schermo intero** (Fullscreen API
+  al primissimo gesto utente — i browser non concedono il fullscreen al primo paint —
+  one-shot `enterFullscreenOnce` in `main.ts`; niente barra browser come con F11) + opzione
+  **"Schermo intero"** in Impostazioni (toggle che segue `fullscreenchange`, chiavi
+  `settings.fullscreen*`). **Pannello Città**: largh. **360px**; la quota **% non va più a
+  capo** (legata all'ultima parola del nome col `&nbsp;` → il % non resta orfano); **resa/g
+  sempre mostrata** anche per le città non collegate (verde = produzione reale collegata,
+  **grigio** `res-day--potential` = solo potenziale); **decimali incolonnati** malgrado
+  Michroma (split al separatore in celle `d-int`/`d-sep`/`d-frac`, **spazio prima/dopo** il
+  separatore). **Pannello Ricerca**: stati nodo a 3 livelli **done** (verde, anello statico)
+  / **ready** (BIANCO pulsante = sbloccabile ORA con le risorse attuali, override `--c/--f/--glow`
+  + keyframe `research-readyPulse`) / **off** (grigio spento: bloccato/non pagabile/placeholder);
+  **rimosso il badge ✓**; affordabilità ricalcolata **in tempo reale** ogni frame
+  (`updateAffordability`, senza ridisegnare). **Widget scorte globali** nella card Ricerca:
+  **sole iconcine + valore** (HumT 🪙 in testa, `resourcesWidgetHtml`/`updateResources`),
+  agganciato allo **scaler** (non allo stage che ha `overflow:hidden`) con `right:100%`+`bottom:0`
+  → adiacente in basso a sinistra e solidale col pannello. **Requisiti/costo del popover a
+  SOLE iconcine** (`costText`→`costHtml`, nuova `prereqHtml`; icona risorsa per il costo, icona
+  nodo per i prereq, nome nel `title`) — **regola fissata anche per le finestre Ricerca future**.
+  **Fix**: dopo un pan dell'albero i nodi diventavano inerti (`moved` non azzerato sul
+  `pointerdown` del nodo → il click veniva scartato); ora `moved=false` a ogni `pointerdown`.
+  Nessuna migrazione salvataggi.
 - Release: a ogni merge chiedere il nome semver all'utente (proponendone uno), **bumpare
   `package.json` `"version"` allo stesso semver** (la UI lo legge e lo mostra nello start
   screen — `src/main.ts` importa `version` da package.json), e aggiornare
