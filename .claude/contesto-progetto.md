@@ -1,6 +1,6 @@
 # Earth Defense — Contesto operativo
 
-Aggiornato: 2026-06-22 (chiusura sessione 16, commit #114; release v0.121.0 — push su GitHub eseguito; design-system da risincronizzare)
+Aggiornato: 2026-06-24 (chiusura sessione 17, commit #116; release v0.122.0 — push su GitHub eseguito; design-system risincronizzato)
 Repo pubblico: github.com/ThirdEyeoOo/Earth_Defense_game_developing (README bilingue, MIT, FUNDING).
 
 ## Cos'è
@@ -134,6 +134,30 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
   **Fix**: dopo un pan dell'albero i nodi diventavano inerti (`moved` non azzerato sul
   `pointerdown` del nodo → il click veniva scartato); ora `moved=false` a ogni `pointerdown`.
   Nessuna migrazione salvataggi.
+- **v0.122.0** — **Pannello Costruisci** (3° pulsante della barra), brainstormato in 4 sottosistemi
+  e implementato a fasi. **Assemblaggio veicoli**: tab del pannello modale `ui/buildPanel.ts`, solo
+  F-22 (riusa `cmdBuildSquadron`) con selettore città; catalogo costruibili dati-driven
+  `sim/buildables.ts` (`placement: city|vehicle`, `researchWhat` per il gating); il bottone build
+  esce dal pannello Città. **Costruzione su città** = **griglia esagonale a hardpoint** (porting
+  prototipo Claude Design *Griglia Strutture.html* → `ui/structureGrid.ts`: drag&drop, stati
+  empty/occupied/building/damaged, popover Ripara/Rimuovi, tavolozza dinamica per ricerca+classe).
+  Sim: `CityState.structures` + `Structure`, `CONFIG.buildings` (capienza `gridCapacity` = 4 + 1 ogni
+  2M ab., `sim/buildings.ts` con geometria esagonale), comandi `cmdBuildStructure`/`cmdRepairStructure`/
+  `cmdRemoveStructure`, completamento `building→occupied` nel `tick` (buildDoneTick). **Salvataggi v7**.
+  **Ricerca ad avanzamento nel tempo** (non più sblocco istantaneo): `research.selected/progress`,
+  `ResearchNode.researchHours`, `labCount`/`researchRate` = **1 (QG) + 1/laboratorio operativo**/ora-gioco;
+  `cmdUnlockResearch`→**`cmdStartResearch`** (paga all'avvio; i nodi a 0 ore — QG — restano istantanei,
+  una ricerca alla volta `researchBusy`); avanzamento nel `tick` (`+researchRate×1,2`). `researchPanel`
+  con stato **researching** (anello giallo + barra), `ready` solo se avviabile e nessun'altra in corso.
+  Albero: nodo **`torre_dif`** (ramo combat) + campo allungato **610→688** (3 righe combat). **Torre
+  difensiva**: asset `defense-tower` (rotta dom, ciano) in `Assets/Umani/Strutture/`, modulo arma
+  `weapons.ts` (`defense-tower`: 12 danni/1,5 min/200 km), `cmdDamageStructure` (HP 0 → `damaged`,
+  riparabile); `render/combatEngine.ts` ciclo torri↔UFO (torre spara dal globo, UFO risponde mirando
+  la torre se non ci sono caccia di stanza), traccianti **ciano** in `combatFx.ts`. **Mini-griglia
+  strutture accanto al nome città sul globo** (`render/cityStructures.ts`, figlia della targhetta
+  CSS2D): la torre usa l'asset in shadow root e **spara da lì** (classe `on` + tracciante dalla bocca);
+  **scala con lo zoom** (wrapper interno `scale(k)` su distanza camera). `ufoLayer` ora mira la torre
+  col puntamento delle torrette plasma. `weaponModules` reso **PARZIALE** (la torre ha render proprio).
 - Release: a ogni merge chiedere il nome semver all'utente (proponendone uno), **bumpare
   `package.json` `"version"` allo stesso semver** (la UI lo legge e lo mostra nello start
   screen — `src/main.ts` importa `version` da package.json), e aggiornare
@@ -387,8 +411,9 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
   default `engageAltitude` = quota d'orbita ⇒ comportamento come prima). `UfoState` += `orbit`/
   `phaseTotalTicks`/`lunarCrossTick`/`captureSweep`.
 - Registro eventi sim (`state.events`): id monotoni, trim a 40 tick; UI legge col cursore.
-- Salvataggi versionati (**v6**; v4→v5 ricostruisce `orbit` da spawnDir + città; **v5→v6** aggiunge
-  `research.unlocked` sbloccando i nodi implementati); la velocità è salvata (pausa ⇒ riparte in pausa).
+- Salvataggi versionati (**v7**; v4→v5 ricostruisce `orbit` da spawnDir + città; **v5→v6** aggiunge
+  `research.unlocked` sbloccando i nodi implementati; **v6→v7** aggiunge `CityState.structures`,
+  `nextStructureId`, `research.selected/progress`); la velocità è salvata (pausa ⇒ riparte in pausa).
 
 ## Tracciamento dimensionale (v0.113.1) — `src/sim/measure.ts` (modulo PURO)
 - Conversioni unità-gioco→reali: `altitudeKm`/`speedKmH` (1 raggio render = `EARTH_RADIUS_KM`
@@ -422,22 +447,22 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
   le animazioni in `prefers-reduced-motion`), **tooltip** su hover, **popover requisiti** ✓/✗ (flip
   sopra il nodo per le righe basse). Icone dei 7 nodi in **`src/ui/researchIcons.ts`**. CSS del
   prototipo in `style.css` **scoped sotto `.research-stage`** (evita collisioni coi nomi generici).
-- **Dati** (`src/sim/researchTree.ts`): **9 nodi** (combat/economy/orbital), interfaccia ricca con
-  `effect` **dichiarativo** (`unlock`/`mult`), `pos` = angolo alto-sx nel campo 913×610, `cost`,
-  `icon`, `isResult`, `placeholder`; helper puri **`isUnlocked`/`isResearched`/`researchMult`**.
-  `RESEARCH_CANVAS` = 913×610. Modello "a punti nel tempo" di `docs/research-model.md` **superato**:
-  sblocco **istantaneo a pagamento**.
-- **Meccanica**: stato **`GameState.research.unlocked`** (id dei nodi); comando puro
-  **`cmdUnlockResearch`** (prereq + `payCost` + sblocco). **Gating** delle funzioni esistenti (canale
-  comandi/render): `quartier_gen` (**gratis**, ricerca iniziale → scioglie il circolo d'avvio) →
-  `cmdFoundHq`; `caccia` → `cmdBuildSquadron`; `collegamento` → `cmdBuildEmbassy`; `minigun` →
-  montaggio/fuoco minigun (`render/combatEngine.ts`+`squadronWeapons.ts`); `blindatura` →
-  `CONFIG.squadron.armor` (2) riduce il danno in `cmdDamageSquadron`; `telescopio` → pulsante Radar +
-  preavviso ondate nell'HUD. `lab`/`diplomazia`/`intercettore` senza consumer (feature future/placeholder).
-- **Salvataggi v6** (migrazione **v5→v6**: sblocca tutti i nodi implementati per le partite in corso).
-  `newGameWithHq` (testUtils) sblocca i nodi implementati. Banner/tutorial guidano lo sblocco gratuito
-  del QG a inizio partita (uno step dedicato del tutorial resta da fare). Da tarare a playtest (costi,
-  `armor`, squadroni dietro 3 ricerche). Design-system da risincronizzare (`.push_pending`).
+- **Dati** (`src/sim/researchTree.ts`): **10 nodi** (combat/economy/orbital), interfaccia ricca con
+  `effect` **dichiarativo** (`unlock`/`mult`) + `researchHours` (ore-ricerca, 0 = istantaneo), `pos`
+  = angolo alto-sx nel campo 913×688, `cost`, `icon`, `isResult`, `placeholder`; helper puri
+  **`isUnlocked`/`isResearched`/`researchMult`/`labCount`/`researchRate`**. `RESEARCH_CANVAS` = 913×688
+  (3 righe nel ramo combat: minigun/blindatura/torre_dif).
+- **Meccanica (v0.122.0 — ad avanzamento nel tempo)**: stato `research.{unlocked,selected,progress}`;
+  comando **`cmdStartResearch`** paga il costo **all'avvio** e imposta `selected` (i nodi a 0 ore — QG —
+  si sbloccano subito; una ricerca alla volta). L'avanzamento è nel **`tick`**: `progress += researchRate
+  × 1,2`, dove `researchRate = 1 (QG) + 1/laboratorio operativo`; a quota piena sblocca. **Gating** delle
+  funzioni: `quartier_gen` (gratis/istantaneo) → `cmdFoundHq`; `caccia` → `cmdBuildSquadron`;
+  `collegamento` → `cmdBuildEmbassy`; `minigun`/`blindatura` → moduli arma/armatura; `telescopio` → Radar;
+  **`lab`** → edificio Laboratorio (accelera la Ricerca); **`torre_dif`** → Torre difensiva.
+  `diplomazia`/`intercettore` ancora placeholder.
+- **Salvataggi v7** (migrazione **v6→v7**: aggiunge `structures`/`nextStructureId`/`research.selected/progress`).
+  `newGameWithHq` (testUtils) sblocca i nodi implementati. Da tarare a playtest (costi, `researchHours`,
+  `armor`).
 
 ## Knowledge graph (graphify)
 - Grafo del codebase in `graphify-out/` (gitignored), ~570 nodi. Hook git aggiornano la parte
@@ -449,8 +474,8 @@ Modulo trasversale **i18n** (`src/i18n/`, importabile da ui e render, MAI da sim
 - Esplorazione: `graphify query "<domanda>"`, `path`, `explain`, `affected`.
 
 ## Prossimi passi concordati
-1. Pannelli veri per i 3 pulsanti rimasti della barra inferiore (Costruisci, Ricerca, Città)
-   — Bilancio è fatto (v0.110.0); gli altri sono placeholder "Funzione in arrivo".
+1. Pannelli della barra inferiore: Bilancio (v0.110.0), Ricerca (v0.113.1+) e **Costruisci** (v0.122.0)
+   fatti; resta solo **Città** come placeholder "Funzione in arrivo".
 2. Economia: edifici di produzione, torri difensive, mercato/vendita surplus, nemici che
    danneggiano gli amount delle risorse (stato già predisposto); SVG QG/ambasciata (oggi
    placeholder funzionali); bilanciamento col playtest (CONFIG.economy). Icone risorse FATTE
