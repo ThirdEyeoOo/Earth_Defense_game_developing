@@ -126,6 +126,22 @@ const MIGRATIONS: Record<number, Migration> = {
     research: { unlocked: [...IMPLEMENTED_NODE_IDS] },
     version: 6,
   }),
+  // v6 → v7: sistema strutture su città (griglia esagonale di hardpoint) + ricerca ad
+  // avanzamento nel tempo. Le città acquisiscono `structures: []`, lo stato un contatore
+  // di id; la ricerca acquisisce `selected`/`progress` (nessuna ricerca in corso).
+  6: raw => {
+    const cities = Array.isArray(raw.cities) ? (raw.cities as Record<string, unknown>[]) : [];
+    for (const city of cities) {
+      if (!Array.isArray(city.structures)) city.structures = [];
+    }
+    const research = (raw.research as Record<string, unknown>) ?? { unlocked: [] };
+    return {
+      ...raw,
+      nextStructureId: 1,
+      research: { ...research, selected: null, progress: 0 },
+      version: 7,
+    };
+  },
 };
 
 export function serialize(state: GameState): string {

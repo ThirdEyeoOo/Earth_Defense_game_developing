@@ -2,7 +2,7 @@
 // è il contratto fra dati (quale arma monta un nemico) e render (quale asset/animazione
 // disegnare — vedi src/render/weaponModules.ts). Modulo PURO: nessun import.
 //
-export type WeaponModuleId = 'plasma-turret' | 'minigun';
+export type WeaponModuleId = 'plasma-turret' | 'minigun' | 'defense-tower';
 
 // Statistiche di gioco di un modulo arma. La cadenza è in MINUTI-GIOCO (il combattimento
 // è in tempo reale nel loop di rendering, non più a tick): la sorgente spara quando sono
@@ -22,4 +22,7 @@ export const WEAPON_STATS: Record<WeaponModuleId, WeaponModule> = {
   // della torretta). 2 minigun/caccia × 4 colpi/min/modulo. Danno per colpo volutamente
   // basso, da tarare a playtest.
   minigun: { cooldownGameMinutes: 0.25, damage: 1, rangeKm: 50 },
+  // cannone della torre difensiva: colpo a terra→cielo lento ma pesante e a lunga gittata
+  // (raggiunge gli UFO più in alto del caccia). Ciclo di fuoco ~1,5 min-gioco come l'asset.
+  'defense-tower': { cooldownGameMinutes: 1.5, damage: 12, rangeKm: 200 },
 };

@@ -6,6 +6,7 @@
 // Aggiungere un nodo = una voce in RESEARCH_TREE + le due chiavi i18n
 // `tech.<id>.title` / `tech.<id>.desc` in it.ts ed en.ts (parità controllata dai test).
 
+import { isConnected } from './economy';
 import type { Cost } from './resources';
 import type { GameState } from './state';
 
@@ -41,7 +42,8 @@ export interface ResearchNode {
   tier: number; // colonna logica: un prereq sta sempre in un tier inferiore
   prereqs: string[]; // id dei nodi prerequisito (archi del DAG)
   pos: { x: number; y: number }; // ANGOLO ALTO-SINISTRA del nodo (197×62) nel campo 913×610
-  cost: Cost; // costo di sblocco (pagato da cmdUnlockResearch via payCost)
+  cost: Cost; // costo pagato all'AVVIO della ricerca (cmdStartResearch via payCost)
+  researchHours: number; // ore-ricerca per completarlo (0 = istantaneo, es. QG)
   effect: ResearchEffect; // cosa fa il nodo (vedi sopra)
   titleKey: string; // chiave i18n del titolo, tradotta dalla UI
   descKey: string; // chiave i18n della descrizione (tooltip)
@@ -55,7 +57,7 @@ export const RESEARCH_BRANCH_ORDER: ResearchBranch[] = ['combat', 'economy', 'or
 
 // Campo del pannello (sistema di coordinate del prototipo Albero della Ricerca.html).
 // Le `pos` dei nodi sono l'angolo alto-sinistra entro questo riquadro.
-export const RESEARCH_CANVAS = { width: 913, height: 610 } as const;
+export const RESEARCH_CANVAS = { width: 913, height: 688 } as const;
 
 // Dimensioni di un nodo nel campo (dal prototipo): servono al layout dei fili.
 export const RESEARCH_NODE_W = 197;
@@ -73,6 +75,7 @@ export const RESEARCH_TREE: ResearchNode[] = [
     prereqs: [],
     pos: { x: 95, y: 150 },
     cost: { humt: 200, resources: { industria: 15, tecnologia: 10 } },
+    researchHours: 24,
     effect: { kind: 'unlock', what: 'weapon.minigun' },
     titleKey: 'tech.minigun.title',
     descKey: 'tech.minigun.desc',
@@ -85,6 +88,7 @@ export const RESEARCH_TREE: ResearchNode[] = [
     prereqs: [],
     pos: { x: 95, y: 228 },
     cost: { humt: 200, resources: { materiali_da_costruzione: 15, tecnologia: 10 } },
+    researchHours: 24,
     effect: { kind: 'unlock', what: 'armor' },
     titleKey: 'tech.blindatura.title',
     descKey: 'tech.blindatura.desc',
@@ -97,11 +101,25 @@ export const RESEARCH_TREE: ResearchNode[] = [
     prereqs: ['minigun', 'blindatura'],
     pos: { x: 400, y: 189 },
     cost: { humt: 400, resources: { industria: 25, combustibili_fossili: 15 } },
+    researchHours: 48,
     effect: { kind: 'unlock', what: 'squadron' },
     titleKey: 'tech.caccia.title',
     descKey: 'tech.caccia.desc',
     icon: 'caccia',
     isResult: true,
+  },
+  {
+    id: 'torre_dif',
+    branch: 'combat',
+    tier: 1,
+    prereqs: [],
+    pos: { x: 95, y: 306 }, // incolonnata sotto la blindatura (x:95, y:228), passo 78
+    cost: { humt: 250, resources: { materiali_da_costruzione: 15, tecnologia: 10 } },
+    researchHours: 36,
+    effect: { kind: 'unlock', what: 'tower' }, // abilita la Torre difensiva nella griglia città
+    titleKey: 'tech.torre_dif.title',
+    descKey: 'tech.torre_dif.desc',
+    icon: 'torre_dif',
   },
 
   // ── Economia ────────────────────────────────────────────────────
@@ -110,8 +128,9 @@ export const RESEARCH_TREE: ResearchNode[] = [
     branch: 'economy',
     tier: 1,
     prereqs: [],
-    pos: { x: 95, y: 360 },
+    pos: { x: 95, y: 438 },
     cost: FREE, // ricerca iniziale gratuita: abilita la fondazione del QG (scioglie il circolo)
+    researchHours: 0, // istantaneo: durante la fondazione il tick non gira ancora
     effect: { kind: 'unlock', what: 'foundHq' },
     titleKey: 'tech.quartier_gen.title',
     descKey: 'tech.quartier_gen.desc',
@@ -122,8 +141,9 @@ export const RESEARCH_TREE: ResearchNode[] = [
     branch: 'economy',
     tier: 2,
     prereqs: ['quartier_gen'],
-    pos: { x: 400, y: 335 },
+    pos: { x: 400, y: 413 },
     cost: { humt: 250, resources: { tecnologia: 15 } },
+    researchHours: 24,
     effect: { kind: 'unlock', what: 'embassy' },
     titleKey: 'tech.collegamento.title',
     descKey: 'tech.collegamento.desc',
@@ -134,9 +154,10 @@ export const RESEARCH_TREE: ResearchNode[] = [
     branch: 'economy',
     tier: 2,
     prereqs: ['quartier_gen'],
-    pos: { x: 400, y: 412 },
+    pos: { x: 400, y: 490 },
     cost: { humt: 300, resources: { materiali_da_costruzione: 20, tecnologia: 20 } },
-    effect: { kind: 'unlock', what: 'lab' }, // nessun consumer ancora (feature futura)
+    researchHours: 30,
+    effect: { kind: 'unlock', what: 'lab' }, // sblocca l'edificio Laboratorio (accelera la Ricerca)
     titleKey: 'tech.laboratorio.title',
     descKey: 'tech.laboratorio.desc',
     icon: 'laboratorio',
@@ -146,8 +167,9 @@ export const RESEARCH_TREE: ResearchNode[] = [
     branch: 'economy',
     tier: 1,
     prereqs: [],
-    pos: { x: 690, y: 372 },
+    pos: { x: 690, y: 450 },
     cost: NONE,
+    researchHours: 0,
     effect: { kind: 'unlock', what: '__placeholder__' },
     titleKey: 'tech.diplomazia.title',
     descKey: 'tech.diplomazia.desc',
@@ -160,8 +182,9 @@ export const RESEARCH_TREE: ResearchNode[] = [
     branch: 'orbital',
     tier: 1,
     prereqs: [],
-    pos: { x: 95, y: 522 },
+    pos: { x: 95, y: 600 },
     cost: { humt: 200, resources: { tecnologia: 20, energia: 10 } },
+    researchHours: 24,
     effect: { kind: 'unlock', what: 'radar' },
     titleKey: 'tech.telescopio.title',
     descKey: 'tech.telescopio.desc',
@@ -172,8 +195,9 @@ export const RESEARCH_TREE: ResearchNode[] = [
     branch: 'orbital',
     tier: 2,
     prereqs: ['telescopio'],
-    pos: { x: 400, y: 522 },
+    pos: { x: 400, y: 600 },
     cost: NONE,
+    researchHours: 0,
     effect: { kind: 'unlock', what: '__placeholder__' },
     titleKey: 'tech.intercettore.title',
     descKey: 'tech.intercettore.desc',
@@ -208,4 +232,20 @@ export function researchMult(state: GameState, target: ModifierTarget): number {
     if (e?.kind === 'mult' && e.target === target) m *= e.factor;
   }
   return m;
+}
+
+// numero di Laboratori OPERATIVI nelle città collegate: ogni laboratorio dà +1 ricerca/ora
+export function labCount(state: GameState): number {
+  let n = 0;
+  for (const c of state.cities) {
+    if (!isConnected(state, c)) continue;
+    for (const s of c.structures) if (s.type === 'lab' && s.state === 'occupied') n++;
+  }
+  return n;
+}
+
+// ricerca prodotta per ORA-gioco: 1 dal Quartier Generale (se fondato) + 1 per laboratorio.
+// Pre-fondazione è 0 (il tick non gira): solo i nodi a researchHours 0 si sbloccano subito.
+export function researchRate(state: GameState): number {
+  return (state.hqCityId !== null ? 1 : 0) + labCount(state);
 }

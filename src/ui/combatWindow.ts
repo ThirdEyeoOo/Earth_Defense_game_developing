@@ -23,7 +23,7 @@ const UFO_ART_WIDTH_PX = (UFO_ART_HEIGHT_PX * 600) / 860; // viewBox UFO 600×86
 // Taglia derivata dal rapporto unico modulo↔UFO, così è coerente con il globo; l'altezza
 // segue l'aspetto dell'asset (viewW/viewH). Lo stato a riposo è baked negli attributi; a
 // ogni colpo del motore si accende `.on` per un lampo (keyframe `fireStyleOneShot`).
-const TURRET_MODULE = WEAPON_MODULES[CONFIG.ufoAbductor.weaponModule];
+const TURRET_MODULE = WEAPON_MODULES[CONFIG.ufoAbductor.weaponModule]!; // plasma-turret: sempre presente
 const TURRET_W = Math.round(UFO_ART_WIDTH_PX * TURRET_TO_UFO_WIDTH);
 const TURRET_H = Math.round((TURRET_W * TURRET_MODULE.viewH) / TURRET_MODULE.viewW);
 const ON_DURATION_MS = 620; // durata della classe `.on` (un lampo di sparo)
@@ -33,7 +33,7 @@ const ON_DURATION_MS = 620; // durata della classe `.on` (un lampo di sparo)
 // caccia "gratis" — come nel mockup di riferimento. Gli id interni (#canne_rotanti, #vampa,
 // #bocca_*) restano: le keyframe li pilotano per discendenza da `.weapon-module.on`, quindi i
 // duplicati fra istanze non danno fastidio. La CSS di fuoco è iniettata una volta nel box.
-const MINIGUN_MODULE = WEAPON_MODULES[CONFIG.squadron.weaponModule];
+const MINIGUN_MODULE = WEAPON_MODULES[CONFIG.squadron.weaponModule]!; // minigun: sempre presente
 const MG_INNER = MINIGUN_MODULE.raw
   .replace(/<svg[^>]*>/, '')
   .replace(/<\/svg>/, '')
@@ -243,6 +243,8 @@ export function createCombatWindow(
     const defenderIds = new Set(battle.defenders.map(s => s.id));
     const alive = new Set<number>();
     for (const shot of shots) {
+      // la finestra FTL mostra solo caccia↔UFO: il fuoco delle torri vive solo sul globo
+      if (shot.from.kind === 'tower' || shot.to.kind === 'tower') continue;
       const fromUfo = shot.from.kind === 'ufo';
       // lo shot appartiene a questo scontro se la sorgente è una sua unità
       const belongs = fromUfo ? attackerIds.has(shot.from.id) : defenderIds.has(shot.from.id);

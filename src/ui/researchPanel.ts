@@ -95,9 +95,10 @@ function wirePath(from: ResearchNode, to: ResearchNode): string {
 
 export interface ResearchPanelOptions {
   getState: () => GameState | undefined;
-  // tenta lo sblocco del nodo: ritorna true se riuscito (costo pagato), false altrimenti
-  // (main.ts mostra l'eventuale errore). Il pannello aggiorna lo stato visivo di conseguenza.
-  onUnlock: (nodeId: string) => boolean;
+  // avvia la ricerca del nodo: ritorna true se riuscito (costo pagato all'avvio), false
+  // altrimenti (main.ts mostra l'errore). I nodi a 0 ore si sbloccano subito; gli altri
+  // diventano la ricerca in corso e avanzano nel tempo. Il pannello aggiorna lo stato visivo.
+  onStart: (nodeId: string) => boolean;
 }
 
 export function createResearchPanel(
@@ -132,12 +133,31 @@ export function createResearchPanel(
     return opts.getState()?.research.unlocked ?? [];
   }
 
-  function nodeState(node: ResearchNode): 'done' | 'locked' | 'available' | 'placeholder' {
+  function selectedId(): string | null {
+    return opts.getState()?.research.selected ?? null;
+  }
+  // true se c'è un'altra ricerca in corso (una alla volta): blocca l'avvio di altri nodi
+  function isBusy(node: ResearchNode): boolean {
+    const sel = selectedId();
+    return sel !== null && sel !== node.id;
+  }
+
+  function nodeState(
+    node: ResearchNode,
+  ): 'done' | 'locked' | 'available' | 'placeholder' | 'researching' {
     if (node.placeholder) return 'placeholder';
+    if (selectedId() === node.id) return 'researching';
     const unlocked = unlockedIds();
     if (unlocked.includes(node.id)) return 'done';
     if (!node.prereqs.every(p => unlocked.includes(p))) return 'locked';
     return 'available';
+  }
+
+  // frazione 0..1 di avanzamento del nodo in corso (per le barre di progresso)
+  function progressFrac(node: ResearchNode): number {
+    const state = opts.getState();
+    if (!state || node.researchHours <= 0) return 0;
+    return Math.max(0, Math.min(1, state.research.progress / node.researchHours));
   }
 
   // true se le risorse/HumT attuali bastano a pagare il costo del nodo
@@ -154,26 +174,32 @@ export function createResearchPanel(
     const cls = ['node', CAT_CLASS[node.branch]];
     if (node.icon) cls.push('with-icon');
     if (node.isResult) cls.push('result');
-    // tre livelli di "accensione": done (ricercato, pieno) → ready (sbloccabile ORA con le
-    // risorse attuali, acceso) → off (bloccato / non ancora pagabile / placeholder, grigio spento)
+    // livelli di "accensione": done (ricercato) → researching (in corso, barra) → ready
+    // (avviabile ORA: risorse ok e nessun'altra ricerca in corso) → off (bloccato/non pagabile/
+    // occupato/placeholder, grigio spento)
     const st = nodeState(node);
     if (st === 'done') cls.push('done');
-    else if (st === 'available' && canAfford(node)) cls.push('ready');
+    else if (st === 'researching') cls.push('researching');
+    else if (st === 'available' && !isBusy(node) && canAfford(node)) cls.push('ready');
     else cls.push('off');
     const title = tk(node.titleKey);
     const icon = node.icon ? `<div class="ic">${RESEARCH_ICONS[node.icon] ?? ''}</div>` : '';
+    const prog =
+      st === 'researching'
+        ? `<div class="node-prog"><i style="width:${(progressFrac(node) * 100).toFixed(1)}%"></i></div>`
+        : '';
     return `<div class="${cls.join(' ')}" data-node="${node.id}"
-      style="left:${node.pos.x}px;top:${node.pos.y}px;${nodeFontSize(title)}">${icon}<span>${esc(title)}</span></div>`;
+      style="left:${node.pos.x}px;top:${node.pos.y}px;${nodeFontSize(title)}">${icon}<span>${esc(title)}</span>${prog}</div>`;
   }
 
   function bandsHtml(): string {
     // posizioni delle bande/divisori dal prototipo
     return (
       `<div class="band-label r" style="top:127px;">${esc(tk('tech.branch.combat'))}</div>` +
-      `<div class="divider" style="top:303px;"></div>` +
-      `<div class="band-label g" style="top:312px;">${esc(tk('tech.branch.economy'))}</div>` +
-      `<div class="divider" style="top:481px;"></div>` +
-      `<div class="band-label b" style="top:490px;">${esc(tk('tech.branch.orbital'))}</div>`
+      `<div class="divider" style="top:381px;"></div>` +
+      `<div class="band-label g" style="top:390px;">${esc(tk('tech.branch.economy'))}</div>` +
+      `<div class="divider" style="top:559px;"></div>` +
+      `<div class="band-label b" style="top:568px;">${esc(tk('tech.branch.orbital'))}</div>`
     );
   }
 
@@ -222,7 +248,7 @@ export function createResearchPanel(
           <button class="chiudi" id="research-close">${esc(tk('tech.close'))}</button>
           <div class="header-bg"></div>
           <div class="field" id="research-field"><div class="field-inner" id="research-field-inner">
-            <svg class="wires" viewBox="0 0 913 610" preserveAspectRatio="none">
+            <svg class="wires" viewBox="0 0 913 688" preserveAspectRatio="none">
               <defs>
                 <marker id="research-ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
                   <path d="M0,0 L9,4.5 L0,9 Z" fill="#56688a"></path>
@@ -286,7 +312,7 @@ export function createResearchPanel(
     tip.textContent = tk(node.descKey);
     const sr = stage.getBoundingClientRect();
     const kx = 913 / sr.width;
-    const ky = 610 / sr.height;
+    const ky = 688 / sr.height;
     const nr = el.getBoundingClientRect();
     const cx = (nr.left + nr.width / 2 - sr.left) * kx;
     const topLocal = (nr.top - sr.top) * ky;
@@ -311,21 +337,34 @@ export function createResearchPanel(
     selectedNode = el;
     reqNodeId = node.id;
 
-    const state = nodeState(node);
-    const canConfirm = state === 'available';
-    reqbox.innerHTML = `
-      <div class="reqhead">${esc(tk('tech.requirements'))}<span class="reqval">${prereqHtml(node)}</span></div>
-      <div class="reqhead">${esc(tk('tech.cost'))}<span class="reqval">${costHtml(node)}</span></div>
-      ${state === 'locked' ? `<div class="reqhead reqlocked">${esc(tk('tech.locked'))}</div>` : ''}
-      <div class="reqacts">
-        <button class="rq ok" id="research-ok" title="${esc(tk('tech.confirm'))}" ${canConfirm ? '' : 'disabled'}>${CHECK}</button>
-        <button class="rq no" id="research-no" title="${esc(tk('tech.cancel'))}">${CROSS}</button>
-      </div>`;
-    reqbox.querySelector('#research-ok')!.addEventListener('click', e => {
+    const st = nodeState(node);
+    if (st === 'researching') {
+      // ricerca in corso: mostra l'avanzamento (aggiornato live da updateAffordability)
+      reqbox.innerHTML = `
+        <div class="reqhead">${esc(tk('tech.researching'))}</div>
+        <div class="node-prog big"><i id="research-reqprog" style="width:${(progressFrac(node) * 100).toFixed(1)}%"></i></div>
+        <div class="reqacts">
+          <button class="rq no" id="research-no" title="${esc(tk('tech.cancel'))}">${CROSS}</button>
+        </div>`;
+    } else {
+      const busy = isBusy(node);
+      const canConfirm = st === 'available' && !busy && canAfford(node);
+      reqbox.innerHTML = `
+        <div class="reqhead">${esc(tk('tech.requirements'))}<span class="reqval">${prereqHtml(node)}</span></div>
+        <div class="reqhead">${esc(tk('tech.cost'))}<span class="reqval">${costHtml(node)}</span></div>
+        ${node.researchHours > 0 ? `<div class="reqhead">${esc(tk('tech.time'))}<span class="reqval">${esc(t('tech.hours', { n: node.researchHours }))}</span></div>` : ''}
+        ${st === 'locked' ? `<div class="reqhead reqlocked">${esc(tk('tech.locked'))}</div>` : ''}
+        ${busy ? `<div class="reqhead reqlocked">${esc(tk('tech.busy'))}</div>` : ''}
+        <div class="reqacts">
+          <button class="rq ok" id="research-ok" title="${esc(tk('tech.start'))}" ${canConfirm ? '' : 'disabled'}>${CHECK}</button>
+          <button class="rq no" id="research-no" title="${esc(tk('tech.cancel'))}">${CROSS}</button>
+        </div>`;
+    }
+    reqbox.querySelector('#research-ok')?.addEventListener('click', e => {
       e.stopPropagation();
-      if (opts.onUnlock(node.id)) {
+      if (opts.onStart(node.id)) {
         closeReq();
-        render(); // ridisegna: il nodo è ora `done` (badge ✓)
+        render(); // ridisegna: il nodo è ora `done` (0 ore) o `researching` (a tempo)
       }
     });
     reqbox.querySelector('#research-no')!.addEventListener('click', e => {
@@ -336,7 +375,7 @@ export function createResearchPanel(
     reqbox.classList.add('show');
     const sr = stage.getBoundingClientRect();
     const kx = 913 / sr.width;
-    const ky = 610 / sr.height;
+    const ky = 688 / sr.height;
     const nr = el.getBoundingClientRect();
     const cx = (nr.left + nr.width / 2 - sr.left) * kx;
     const topLocal = (nr.top - sr.top) * ky;
@@ -347,7 +386,7 @@ export function createResearchPanel(
     left = Math.max(8, Math.min(913 - w - 8, left));
     reqbox.style.left = `${left}px`;
     // sotto il nodo se c'è spazio, altrimenti sopra (i nodi bassi clipperebbero in fondo)
-    if (bottomLocal + 12 + h <= 610) {
+    if (bottomLocal + 12 + h <= 688) {
       reqbox.style.top = `${bottomLocal + 12}px`;
       reqbox.classList.remove('above');
     } else {
@@ -443,7 +482,7 @@ export function createResearchPanel(
   // scala lo stage per stare nel viewport (come il prototipo)
   function fit(): void {
     if (!scaler) return;
-    const s = Math.min(window.innerWidth / 953, window.innerHeight / 650, 1.3);
+    const s = Math.min(window.innerWidth / 953, window.innerHeight / 728, 1.3);
     scaler.style.transform = `scale(${s})`;
   }
 
@@ -492,18 +531,40 @@ export function createResearchPanel(
     if (isOpen()) fit();
   });
 
-  // ricalcola i livelli di accensione (ready/off) SENZA ridisegnare: i nodi disponibili
-  // diventano "ready" appena le risorse bastano (e viceversa) mentre il pannello è aperto,
-  // senza distruggere hover/pan/popover. done e placeholder non cambiano stato qui.
+  // riconcilia OGNI nodo col suo stato corrente SENZA ridisegnare (preserva hover/pan/popover):
+  // ready/off in tempo reale, e soprattutto le transizioni guidate dal tick — un nodo in corso
+  // diventa `done` da solo a fine ricerca, con la barra di avanzamento che cresce ogni frame.
   function updateAffordability(): void {
     if (!isOpen() || !stage) return;
     updateResources(); // scorte globali in tempo reale nel widget a sinistra
     for (const el of stage.querySelectorAll<HTMLElement>('.node')) {
       const node = researchById.get(el.dataset.node!);
-      if (!node || nodeState(node) !== 'available') continue;
-      const ready = canAfford(node);
+      if (!node) continue;
+      const st = nodeState(node);
+      const ready = st === 'available' && !isBusy(node) && canAfford(node);
+      el.classList.toggle('done', st === 'done');
+      el.classList.toggle('researching', st === 'researching');
       el.classList.toggle('ready', ready);
-      el.classList.toggle('off', !ready);
+      el.classList.toggle('off', !(st === 'done' || st === 'researching' || ready));
+      // barra di avanzamento: presente solo mentre il nodo è in corso
+      let bar = el.querySelector<HTMLElement>('.node-prog');
+      if (st === 'researching') {
+        if (!bar) {
+          bar = document.createElement('div');
+          bar.className = 'node-prog';
+          bar.innerHTML = '<i></i>';
+          el.appendChild(bar);
+        }
+        bar.querySelector('i')!.style.width = `${(progressFrac(node) * 100).toFixed(1)}%`;
+      } else if (bar) {
+        bar.remove();
+      }
+    }
+    // popover aperto sul nodo in corso: aggiorna la sua barra
+    const reqprog = reqbox?.querySelector<HTMLElement>('#research-reqprog');
+    if (reqprog && reqNodeId) {
+      const node = researchById.get(reqNodeId);
+      if (node) reqprog.style.width = `${(progressFrac(node) * 100).toFixed(1)}%`;
     }
   }
 

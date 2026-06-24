@@ -2,13 +2,11 @@ import { cityName, countryName, t } from '../i18n';
 import { CONFIG } from '../sim/config';
 import { cityPotential, cityProductionPerDay, embassyCost, isConnected } from '../sim/economy';
 import type { Cost, ResourceType } from '../sim/resources';
-import { squadronCost } from '../sim/squadrons';
 import type { CityState, GameState } from '../sim/state';
 import { fmtDecimal1, fmtInt } from './format';
 import { resourceIcon } from './resourceIcons';
 
 export interface CityPanelCallbacks {
-  onBuild(cityId: string): void;
   onStartTransfer(squadronId: number): void;
   onFoundHq(cityId: string): void;
   onBuildEmbassy(cityId: string): void;
@@ -102,7 +100,6 @@ export function createCityPanel(
 
       const stationed = state.squadrons.filter(s => s.cityId === city.id && s.transfer === null);
       const inbound = state.squadrons.filter(s => s.cityId === city.id && s.transfer !== null);
-      const cost = squadronCost(state, city.id);
       const ufosHere = state.ufos.filter(u => u.targetCityId === city.id).length;
       const connected = isConnected(state, city);
       const embassy = !connected && city.alive ? embassyCost(state, city.id) : null;
@@ -124,13 +121,6 @@ export function createCityPanel(
         <h3>${t('panel.squadrons', { n: stationed.length })}</h3>
         <ul id="squadron-list"></ul>
         ${inbound.length > 0 ? `<p>${t('panel.inbound', { n: inbound.length })}</p>` : ''}
-        <button id="build-btn" ${!canAfford(state, cost) || !city.alive ? 'disabled' : ''}>
-          ${t('panel.build', {
-            humt: fmtInt(cost.humt),
-            ind: cost.resources.industria ?? 0,
-            fuel: cost.resources.combustibili_fossili ?? 0,
-          })}
-        </button>
         <p id="panel-error" class="danger"></p>
       `;
       const list = root.querySelector('#squadron-list')!;
@@ -143,7 +133,6 @@ export function createCityPanel(
         li.appendChild(btn);
         list.appendChild(li);
       }
-      root.querySelector('#build-btn')!.addEventListener('click', () => cb.onBuild(city.id));
       root
         .querySelector('#embassy-btn')
         ?.addEventListener('click', () => cb.onBuildEmbassy(city.id));

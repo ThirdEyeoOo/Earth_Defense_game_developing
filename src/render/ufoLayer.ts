@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import ufoArtRaw from '../../Assets/Alieni/UFO/alien_abductor.svg?raw';
-import { activeBattles } from '../sim/combat';
+import { activeBattles, isEngageable } from '../sim/combat';
 import { CONFIG } from '../sim/config';
-import { ufoSquadronDistanceKm } from '../sim/measure';
+import { ufoAltitudeKm, ufoSquadronDistanceKm } from '../sim/measure';
 import type { GameState, UfoState } from '../sim/state';
 import { WEAPON_STATS } from '../sim/weapons';
 import { cityPosition } from './cities';
@@ -33,7 +33,7 @@ const LABEL_CLEARANCE_PX = 14; // distanza a cui la base del raggio resta sopra 
 // così scalano/occludono/si muovono con la nave. Taglia in unità viewBox UFO (600×860) dal
 // rapporto unico; lo snodo #mount cade sull'hardpoint.
 const UFO_VIEW_W = 600;
-const TURRET_MODULE = WEAPON_MODULES[CONFIG.ufoAbductor.weaponModule];
+const TURRET_MODULE = WEAPON_MODULES[CONFIG.ufoAbductor.weaponModule]!; // plasma-turret: sempre presente
 const TURRET_RANGE_KM = WEAPON_STATS[CONFIG.ufoAbductor.weaponModule].rangeKm; // gittata torretta
 const TURRET_VB_W = TURRET_TO_UFO_WIDTH * UFO_VIEW_W; // ≈132 unità viewBox
 const TURRET_VB_H = (TURRET_VB_W * TURRET_MODULE.viewH) / TURRET_MODULE.viewW; // ≈220
@@ -131,17 +131,37 @@ export class UfoLayer {
         inst.svgEl.classList.toggle('on', on);
         inst.lastOn = on;
       }
-      // fuoco delle torrette: acceso solo se ingaggiato E il caccia è entro la GITTATA
-      // (la torretta intanto può comunque INSEGUIRE il bersaglio col puntamento).
-      const firing = engaged.has(ufo.id);
-      const inRange = firing && ufoSquadronDistanceKm(ufo, tickFraction) <= TURRET_RANGE_KM;
-      // bersaglio = primo difensore vivo sulla città attaccata (lo stesso del motore)
+      // Bersaglio delle torrette: un caccia di stanza (battaglia) OPPURE — se non ci sono
+      // caccia — una torre difensiva sulla città (l'UFO risponde al suo fuoco mirandola).
+      // `firing` = insegue il bersaglio; `inRange` = entro la gittata → lampo/animazione.
+      const battleEngaged = engaged.has(ufo.id);
+      let firing = battleEngaged;
+      let inRange = false;
       let aimTarget: { cx: number; cy: number } | null = null;
-      if (firing) {
+      if (battleEngaged) {
         const def = state.squadrons.find(
           s => s.cityId === ufo.targetCityId && s.transfer === null,
         );
         if (def) aimTarget = units.squadronRect(def.id, camera);
+        inRange = ufoSquadronDistanceKm(ufo, tickFraction) <= TURRET_RANGE_KM;
+      } else {
+        const city = state.cities.find(c => c.id === ufo.targetCityId);
+        const tower = city?.structures.find(s => s.type === 'tower' && s.state === 'occupied');
+        const noSquad = !state.squadrons.some(
+          s => s.cityId === ufo.targetCityId && s.transfer === null,
+        );
+        if (
+          city &&
+          tower &&
+          noSquad &&
+          isEngageable(ufo) &&
+          ufoAltitudeKm(ufo, tickFraction) <= TURRET_RANGE_KM
+        ) {
+          firing = true;
+          inRange = true;
+          const p = projectScreen(cityPosition(city, 1.01), camera); // mira alla città (sede della torre)
+          aimTarget = { cx: p.x, cy: p.y };
+        }
       }
       for (const turret of inst.turrets) {
         turret.svg.classList.toggle('on', inRange); // lampo/animazione di fuoco solo in gittata

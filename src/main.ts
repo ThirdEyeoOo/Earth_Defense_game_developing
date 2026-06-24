@@ -18,10 +18,13 @@ import { dayOfTick } from './sim/calendar';
 import {
   cmdBuildEmbassy,
   cmdBuildSquadron,
+  cmdBuildStructure,
   cmdFoundHq,
   cmdRelocateSquadron,
+  cmdRemoveStructure,
+  cmdRepairStructure,
   cmdSetSpeed,
-  cmdUnlockResearch,
+  cmdStartResearch,
   type CommandResult,
 } from './sim/commands';
 import { deserialize, SAVE_KEY, serialize } from './sim/save';
@@ -32,6 +35,7 @@ import { CityLayer } from './render/cities';
 import { AbductionEngine } from './render/abductionEngine';
 import { CombatEngine } from './render/combatEngine';
 import { CombatFxLayer } from './render/combatFx';
+import { CityStructuresLayer } from './render/cityStructures';
 import { SquadronWeaponLayer } from './render/squadronWeapons';
 import { EffectsLayer } from './render/effects';
 import { FloatingTextLayer } from './render/floatingText';
@@ -43,6 +47,7 @@ import { UfoLayer } from './render/ufoLayer';
 import { UnitLayer } from './render/units';
 import { createBalancePanel } from './ui/balancePanel';
 import { createBottomBar } from './ui/bottomBar';
+import { createBuildPanel } from './ui/buildPanel';
 import { createCityPanel } from './ui/cityPanel';
 import { createCombatWindow } from './ui/combatWindow';
 import { createEncyclopedia } from './ui/encyclopedia';
@@ -125,6 +130,8 @@ const combatEngine = new CombatEngine();
 const abductionEngine = new AbductionEngine();
 const combatFx = new CombatFxLayer();
 const squadronWeapons = new SquadronWeaponLayer();
+// mini-griglia strutture sul globo (figlia delle targhette città del cityLayer corrente)
+const cityStructures = new CityStructuresLayer(id => cityLayer.labelElement(id));
 
 // picking degli squadroni (mesh Three.js): raycaster sul canvas, con guardia
 // anti-drag come per le targhette città. Gli UFO sono DOM → gestiti in UfoLayer.
@@ -187,22 +194,23 @@ const encyclopedia = createEncyclopedia(document.getElementById('encyclopedia-mo
 const bottomBar = createBottomBar(document.getElementById('bottom-bar')!, action => {
   if (action === 'bilancio') balancePanel.toggle();
   else if (action === 'ricerca') researchPanel.toggle();
+  else if (action === 'costruisci') buildPanel.toggle();
   else showBanner(t('banner.comingSoon'));
 });
 const radar = createRadar(document.getElementById('radar-panel')!);
 const balancePanel = createBalancePanel(document.getElementById('balance-panel')!);
-// pannello Ricerca: albero tecnologico interattivo. La conferma di un nodo sblocca
-// la funzione relativa (gate dei comandi) pagando il costo; lo stato si persiste subito.
+// pannello Ricerca: albero tecnologico interattivo. Avviare un nodo paga subito il costo e
+// lo mette in coda (avanza nel tempo via i laboratori); i nodi gratis (QG) si sbloccano subito.
 const researchPanel = createResearchPanel(document.getElementById('research-modal')!, {
   getState: () => state,
-  onUnlock: nodeId => {
-    const result = cmdUnlockResearch(state, nodeId);
+  onStart: nodeId => {
+    const result = cmdStartResearch(state, nodeId);
     if (!result.ok) {
       showCommandError(result);
       return false;
     }
     lastPanelKey = ''; // sbloccare il QG/funzioni cambia i pulsanti del pannello città
-    // l'autosave scatta al cambio giorno (e mai in fondazione): salva subito lo sblocco
+    // l'autosave scatta al cambio giorno (e mai in fondazione): salva subito l'avvio/sblocco
     try {
       localStorage.setItem(SAVE_KEY, serialize(state));
     } catch {
@@ -210,6 +218,15 @@ const researchPanel = createResearchPanel(document.getElementById('research-moda
     }
     return true;
   },
+});
+// pannello Costruisci: hub di assemblaggio veicoli + costruzione strutture su città
+const buildPanel = createBuildPanel(document.getElementById('build-panel')!, {
+  getState: () => state,
+  onBuildSquadron: cityId => showCommandError(cmdBuildSquadron(state, cityId)),
+  onBuildStructure: (cityId, cell, type) =>
+    showCommandError(cmdBuildStructure(state, cityId, cell, type)),
+  onRepairStructure: (cityId, id) => showCommandError(cmdRepairStructure(state, cityId, id)),
+  onRemoveStructure: (cityId, id) => showCommandError(cmdRemoveStructure(state, cityId, id)),
 });
 // finestra di scontro stile FTL: si apre dal badge di battaglia sul globo
 const combatWindow = createCombatWindow(document.getElementById('combat-window')!);
@@ -221,7 +238,6 @@ const tutorial = createTutorial(document.getElementById('tutorial-companion')!, 
   else banner.classList.add('hidden');
 });
 const cityPanel = createCityPanel(document.getElementById('city-panel')!, {
-  onBuild: cityId => showCommandError(cmdBuildSquadron(state, cityId)),
   onStartTransfer: squadronId => {
     transferringSquadronId = squadronId;
     showBanner(t('banner.selectDestination'), null); // resta finché si sceglie o si annulla
@@ -287,6 +303,7 @@ function bootGame(gameState: GameState): void {
   abductionEngine.reset();
   combatFx.reset();
   squadronWeapons.reset();
+  cityStructures.dispose(); // le mini-griglie si riagganciano alle targhette del nuovo cityLayer
   lastSavedDay = dayOfTick(state.tick);
   if (cityLayer) {
     ctx.scene.remove(cityLayer.group);
@@ -393,6 +410,7 @@ function frame(now: number): void {
     // un errore cosmetico non deve fermare la simulazione né il loop
     try {
       cityLayer.update(state, selectedCityId, ctx.camera);
+      cityStructures.update(state, ctx.camera); // mini-griglia (scala con lo zoom)
       battleBadges.update(state, ctx.camera);
       unitLayer.update(state, tickFraction, gameMinutes);
       ufoLayer.update(state, unitLayer, ctx.camera, tickFraction);
@@ -413,6 +431,7 @@ function frame(now: number): void {
         unitLayer,
         ufoLayer,
         squadronWeapons,
+        cityStructures,
         ctx.camera,
       );
       // tracciamento: se l'oggetto selezionato è uscito di scena, azzera
@@ -428,6 +447,7 @@ function frame(now: number): void {
       hud.update(state, state.tick + tickFraction);
       radar.update(state);
       balancePanel.update(state);
+      buildPanel.update(state);
       researchPanel.updateAffordability();
       tutorial.update(state);
       // il pannello ha pulsanti: si ricostruisce solo quando i dati cambiano,
@@ -468,6 +488,7 @@ onLanguageChange(() => {
   settings.refresh();
   encyclopedia.refresh();
   researchPanel.refresh();
+  buildPanel.refresh();
   intro.refreshLabels();
   tutorial.refreshLabels();
 });

@@ -1,3 +1,4 @@
+import { buildTicksFor, cellOccupied, gridCapacity, structureCost, structureDef } from './buildings';
 import { CONFIG } from './config';
 import { embassyCost, isConnected } from './economy';
 import { emitEvent } from './events';
@@ -5,7 +6,7 @@ import { greatCircleKm } from './geo';
 import { isResearched, isUnlocked, researchById } from './researchTree';
 import type { Cost, ResourceType } from './resources';
 import { squadronCost, transferTicks } from './squadrons';
-import type { GameSpeed, GameState } from './state';
+import type { GameSpeed, GameState, StructureType } from './state';
 import { removeUfo, startEscape } from './ufos';
 
 // La sim non conosce i testi: gli errori sono codici (+ parametri)
@@ -21,9 +22,14 @@ export type CommandErrorCode =
   | 'hqAlreadyFounded'
   | 'hqNotFounded'
   | 'alreadyConnected'
+  | 'cityNotConnected' // struttura costruibile solo su città collegata alla rete
+  | 'cellUnavailable' // hardpoint fuori griglia o già occupato
+  | 'structureNotFound'
+  | 'cannotRepair' // struttura non danneggiata
   | 'researchLocked' // funzione non ancora sbloccata nell'albero della Ricerca
   | 'researchAlreadyDone'
-  | 'researchPrereqMissing';
+  | 'researchPrereqMissing'
+  | 'researchBusy'; // un'altra ricerca è già in corso (una alla volta)
 
 export type CommandResult =
   | { ok: true }
@@ -50,19 +56,28 @@ function payCost(state: GameState, cost: Cost): CommandResult {
   return { ok: true };
 }
 
-// Sblocca un nodo dell'albero della Ricerca: verifica prereq + risorse, scala il costo
-// (per il QG è 0: ricerca iniziale gratuita) e segna il nodo come ricercato. È l'unico
-// canale che apre le funzioni gated (fondare il QG, squadroni, ambasciate, armi, radar).
-export function cmdUnlockResearch(state: GameState, nodeId: string): CommandResult {
+// Avvia la ricerca di un nodo: verifica prereq + risorse, paga il costo ALL'AVVIO e imposta
+// il nodo come `selected`; l'avanzamento avviene nel tick (researchRate × ore, vedi sim/tick.ts).
+// I nodi a researchHours 0 (es. il QG gratis) si sbloccano SUBITO: durante la fondazione il
+// tick non gira ancora, quindi non potrebbero avanzare. Una sola ricerca attiva alla volta.
+export function cmdStartResearch(state: GameState, nodeId: string): CommandResult {
   const node = researchById.get(nodeId);
   if (!node || node.placeholder) return { ok: false, code: 'researchLocked' };
   if (isResearched(state, nodeId)) return { ok: false, code: 'researchAlreadyDone' };
   if (!node.prereqs.every(p => isResearched(state, p))) {
     return { ok: false, code: 'researchPrereqMissing' };
   }
+  if (node.researchHours <= 0) {
+    const paid = payCost(state, node.cost);
+    if (!paid.ok) return paid;
+    state.research.unlocked.push(nodeId);
+    return { ok: true };
+  }
+  if (state.research.selected !== null) return { ok: false, code: 'researchBusy' };
   const paid = payCost(state, node.cost);
   if (!paid.ok) return paid;
-  state.research.unlocked.push(nodeId);
+  state.research.selected = nodeId;
+  state.research.progress = 0;
   return { ok: true };
 }
 
@@ -110,6 +125,96 @@ export function cmdBuildSquadron(state: GameState, cityId: string): CommandResul
     transfer: null,
   });
   return { ok: true };
+}
+
+// Costruisce una struttura su un hardpoint della griglia esagonale della città. Verifica
+// QG, ricerca sbloccata (il tipo coincide col `what` del nodo: tower/lab), città viva e
+// collegata, cella valida e libera; poi paga il costo e crea la struttura in stato
+// `building` (la promozione a `occupied` avviene nel tick a buildDoneTick).
+export function cmdBuildStructure(
+  state: GameState,
+  cityId: string,
+  cell: number,
+  type: StructureType,
+): CommandResult {
+  if (state.hqCityId === null) return { ok: false, code: 'hqNotFounded' };
+  if (!isUnlocked(state, type)) return { ok: false, code: 'researchLocked' };
+  const city = state.cities.find(c => c.id === cityId);
+  if (!city || !city.alive) return { ok: false, code: 'cityUnavailable' };
+  if (!isConnected(state, city)) return { ok: false, code: 'cityNotConnected' };
+  if (cell < 0 || cell >= gridCapacity(city) || cellOccupied(city, cell)) {
+    return { ok: false, code: 'cellUnavailable' };
+  }
+  const paid = payCost(state, structureCost(type));
+  if (!paid.ok) return paid;
+  city.structures.push({
+    id: state.nextStructureId++,
+    cell,
+    type,
+    state: 'building',
+    hp: structureDef(type).hp,
+    buildDoneTick: state.tick + buildTicksFor(type),
+  });
+  return { ok: true };
+}
+
+// Ripara una struttura danneggiata: paga una frazione del costo di costruzione e la
+// riporta operativa con HP pieni.
+export function cmdRepairStructure(
+  state: GameState,
+  cityId: string,
+  structureId: number,
+): CommandResult {
+  const city = state.cities.find(c => c.id === cityId);
+  if (!city) return { ok: false, code: 'cityUnavailable' };
+  const st = city.structures.find(s => s.id === structureId);
+  if (!st) return { ok: false, code: 'structureNotFound' };
+  if (st.state !== 'damaged') return { ok: false, code: 'cannotRepair' };
+  const factor = CONFIG.buildings.repairCostFactor;
+  const full = structureCost(st.type);
+  const repair: Cost = { humt: Math.round(full.humt * factor), resources: {} };
+  for (const [t, a] of Object.entries(full.resources) as [ResourceType, number][]) {
+    repair.resources[t] = Math.round(a * factor);
+  }
+  const paid = payCost(state, repair);
+  if (!paid.ok) return paid;
+  st.state = 'occupied';
+  st.hp = structureDef(st.type).hp;
+  return { ok: true };
+}
+
+// Demolisce una struttura (qualsiasi stato): libera l'hardpoint. Nessun rimborso in v1.
+export function cmdRemoveStructure(
+  state: GameState,
+  cityId: string,
+  structureId: number,
+): CommandResult {
+  const city = state.cities.find(c => c.id === cityId);
+  if (!city) return { ok: false, code: 'cityUnavailable' };
+  const before = city.structures.length;
+  city.structures = city.structures.filter(s => s.id !== structureId);
+  if (city.structures.length === before) return { ok: false, code: 'structureNotFound' };
+  return { ok: true };
+}
+
+// Danno inflitto a una struttura (torre) dal fuoco di un UFO (combattimento in tempo reale
+// sul globo). A HP esauriti la struttura passa a `damaged` (inattiva finché riparata), non
+// viene distrutta. No-op se non è più operativa o non esiste.
+export function cmdDamageStructure(
+  state: GameState,
+  cityId: string,
+  structureId: number,
+  amount: number,
+): void {
+  const city = state.cities.find(c => c.id === cityId);
+  if (!city) return;
+  const s = city.structures.find(x => x.id === structureId);
+  if (!s || s.state !== 'occupied') return;
+  s.hp -= amount;
+  if (s.hp <= 0) {
+    s.hp = 0;
+    s.state = 'damaged';
+  }
 }
 
 // `tickFraction` (0..1, frazione del tick in corso) viene memorizzata sul trasferimento:

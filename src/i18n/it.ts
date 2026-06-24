@@ -111,6 +111,21 @@ export const it = {
   'bar.ricerca': 'Ricerca',
   'bar.citta': 'Città',
 
+  // pannello Costruisci (ui/buildPanel.ts)
+  'build.title': 'Costruisci',
+  'build.tab.vehicles': 'Assemblaggio veicoli',
+  'build.tab.structures': 'Costruzione su città',
+  'build.close': 'Chiudi',
+  'build.selectCity': 'Città:',
+  'build.noCities': 'Nessuna città collegata. Fonda il Quartier Generale o apri ambasciate.',
+  'build.locked': 'Nessun veicolo sbloccato: completa la ricerca nell’albero.',
+  'build.comingSoon': 'In arrivo',
+  'buildable.f22.name': 'Caccia F-22',
+  'buildable.tower.name': 'Torre difensiva',
+  'buildable.lab.name': 'Laboratorio',
+  'buildable.cat.combat': 'Combattimento',
+  'buildable.cat.economy': 'Economia',
+
   // albero della ricerca (ui/researchPanel.ts + sim/researchTree.ts)
   'tech.title': 'Ricerca',
   'tech.subtitle': 'Sblocca tecnologie spendendo risorse',
@@ -124,6 +139,11 @@ export const it = {
   'tech.cost': 'Costo:',
   'tech.free': 'Gratis',
   'tech.confirm': 'Conferma',
+  'tech.start': 'Avvia ricerca',
+  'tech.researching': 'Ricerca in corso…',
+  'tech.busy': "Un'altra ricerca è già in corso",
+  'tech.time': 'Tempo:',
+  'tech.hours': '{n} h',
   'tech.cancel': 'Annulla',
   'tech.locked': 'Prerequisiti mancanti',
   'tech.zoom.in': 'Ingrandisci',
@@ -151,6 +171,28 @@ export const it = {
   'tech.diplomazia.desc': 'Funzione in arrivo.',
   'tech.intercettore.title': 'Intercettore orbitale',
   'tech.intercettore.desc': 'Funzione in arrivo.',
+  'tech.torre_dif.title': 'Torre difensiva',
+  'tech.torre_dif.desc':
+    'Abilita la costruzione di torri difensive sugli hardpoint delle città: sparano agli UFO in avvicinamento.',
+
+  // griglia strutture (ui/structureGrid.ts) — i nomi struttura riusano le chiavi buildable.*
+  'struct.subtitle':
+    'Trascina una struttura in una cella libera. Ogni cella è un hardpoint della città.',
+  'struct.palette': 'Tavolozza',
+  'struct.paletteHint': 'Strutture costruibili nella città',
+  'struct.occupancy': 'Occupazione',
+  'struct.locked': 'Nessuna struttura sbloccata: completa la ricerca nell’albero.',
+  'struct.dragHint': 'Cella libera — trascina qui una struttura',
+  'struct.repair': 'Ripara',
+  'struct.remove': 'Rimuovi',
+  'struct.legend.empty': 'Libera',
+  'struct.legend.occupied': 'Operativa',
+  'struct.legend.target': 'Bersaglio valido',
+  'struct.legend.building': 'In costruzione',
+  'struct.legend.damaged': 'Danneggiata',
+  'struct.state.occupied': 'Operativa',
+  'struct.state.building': 'In costruzione…',
+  'struct.state.damaged': 'Danneggiata',
 
   // errori dei comandi (codici da sim/commands.ts: la sim non conosce i testi)
   'cmd.cityUnavailable': 'Città non disponibile',
@@ -163,9 +205,14 @@ export const it = {
   'cmd.hqAlreadyFounded': 'Il Quartier Generale è già stato fondato',
   'cmd.hqNotFounded': 'Prima fonda il Quartier Generale',
   'cmd.alreadyConnected': 'Città già collegata alla rete',
+  'cmd.cityNotConnected': 'Città non collegata alla rete',
+  'cmd.cellUnavailable': 'Hardpoint non disponibile',
+  'cmd.structureNotFound': 'Struttura inesistente',
+  'cmd.cannotRepair': 'La struttura non è danneggiata',
   'cmd.researchLocked': 'Ricerca necessaria',
   'cmd.researchAlreadyDone': 'Ricerca già completata',
   'cmd.researchPrereqMissing': 'Prerequisiti di ricerca mancanti',
+  'cmd.researchBusy': "Un'altra ricerca è già in corso",
 
   // risorse (chiave = ResourceType in sim/resources.ts)
   'res.agroalimentare': 'Agroalimentare',

@@ -51,6 +51,11 @@ export class CityLayer {
     scene.add(this.group);
   }
 
+  // elemento DOM della targhetta (per agganciarci la mini-griglia strutture sul globo)
+  labelElement(cityId: string): HTMLDivElement | undefined {
+    return this.labels.get(cityId)?.element;
+  }
+
   // i testi delle targhette sono settati alla creazione: al cambio lingua
   // vanno riscritti esplicitamente
   refreshNames(): void {

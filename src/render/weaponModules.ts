@@ -71,7 +71,9 @@ const MG_FIRE_ONESHOT = `
 .weapon-module.on #vampa{animation:mg-flash .08s linear 7}
 ${MG_KEYFRAMES}`;
 
-export const WEAPON_MODULES: Record<WeaponModuleId, WeaponModuleArt> = {
+// La torre difensiva ('defense-tower') NON è qui: non è montata su un hardpoint, ha un
+// render proprio (render/cityStructures.ts). Quindi il registro è PARZIALE.
+export const WEAPON_MODULES: Partial<Record<WeaponModuleId, WeaponModuleArt>> = {
   'plasma-turret': {
     raw: turretRaw,
     viewW: 240,

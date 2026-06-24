@@ -1,10 +1,10 @@
 import type { Battle } from '../sim/combat';
 import { activeBattles, isEngageable } from '../sim/combat';
-import { cmdDamageSquadron, cmdDamageUfo } from '../sim/commands';
+import { cmdDamageSquadron, cmdDamageStructure, cmdDamageUfo } from '../sim/commands';
 import { CONFIG } from '../sim/config';
-import { ufoSquadronDistanceKm } from '../sim/measure';
+import { ufoAltitudeKm, ufoSquadronDistanceKm } from '../sim/measure';
 import { isUnlocked } from '../sim/researchTree';
-import type { GameState, UfoState } from '../sim/state';
+import type { CityState, GameState, Structure, UfoState } from '../sim/state';
 import type { WeaponModuleId } from '../sim/weapons';
 import { WEAPON_STATS } from '../sim/weapons';
 
@@ -18,7 +18,7 @@ import { WEAPON_STATS } from '../sim/weapons';
 // Il fuoco è a DUE SENSI: torrette dell'UFO → caccia (cmdDamageSquadron) e minigun dei
 // caccia → UFO (cmdDamageUfo, che può abbatterlo).
 
-export type UnitKind = 'ufo' | 'squadron';
+export type UnitKind = 'ufo' | 'squadron' | 'tower';
 export type Side = 'left' | 'right';
 
 export interface ShotEnd {
@@ -95,6 +95,52 @@ export class CombatEngine {
           }
         }
       }
+
+      // Torri difensive operative ↔ UFO (indipendenti dalle battaglie coi caccia, perché una
+      // torre difende anche da sola). La torre spara dal globo verso l'orbita; l'UFO risponde
+      // alla torre SOLO se la città non ha caccia di stanza (altrimenti il suo fuoco è già
+      // impegnato coi caccia, niente doppio volume). Gating per QUOTA (torre a terra).
+      if (isUnlocked(state, 'tower')) {
+        const towerWeapon = WEAPON_STATS['defense-tower'];
+        const ufoWeapon = WEAPON_STATS[CONFIG.ufoAbductor.weaponModule];
+        for (const city of state.cities) {
+          if (!city.alive) continue;
+          const towers = city.structures.filter(s => s.type === 'tower' && s.state === 'occupied');
+          if (towers.length === 0) continue;
+          const ufosHere = state.ufos.filter(u => u.targetCityId === city.id && isEngageable(u));
+          if (ufosHere.length === 0) continue;
+          const noSquad = !state.squadrons.some(s => s.cityId === city.id && s.transfer === null);
+          const findUfo = () => state.ufos.find(u => u.targetCityId === city.id && isEngageable(u));
+          for (const tower of towers) {
+            this.scheduleFire(state, gameMinutes, speed, liveKeys, {
+              from: { kind: 'tower', id: tower.id, side: 'left' },
+              weapon: 'defense-tower',
+              damage: towerWeapon.damage,
+              cooldown: towerWeapon.cooldownGameMinutes,
+              rangeKm: towerWeapon.rangeKm,
+              targetKind: 'ufo',
+              fromGround: true,
+              findTarget: findUfo,
+            });
+            if (!noSquad) continue;
+            for (const ufo of ufosHere) {
+              if (!state.ufos.some(u => u.id === ufo.id)) continue;
+              for (const side of SIDES) {
+                this.scheduleFire(state, gameMinutes, speed, liveKeys, {
+                  from: { kind: 'ufo', id: ufo.id, side },
+                  weapon: CONFIG.ufoAbductor.weaponModule,
+                  damage: ufoWeapon.damage,
+                  cooldown: ufoWeapon.cooldownGameMinutes,
+                  rangeKm: ufoWeapon.rangeKm,
+                  targetKind: 'tower',
+                  fromGround: true,
+                  findTarget: () => firstTower(city),
+                });
+              }
+            }
+          }
+        }
+      }
     }
 
     // dimentica le sorgenti non più ingaggiate (evita accumulo di chiavi stantie)
@@ -127,6 +173,7 @@ export class CombatEngine {
       cooldown: number;
       rangeKm: number;
       targetKind: UnitKind;
+      fromGround?: boolean; // true se torre↔UFO: la distanza è la QUOTA dell'UFO (torre a terra)
       findTarget: () => { id: number } | null | undefined;
     },
   ): void {
@@ -140,7 +187,12 @@ export class CombatEngine {
     // una raffica accumulata appena il bersaglio entra in portata.
     const target0 = spec.findTarget();
     const pairUfo = this.pairUfo(state, spec.from, target0);
-    if (!pairUfo || ufoSquadronDistanceKm(pairUfo) > spec.rangeKm) {
+    const dist = pairUfo
+      ? spec.fromGround
+        ? ufoAltitudeKm(pairUfo, 0)
+        : ufoSquadronDistanceKm(pairUfo)
+      : Infinity;
+    if (!pairUfo || dist > spec.rangeKm) {
       this.nextFireAt.set(key, gameMinutes);
       return;
     }
@@ -190,8 +242,25 @@ export class CombatEngine {
 
   private applyImpact(state: GameState, kind: UnitKind, id: number, damage: number): void {
     if (kind === 'squadron') cmdDamageSquadron(state, id, damage);
-    else cmdDamageUfo(state, id, damage);
+    else if (kind === 'tower') {
+      const found = findStructure(state, id);
+      if (found) cmdDamageStructure(state, found.cityId, id, damage);
+    } else cmdDamageUfo(state, id, damage);
   }
+}
+
+// localizza una struttura per id globale (gli id sono unici via nextStructureId)
+function findStructure(state: GameState, id: number): { cityId: string; structure: Structure } | null {
+  for (const city of state.cities) {
+    const structure = city.structures.find(s => s.id === id);
+    if (structure) return { cityId: city.id, structure };
+  }
+  return null;
+}
+
+// prima torre operativa della città (bersaglio del fuoco UFO)
+function firstTower(city: CityState): { id: number } | undefined {
+  return city.structures.find(s => s.type === 'tower' && s.state === 'occupied');
 }
 
 // primo difensore vivo di stanza sulla città della battaglia

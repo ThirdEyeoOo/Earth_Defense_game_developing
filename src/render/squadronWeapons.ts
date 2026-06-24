@@ -38,7 +38,7 @@ interface Minigun {
 export class SquadronWeaponLayer {
   private readonly overlay: HTMLDivElement;
   private readonly guns = new Map<string, Minigun>(); // `squadronId:side` → minigun
-  private readonly art = WEAPON_MODULES[CONFIG.squadron.weaponModule];
+  private readonly art = WEAPON_MODULES[CONFIG.squadron.weaponModule]!; // minigun: sempre presente
 
   constructor(parent: HTMLElement = document.body) {
     this.overlay = document.createElement('div');

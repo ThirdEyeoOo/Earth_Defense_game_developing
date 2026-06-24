@@ -1,0 +1,137 @@
+<!-- ed-asset route="dom" name="defense-tower" animatable="#recoil,#charge-core,#muzzle-glow,#muzzle-flash,#plasma-bolt,#coils,#status-light" state-class="on" i18n-text="none" -->
+<svg viewBox="0 0 240 400" xmlns="http://www.w3.org/2000/svg" width="240" height="400" role="img" aria-label="Torre difensiva planetaria a terra, cannone a energia ciano">
+
+  <defs>
+    <linearGradient id="d-steel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#161b21"></stop><stop offset="22%" stop-color="#48535e"></stop>
+      <stop offset="50%" stop-color="#2a323a"></stop><stop offset="78%" stop-color="#0f151b"></stop>
+      <stop offset="100%" stop-color="#05080b"></stop>
+    </linearGradient>
+    <linearGradient id="d-steel-v" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4a555f"></stop><stop offset="45%" stop-color="#232b33"></stop>
+      <stop offset="100%" stop-color="#0a0f14"></stop>
+    </linearGradient>
+    <linearGradient id="d-barrel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#080c10"></stop><stop offset="20%" stop-color="#3c454f"></stop>
+      <stop offset="44%" stop-color="#6e7a85"></stop><stop offset="60%" stop-color="#2a323a"></stop>
+      <stop offset="100%" stop-color="#05080b"></stop>
+    </linearGradient>
+    <linearGradient id="d-yoke" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3c454f"></stop><stop offset="100%" stop-color="#0b1015"></stop>
+    </linearGradient>
+    <linearGradient id="d-base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#39434d"></stop><stop offset="55%" stop-color="#1c232a"></stop>
+      <stop offset="100%" stop-color="#05080b"></stop>
+    </linearGradient>
+    <radialGradient id="d-core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f0fbff"></stop><stop offset="28%" stop-color="#8fe0ff"></stop>
+      <stop offset="62%" stop-color="#2aa6ff"></stop><stop offset="100%" stop-color="#0a3a6b" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="d-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f0fbff" stop-opacity="1"></stop><stop offset="35%" stop-color="#8fe0ff" stop-opacity="0.9"></stop>
+      <stop offset="75%" stop-color="#33b6ff" stop-opacity="0.4"></stop><stop offset="100%" stop-color="#1a7fd6" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="d-bolt" cx="50%" cy="58%" r="58%">
+      <stop offset="0%" stop-color="#ffffff"></stop><stop offset="30%" stop-color="#e0f6ff"></stop>
+      <stop offset="62%" stop-color="#5fc8ff"></stop><stop offset="100%" stop-color="#33b6ff" stop-opacity="0"></stop>
+    </radialGradient>
+    <linearGradient id="d-coil" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0a2a4a"></stop><stop offset="100%" stop-color="#04131f"></stop>
+    </linearGradient>
+    <filter id="d-soft" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3"></feGaussianBlur></filter>
+    <filter id="d-strong" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="10"></feGaussianBlur></filter>
+    <filter id="d-tiny" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="1.4"></feGaussianBlur></filter>
+    <clipPath id="d-barrelClip"><rect x="98" y="72" width="44" height="130" rx="14"></rect></clipPath>
+  </defs>
+
+
+  <ellipse id="muzzle-haze" cx="120" cy="66" rx="46" ry="22" fill="#33b6ff" opacity="0.14" filter="url(#d-strong)"></ellipse>
+
+
+  <g id="base">
+
+    <ellipse cx="120" cy="384" rx="92" ry="14" fill="#04070a" opacity="0.55"></ellipse>
+    <path d="M44 384 L60 348 L180 348 L196 384 Z" fill="url(#d-base)" stroke="#05080b" stroke-width="1.6" stroke-linejoin="round"></path>
+    <path d="M44 384 L60 348 L120 348 L120 384 Z" fill="#39434d" opacity="0.25"></path>
+    <rect x="66" y="330" width="108" height="22" rx="4" fill="url(#d-steel-v)" stroke="#05080b" stroke-width="1.4"></rect>
+    <g fill="#0a0d10"><rect x="74" y="335" width="6" height="12" rx="2"></rect><rect x="160" y="335" width="6" height="12" rx="2"></rect></g>
+    <g fill="none" stroke="#5fc8ff" stroke-width="1.2" opacity="0.4"><path d="M60 360 L180 360"></path></g>
+    <circle cx="78" cy="368" r="3" fill="#0a0d10" stroke="#5fc8ff" stroke-width="0.8" opacity="0.6"></circle>
+    <circle cx="162" cy="368" r="3" fill="#0a0d10" stroke="#5fc8ff" stroke-width="0.8" opacity="0.6"></circle>
+  </g>
+
+
+  <g id="yoke">
+    <path d="M70 332 L70 286 Q70 272 86 270 L96 270 L96 290 Q82 292 82 304 L82 332 Z" fill="url(#d-yoke)" stroke="#05080b" stroke-width="1"></path>
+    <path d="M170 332 L170 286 Q170 272 154 270 L144 270 L144 290 Q158 292 158 304 L158 332 Z" fill="url(#d-yoke)" stroke="#05080b" stroke-width="1"></path>
+    <circle cx="120" cy="296" r="22" fill="url(#d-steel-v)" stroke="#05080b" stroke-width="1.4"></circle>
+    <ellipse cx="113" cy="289" rx="7" ry="4" fill="#6e7a85" opacity="0.5"></ellipse>
+    <circle cx="120" cy="296" r="5" fill="#0a0d10" stroke="#3c454f" stroke-width="1.2"></circle>
+  </g>
+
+
+  <g id="recoil">
+
+    <g id="housing">
+      <rect x="104" y="290" width="32" height="20" rx="4" fill="url(#d-steel)" stroke="#05080b" stroke-width="1"></rect>
+      <path d="M120 300 L172 280 L180 228 L150 196 L90 196 L60 228 L68 280 Z" fill="url(#d-steel)" stroke="#05080b" stroke-width="1.6" stroke-linejoin="round"></path>
+      <path d="M120 300 L68 280 L60 228 L90 196 L106 196 L82 228 L92 272 Z" fill="#48535e" opacity="0.3"></path>
+      <g stroke="#05080b" stroke-width="1.1" fill="none" opacity="0.7">
+        <path d="M84 274 L120 262 L156 274"></path><path d="M82 238 L120 224 L158 238"></path>
+        <line x1="120" y1="224" x2="120" y2="262"></line>
+      </g>
+      <path d="M90 196 L150 196" stroke="#33b6ff" stroke-width="1.4" opacity="0.45"></path>
+
+      <g id="charge-core" opacity="0.6">
+        <circle cx="120" cy="246" r="26" fill="url(#d-glow)" filter="url(#d-soft)"></circle>
+        <circle cx="120" cy="246" r="13" fill="url(#d-core)"></circle>
+        <circle cx="120" cy="246" r="5" fill="#ffffff"></circle>
+      </g>
+      <circle cx="120" cy="246" r="22" fill="none" stroke="#10171d" stroke-width="3" opacity="0.8"></circle>
+      <circle cx="120" cy="246" r="22" fill="none" stroke="#7fd2ff" stroke-width="1" opacity="0.45"></circle>
+
+      <circle id="status-light" cx="158" cy="286" r="3.6" fill="#8fe0ff" opacity="0.85"></circle>
+      <circle cx="158" cy="286" r="6" fill="#8fe0ff" opacity="0.3" filter="url(#d-tiny)"></circle>
+    </g>
+
+
+    <g id="barrel">
+      <rect x="98" y="72" width="44" height="132" rx="14" fill="url(#d-barrel)" stroke="#05080b" stroke-width="1.4"></rect>
+      <rect x="110" y="76" width="6" height="124" rx="3" fill="#8e9ba6" opacity="0.4"></rect>
+      <g clip-path="url(#d-barrelClip)">
+        <rect x="112" y="72" width="16" height="132" fill="#021522"></rect>
+        <rect x="116" y="72" width="8" height="132" fill="#2aa6ff" opacity="0.35"></rect>
+      </g>
+
+      <g id="coils">
+        <g><rect x="92" y="175" width="56" height="11" rx="5" fill="url(#d-coil)" stroke="#05080b" stroke-width="1"></rect><circle class="coil-orb" cx="120" cy="180.5" r="3.4" fill="#8fe0ff" opacity="0.2"></circle></g>
+        <g><rect x="92" y="145" width="56" height="11" rx="5" fill="url(#d-coil)" stroke="#05080b" stroke-width="1"></rect><circle class="coil-orb" cx="120" cy="150.5" r="3.4" fill="#8fe0ff" opacity="0.2"></circle></g>
+        <g><rect x="92" y="115" width="56" height="11" rx="5" fill="url(#d-coil)" stroke="#05080b" stroke-width="1"></rect><circle class="coil-orb" cx="120" cy="120.5" r="3.4" fill="#8fe0ff" opacity="0.2"></circle></g>
+        <g><rect x="92" y="85" width="56" height="11" rx="5" fill="url(#d-coil)" stroke="#05080b" stroke-width="1"></rect><circle class="coil-orb" cx="120" cy="90.5" r="3.4" fill="#8fe0ff" opacity="0.2"></circle></g>
+      </g>
+
+      <rect x="94" y="64" width="52" height="16" rx="6" fill="url(#d-steel-v)" stroke="#05080b" stroke-width="1.4"></rect>
+      <g fill="#0a0d10"><rect x="100" y="64" width="5" height="16"></rect><rect x="135" y="64" width="5" height="16"></rect></g>
+      <ellipse id="muzzle" cx="120" cy="68" rx="13" ry="6" fill="#021522" stroke="#10171d" stroke-width="2"></ellipse>
+    </g>
+  </g>
+
+
+  <circle id="muzzle-glow" cx="120" cy="66" r="28" fill="url(#d-glow)" filter="url(#d-soft)" opacity="0.1"></circle>
+
+
+  <g id="muzzle-flash" opacity="0">
+    <circle cx="120" cy="66" r="16" fill="url(#d-glow)"></circle>
+    <path d="M120 66 L108 50 L120 56 L132 50 Z" fill="#e0f6ff"></path>
+    <path d="M120 66 L104 66 L120 72 L136 66 Z" fill="#e0f6ff" opacity="0.7"></path>
+    <circle cx="120" cy="66" r="7" fill="#ffffff"></circle>
+  </g>
+
+
+  <g id="plasma-bolt" opacity="0">
+    <ellipse cx="120" cy="46" rx="9" ry="20" fill="url(#d-bolt)"></ellipse>
+    <ellipse cx="120" cy="50" rx="4" ry="11" fill="#ffffff"></ellipse>
+    <path d="M120 66 Q113 48 120 36 Q127 48 120 66 Z" fill="#e0f6ff" opacity="0.6"></path>
+  </g>
+
+</svg>

@@ -7,12 +7,14 @@ import {
   cmdFoundHq,
   cmdRelocateSquadron,
   cmdSetSpeed,
-  cmdUnlockResearch,
+  cmdStartResearch,
 } from './commands';
 import { CONFIG } from './config';
 import { embassyCost, isConnected } from './economy';
+import { researchRate } from './researchTree';
 import { squadronCost } from './squadrons';
 import { createNewGame } from './state';
+import { tick } from './tick';
 import { spawnUfo } from './ufos';
 import { grantRiches, newGameWithHq } from './testUtils';
 
@@ -218,42 +220,68 @@ describe('cmdDamageSquadron', () => {
   });
 });
 
-describe('cmdUnlockResearch e gating', () => {
-  it('il Quartier Generale è gratis e abilita la fondazione', () => {
+describe('cmdStartResearch e gating', () => {
+  it('il Quartier Generale è gratis e istantaneo (researchHours 0) e abilita la fondazione', () => {
     const s = createNewGame(1);
     expect(cmdFoundHq(s, 'rome')).toEqual({ ok: false, code: 'researchLocked' });
-    const r = cmdUnlockResearch(s, 'quartier_gen');
+    const r = cmdStartResearch(s, 'quartier_gen');
     expect(r.ok).toBe(true);
     expect(s.humt).toBe(0); // gratis: nessun costo
-    expect(s.research.unlocked).toContain('quartier_gen');
+    expect(s.research.unlocked).toContain('quartier_gen'); // istantaneo: nessuna attesa
+    expect(s.research.selected).toBeNull();
     expect(cmdFoundHq(s, 'rome').ok).toBe(true);
   });
 
-  it('rifiuta placeholder, nodi inesistenti, prerequisiti mancanti e doppio sblocco', () => {
+  it('rifiuta placeholder/inesistenti/prereq mancanti; avvia a tempo e blocca se occupato', () => {
     const s = createNewGame(1);
     grantRiches(s);
-    expect(cmdUnlockResearch(s, 'diplomazia')).toEqual({ ok: false, code: 'researchLocked' });
-    expect(cmdUnlockResearch(s, 'inesistente')).toEqual({ ok: false, code: 'researchLocked' });
-    expect(cmdUnlockResearch(s, 'caccia')).toEqual({ ok: false, code: 'researchPrereqMissing' });
-    cmdUnlockResearch(s, 'minigun');
-    cmdUnlockResearch(s, 'blindatura');
-    expect(cmdUnlockResearch(s, 'caccia').ok).toBe(true);
-    expect(cmdUnlockResearch(s, 'caccia')).toEqual({ ok: false, code: 'researchAlreadyDone' });
+    expect(cmdStartResearch(s, 'diplomazia')).toEqual({ ok: false, code: 'researchLocked' });
+    expect(cmdStartResearch(s, 'inesistente')).toEqual({ ok: false, code: 'researchLocked' });
+    expect(cmdStartResearch(s, 'caccia')).toEqual({ ok: false, code: 'researchPrereqMissing' });
+    // un nodo a tempo diventa la ricerca SELEZIONATA, non subito sbloccata
+    expect(cmdStartResearch(s, 'minigun').ok).toBe(true);
+    expect(s.research.selected).toBe('minigun');
+    expect(s.research.unlocked).not.toContain('minigun');
+    // una seconda ricerca è rifiutata finché la prima non finisce
+    expect(cmdStartResearch(s, 'blindatura')).toEqual({ ok: false, code: 'researchBusy' });
   });
 
-  it('paga il costo del nodo (rifiuto se le risorse non bastano, senza scalare nulla)', () => {
+  it('paga il costo all’avvio (rifiuto se le risorse non bastano, senza scalare nulla)', () => {
     const s = createNewGame(1);
-    expect(cmdUnlockResearch(s, 'minigun')).toEqual({
+    expect(cmdStartResearch(s, 'minigun')).toEqual({
       ok: false,
       code: 'insufficientHumt',
       params: { cost: 200 },
     });
     grantRiches(s);
     const humt = s.humt;
-    expect(cmdUnlockResearch(s, 'minigun').ok).toBe(true);
+    expect(cmdStartResearch(s, 'minigun').ok).toBe(true);
     expect(s.humt).toBe(humt - 200);
     expect(s.resources.industria).toBe(9999 - 15);
     expect(s.resources.tecnologia).toBe(9999 - 10);
+  });
+
+  it('avanza nel tick al ritmo del QG e si completa', () => {
+    const s = newGameWithHq(1);
+    s.research.unlocked = [];
+    s.research.selected = null;
+    s.research.progress = 0;
+    grantRiches(s);
+    expect(cmdStartResearch(s, 'minigun').ok).toBe(true);
+    // ritmo 1/ora (solo QG) × 1,2 ore/tick ⇒ 24 ore in 20 tick
+    expect(researchRate(s)).toBe(1);
+    for (let i = 0; i < 20; i++) tick(s);
+    expect(s.research.unlocked).toContain('minigun');
+    expect(s.research.selected).toBeNull();
+  });
+
+  it('i laboratori operativi accelerano la ricerca (researchRate)', () => {
+    const s = newGameWithHq(1);
+    expect(researchRate(s)).toBe(1); // solo QG
+    const rome = s.cities.find(c => c.id === 'rome')!;
+    rome.structures.push({ id: 1, cell: 0, type: 'lab', state: 'occupied', hp: 150, buildDoneTick: 0 });
+    rome.structures.push({ id: 2, cell: 1, type: 'lab', state: 'building', hp: 150, buildDoneTick: 9 });
+    expect(researchRate(s)).toBe(2); // QG + 1 lab operativo (quello in costruzione non conta)
   });
 
   it('gate squadroni e ambasciate dietro la ricerca', () => {

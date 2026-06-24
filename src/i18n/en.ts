@@ -112,6 +112,21 @@ export const en: Record<MessageKey, string> = {
   'bar.ricerca': 'Research',
   'bar.citta': 'Cities',
 
+  // build panel (ui/buildPanel.ts)
+  'build.title': 'Build',
+  'build.tab.vehicles': 'Vehicle assembly',
+  'build.tab.structures': 'City construction',
+  'build.close': 'Close',
+  'build.selectCity': 'City:',
+  'build.noCities': 'No connected city. Found the Headquarters or open embassies.',
+  'build.locked': 'No vehicle unlocked: complete the research in the tree.',
+  'build.comingSoon': 'Coming soon',
+  'buildable.f22.name': 'F-22 Fighter',
+  'buildable.tower.name': 'Defense Tower',
+  'buildable.lab.name': 'Laboratory',
+  'buildable.cat.combat': 'Combat',
+  'buildable.cat.economy': 'Economy',
+
   // research tree (ui/researchPanel.ts + sim/researchTree.ts)
   'tech.title': 'Research',
   'tech.subtitle': 'Unlock technologies by spending resources',
@@ -125,6 +140,11 @@ export const en: Record<MessageKey, string> = {
   'tech.cost': 'Cost:',
   'tech.free': 'Free',
   'tech.confirm': 'Confirm',
+  'tech.start': 'Start research',
+  'tech.researching': 'Researching…',
+  'tech.busy': 'Another research is already in progress',
+  'tech.time': 'Time:',
+  'tech.hours': '{n} h',
   'tech.cancel': 'Cancel',
   'tech.locked': 'Missing prerequisites',
   'tech.zoom.in': 'Zoom in',
@@ -152,6 +172,27 @@ export const en: Record<MessageKey, string> = {
   'tech.diplomazia.desc': 'Coming soon.',
   'tech.intercettore.title': 'Orbital interceptor',
   'tech.intercettore.desc': 'Coming soon.',
+  'tech.torre_dif.title': 'Defense Tower',
+  'tech.torre_dif.desc':
+    'Unlocks building defense towers on city hardpoints: they fire at incoming UFOs.',
+
+  // structures grid (ui/structureGrid.ts) — structure names reuse the buildable.* keys
+  'struct.subtitle': 'Drag a structure onto a free cell. Each cell is a city hardpoint.',
+  'struct.palette': 'Palette',
+  'struct.paletteHint': 'Structures buildable in the city',
+  'struct.occupancy': 'Occupancy',
+  'struct.locked': 'No structure unlocked: complete the research in the tree.',
+  'struct.dragHint': 'Free cell — drag a structure here',
+  'struct.repair': 'Repair',
+  'struct.remove': 'Remove',
+  'struct.legend.empty': 'Free',
+  'struct.legend.occupied': 'Operational',
+  'struct.legend.target': 'Valid target',
+  'struct.legend.building': 'Under construction',
+  'struct.legend.damaged': 'Damaged',
+  'struct.state.occupied': 'Operational',
+  'struct.state.building': 'Under construction…',
+  'struct.state.damaged': 'Damaged',
 
   // command errors
   'cmd.cityUnavailable': 'City unavailable',
@@ -164,9 +205,14 @@ export const en: Record<MessageKey, string> = {
   'cmd.hqAlreadyFounded': 'The Headquarters has already been founded',
   'cmd.hqNotFounded': 'Found the Headquarters first',
   'cmd.alreadyConnected': 'City already connected to the network',
+  'cmd.cityNotConnected': 'City not connected to the network',
+  'cmd.cellUnavailable': 'Hardpoint unavailable',
+  'cmd.structureNotFound': 'Structure does not exist',
+  'cmd.cannotRepair': 'The structure is not damaged',
   'cmd.researchLocked': 'Research required',
   'cmd.researchAlreadyDone': 'Already researched',
   'cmd.researchPrereqMissing': 'Missing research prerequisites',
+  'cmd.researchBusy': 'Another research is already in progress',
 
   // resources (key = ResourceType in sim/resources.ts)
   'res.agroalimentare': 'Agri-food',

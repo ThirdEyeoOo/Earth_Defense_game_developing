@@ -6,6 +6,20 @@ import type { CityResource, ResourceType } from './resources';
 import { emptyStockpile } from './resources';
 import { stateRand } from './rng';
 
+// Strutture piazzabili sugli hardpoint della griglia esagonale di una città (vedi
+// sim/buildings.ts + ui/structureGrid.ts). 'building' = in costruzione (operativa a
+// buildDoneTick); 'occupied' = operativa; 'damaged' = colpita, inattiva finché riparata.
+export type StructureType = 'tower' | 'lab';
+
+export interface Structure {
+  id: number;
+  cell: number; // indice dell'hardpoint nella griglia esagonale della città
+  type: StructureType;
+  state: 'building' | 'occupied' | 'damaged';
+  hp: number;
+  buildDoneTick: number; // tick a cui la costruzione termina (state building → occupied)
+}
+
 export interface CityState {
   id: string;
   name: string;
@@ -18,6 +32,7 @@ export interface CityState {
   alive: boolean;
   resources: CityResource[]; // amount mutabili in partita (copiati dal JSON)
   embassy: boolean; // collegata alla rete della nuova umanità (il QG non la richiede)
+  structures: Structure[]; // strutture sugli hardpoint (griglia esagonale)
 }
 
 export interface TransferState {
@@ -89,6 +104,7 @@ export interface GameState {
   squadrons: SquadronState[];
   ufos: UfoState[];
   nextSquadronId: number;
+  nextStructureId: number;
   nextUfoId: number;
   nextWave: WaveState;
   wavesSpawned: number;
@@ -99,7 +115,9 @@ export interface GameState {
   // Albero della Ricerca: id dei nodi sbloccati (vedi sim/researchTree.ts). Le funzioni
   // (fondare il QG, costruire squadroni/ambasciate, montare il minigun, ecc.) sono gated
   // dietro lo sblocco del nodo relativo.
-  research: { unlocked: string[] };
+  // Ricerca ad avanzamento nel tempo: `selected` = nodo in corso (uno alla volta),
+  // `progress` = ore-ricerca accumulate verso `researchHours` del nodo (vedi sim/tick.ts).
+  research: { unlocked: string[]; selected: string | null; progress: number };
 }
 
 interface CityRow {
@@ -134,6 +152,7 @@ export function createNewGame(seed: number): GameState {
     alive: true,
     resources: c.resources.map(r => ({ ...r })),
     embassy: false,
+    structures: [],
   }));
   const state: GameState = {
     version: CONFIG.saveVersion,
@@ -147,6 +166,7 @@ export function createNewGame(seed: number): GameState {
     squadrons: [],
     ufos: [],
     nextSquadronId: 1,
+    nextStructureId: 1,
     nextUfoId: 1,
     nextWave: { waveNumber: 1, arrivalTick: 0, ufoCount: CONFIG.waves.ufosBase, region: '' },
     wavesSpawned: 0,
@@ -154,7 +174,8 @@ export function createNewGame(seed: number): GameState {
     outcome: 'playing',
     events: [],
     nextEventId: 1,
-    research: { unlocked: [] }, // nuova partita: niente sbloccato (prima si ricerca il QG, gratis)
+    // nuova partita: niente sbloccato (prima si ricerca il QG, gratis e istantaneo)
+    research: { unlocked: [], selected: null, progress: 0 },
   };
   const w = CONFIG.waves;
   const day =

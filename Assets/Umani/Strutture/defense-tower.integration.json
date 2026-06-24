@@ -1,0 +1,12 @@
+{
+  "name": "defense-tower",
+  "route": "dom",
+  "viewBox": "0 0 240 400",
+  "concept": "Torre difensiva planetaria umana: ancorata al suolo, spara verso l'alto contro gli UFO. Energia CIANO/BLU (difese terrestri) vs verde alieno. Controparte di plasma-turret.",
+  "orientation": "Muso verso l'ALTO (#base a terra, canna allo zenit).",
+  "stateClass": "on",
+  "animatable": ["#recoil", "#charge-core", "#coils", "#muzzle-glow", "#muzzle-flash", "#plasma-bolt", "#status-light"],
+  "restState": "Dormiente via attributi opacity (muzzle-flash/plasma-bolt 0, muzzle-glow 0.1, charge-core 0.6, .coil-orb 0.2). Il gioco aggiunge la classe 'on' e inietta la CSS d'animazione (vedi render/cityStructures.ts DEFENSE_TOWER_ON_CSS, ciclo 1.5s).",
+  "muzzle": "bocca a 120,66 nel viewBox (i traccianti del globo partono dalla cima dell'asset)",
+  "suggestedPlacement": "modulo CSS2D nella mini-griglia strutture accanto al nome città sul globo; rivolto allo zenit"
+}

@@ -1,5 +1,6 @@
 import type { PerspectiveCamera } from 'three';
 import type { GameState } from '../sim/state';
+import type { CityStructuresLayer } from './cityStructures';
 import type { Shot } from './combatEngine';
 import type { SquadronWeaponLayer } from './squadronWeapons';
 import type { UfoLayer } from './ufoLayer';
@@ -13,6 +14,19 @@ import type { UnitLayer } from './units';
 // applica il motore; questa è pura visualizzazione.
 
 type Pt = { x: number; y: number };
+
+// classe del proiettile/impatto per arma: minigun tracciante giallo, torre bolide ciano,
+// plasma UFO bolide verde
+function projClass(shot: Shot): string {
+  if (shot.weapon === 'minigun') return 'combat-tracer';
+  if (shot.weapon === 'defense-tower') return 'combat-proj combat-proj--cyan';
+  return 'combat-proj';
+}
+function impactClass(shot: Shot): string {
+  if (shot.weapon === 'minigun') return 'combat-spark';
+  if (shot.weapon === 'defense-tower') return 'combat-impact combat-impact--cyan';
+  return 'combat-impact';
+}
 
 export class CombatFxLayer {
   private readonly overlay: HTMLDivElement;
@@ -38,13 +52,14 @@ export class CombatFxLayer {
     units: UnitLayer,
     ufos: UfoLayer,
     squadronWeapons: SquadronWeaponLayer,
+    cityStructures: CityStructuresLayer,
     camera: PerspectiveCamera,
   ): void {
     const alive = new Set<number>();
     for (const shot of shots) {
       alive.add(shot.id);
-      const from = this.originOf(shot, units, ufos, squadronWeapons, camera);
-      const target = this.targetOf(shot, units, ufos, camera);
+      const from = this.originOf(shot, units, ufos, squadronWeapons, cityStructures, camera);
+      const target = this.targetOf(shot, units, ufos, cityStructures, camera);
       if (!from || !target) {
         this.removeProj(shot.id);
         continue;
@@ -77,11 +92,13 @@ export class CombatFxLayer {
     units: UnitLayer,
     ufos: UfoLayer,
     squadronWeapons: SquadronWeaponLayer,
+    cityStructures: CityStructuresLayer,
     camera: PerspectiveCamera,
   ): Pt | null {
     if (shot.from.kind === 'ufo') {
       return ufos.turretMuzzleRect(shot.from.id, shot.from.side) ?? this.ufoCenter(ufos, shot.from.id);
     }
+    if (shot.from.kind === 'tower') return cityStructures.towerMuzzleRect(shot.from.id);
     const muzzle = squadronWeapons.minigunMuzzleRect(shot.from.id, shot.from.side);
     if (muzzle) return muzzle;
     const r = units.squadronRect(shot.from.id, camera);
@@ -92,12 +109,14 @@ export class CombatFxLayer {
     shot: Shot,
     units: UnitLayer,
     ufos: UfoLayer,
+    cityStructures: CityStructuresLayer,
     camera: PerspectiveCamera,
   ): Pt | null {
     if (shot.to.kind === 'squadron') {
       const r = units.squadronRect(shot.to.id, camera);
       return r ? { x: r.cx, y: r.cy } : null;
     }
+    if (shot.to.kind === 'tower') return cityStructures.towerMuzzleRect(shot.to.id);
     // bersaglio UFO: ufoCombatRect (non ufoBodyRect) così funziona ANCHE in rapimento
     const r = ufos.ufoCombatRect(shot.to.id);
     return r ? { x: r.cx, y: r.cy } : null;
@@ -112,7 +131,7 @@ export class CombatFxLayer {
     let el = this.projs.get(id);
     if (!el) {
       el = document.createElement('div');
-      el.className = shot.weapon === 'minigun' ? 'combat-tracer' : 'combat-proj';
+      el.className = projClass(shot);
       this.overlay.appendChild(el);
       this.projs.set(id, el);
     }
@@ -129,7 +148,7 @@ export class CombatFxLayer {
 
   private spawnImpact(x: number, y: number, shot: Shot): void {
     const imp = document.createElement('div');
-    imp.className = shot.weapon === 'minigun' ? 'combat-spark' : 'combat-impact';
+    imp.className = impactClass(shot);
     imp.style.left = `${x.toFixed(1)}px`;
     imp.style.top = `${y.toFixed(1)}px`;
     this.overlay.appendChild(imp);

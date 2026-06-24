@@ -50,6 +50,34 @@ export const CONFIG = {
     >,
     costGrowth: 0.5,
   },
+  // Strutture sugli hardpoint della città (griglia esagonale, vedi sim/buildings.ts).
+  // Capienza griglia = baseSlots + floor(pop / popPerSlot). Costi/durate da tarare a playtest.
+  buildings: {
+    baseSlots: 4,
+    popPerSlot: 2_000_000, // +1 hardpoint ogni 2 milioni di abitanti
+    repairCostFactor: 0.4, // riparare costa il 40% del costo di costruzione (Fase 4)
+    tower: {
+      cost: {
+        humt: 250,
+        resources: { industria: 20, materiali_da_costruzione: 15 } satisfies Partial<
+          Record<ResourceType, number>
+        >,
+      },
+      buildMinutes: 720, // mezza giornata-gioco
+      hp: 300,
+      weaponModule: 'defense-tower' satisfies WeaponModuleId, // cannone a energia anti-UFO
+    },
+    lab: {
+      cost: {
+        humt: 300,
+        resources: { tecnologia: 20, energia: 10 } satisfies Partial<
+          Record<ResourceType, number>
+        >,
+      },
+      buildMinutes: 720,
+      hp: 150,
+    },
+  },
   // Fisica orbitale (vedi src/sim/orbit.ts). Tutto in RAGGI terrestri (globo = 1)
   // e TICK. Costanti "reali scalate": μ deriva da g reale con τ = 4320 s-gioco/tick
   // (= 1 giorno-gioco / 20). Le durate delle fasi NON sono più costanti: la sim le
@@ -89,5 +117,5 @@ export const CONFIG = {
     ufosPerWave: 1,
     victoryWaves: 10,
   },
-  saveVersion: 6,
+  saveVersion: 7,
 } as const;
